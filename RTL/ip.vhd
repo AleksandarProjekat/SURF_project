@@ -25,8 +25,6 @@ use work.MyTypes.all;  -- Uklju?ivanje definisanih tipova iz paketa
 -- Removed ieee.math_real.all; not typically needed for the types of operations described
 -- use ieee.std_logic_unsigned.all; This package is generally considered deprecated in favor of numeric_std
 
---type real_array is array (integer range <>) of std_logic_vector 
-
 entity ip is
     generic (
         WIDTH : integer := 11;            -- Bit width for various unsigned signals
