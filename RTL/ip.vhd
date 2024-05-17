@@ -41,7 +41,7 @@ entity ip is
         i_width : in unsigned(WIDTH - 1 downto 0);
         clk : in std_logic;
         reset : in std_logic;
-        iradius : in unsigned(WIDTH - 1 downto 0);
+        iradius : in signed(WIDTH - 1 downto 0);
         fracr : in std_logic_vector(FIXED_SIZE - 1 downto 0);
         fracc : in std_logic_vector(FIXED_SIZE - 1 downto 0);
         spacing : in std_logic_vector(FIXED_SIZE - 1 downto 0);
@@ -91,9 +91,11 @@ architecture Behavioral of ip is
 --za SIGNALE VIDETI KOJI JE TIP I SIRINA
 	signal state_reg, state_next : state_type;
 
-	signal i_reg, i_next : integer range -to_integer(unsigned(iradius)) to to_integer(unsigned(iradius));
-	signal j_reg, j_next : integer range -to_integer(unsigned(iradius)) to to_integer(unsigned(iradius));
+--	signal i_reg, i_next : integer range -to_integer(unsigned(iradius)) to to_integer(unsigned(iradius));
+--	signal j_reg, j_next : integer range -to_integer(unsigned(iradius)) to to_integer(unsigned(iradius));
 	
+	signal i_reg, i_next : signed(WIDTH - 1 downto 0);
+	signal j_reg, j_next : signed(WIDTH - 1 downto 0);
 	signal ri, ci : unsigned(WIDTH - 1 downto 0);
     signal ri_next, ci_next : unsigned(WIDTH - 1 downto 0);
 	signal r, c : unsigned(WIDTH - 1 downto 0);
@@ -122,8 +124,10 @@ begin
 	begin
 		if reset = '1' then
 			state_reg <= idle;
-            i_reg <= -to_integer(unsigned(iradius));
-			j_reg <= -to_integer(unsigned(iradius));
+         --   i_reg <= -to_integer(unsigned(iradius));
+		--	j_reg <= -to_integer(unsigned(iradius));
+            i_reg <= -iradius;
+            j_reg <= -iradius;
 			ri <= (others => '0');
             ci <= (others => '0');
 			addSampleStep <= (others => '0');
@@ -273,8 +277,10 @@ begin
 					end if;
 	
 				when StartLoop =>
-					i_next <= -to_integer(unsigned(iradius));
-					j_next <= -to_integer(unsigned(iradius));
+				--	i_next <= -to_integer(unsigned(iradius));
+				--	j_next <= -to_integer(unsigned(iradius));
+				    i_next <= -iradius;
+				    j_next <= -iradius;
 					state_next <= InnerLoop;
 	
 				when InnerLoop =>
@@ -282,29 +288,34 @@ begin
 						state_next <= IncrementI;
 					else
 						-- Compute positions
-						rpos_next <= std_logic_vector(
-							resize(
-								to_unsigned(
-									(to_integer(unsigned(step)) *
-									(to_integer(unsigned(i_cose)) * i_reg + to_integer(unsigned(i_sine)) * j_reg) -
-									to_integer(unsigned(fracr))) / to_integer(unsigned(spacing)),
-									FIXED_SIZE  -- Make sure the width matches the size of rpos_next
-								),
-								FIXED_SIZE  -- Make sure the width matches the size of rpos_next
-							)
-						);
+						
+                        rpos_next <= std_logic_vector(
+                            resize(
+                                to_unsigned(
+                                    (to_integer(unsigned(step)) *
+                                     (to_integer(unsigned(i_cose)) * to_integer(signed(i_reg)) + to_integer(unsigned(i_sine)) * to_integer(signed(j_reg))) -
+                                     to_integer(unsigned(fracr))) / to_integer(unsigned(spacing)),
+                                    FIXED_SIZE
+                                ),
+                                FIXED_SIZE
+                            )
+                        );
+
 					
-						cpos_next <= std_logic_vector(
-							resize(
-								to_unsigned(
-									(to_integer(unsigned(step)) *
-									(-to_integer(unsigned(i_sine)) * i_reg + to_integer(unsigned(i_cose)) * j_reg) -
-									to_integer(unsigned(fracc))) / to_integer(unsigned(spacing)),
-									FIXED_SIZE  -- Make sure the width matches the size of cpos_next
-								),
-								FIXED_SIZE  -- Make sure the width matches the size of cpos_next
-							)
-						);
+                                            cpos_next <= std_logic_vector(
+                            resize(
+                                to_unsigned(
+                                    integer(
+                                        (to_integer(unsigned(step)) *
+                                        (-to_integer(unsigned(i_sine)) * to_integer(signed(i_reg)) + to_integer(unsigned(i_cose)) * to_integer(signed(j_reg))) -
+                                        to_integer(unsigned(fracc))) / to_integer(unsigned(spacing))
+                                    ),
+                                    FIXED_SIZE
+                                ),
+                                FIXED_SIZE
+                            )
+                        );
+
 						rx_next <= std_logic_vector(to_unsigned(to_integer(unsigned(rpos)), rpos'length) + to_unsigned(0, rpos'length) / 2 - 1);
                         cx_next <= std_logic_vector(to_unsigned(to_integer(unsigned(cpos)), cpos'length) + to_unsigned(0, cpos'length) / 2 - 1);
 						state_next <= BoundaryCheck;
@@ -450,7 +461,7 @@ begin
 	
 				when IncrementI =>
 					i_next <= i_reg + 1;
-					j_next <= -to_integer(unsigned(iradius));
+					j_next <= -iradius;
 					state_next <= StartLoop;
 	
 				when Finish =>
