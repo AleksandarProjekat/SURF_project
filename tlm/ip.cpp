@@ -175,8 +175,8 @@ void Ip::proc() {
     {
    
         // Examine all points from the gradient image that could lie within the _index square.
-        for (int i = -iradius; i <= iradius; i++) {
-            for (int j = -iradius; j <= iradius; j++) {
+        for (int i = 0; i <= 2*iradius; i++) {
+            for (int j = 0; j <= 2*iradius; j++) {
     
                 /* static int counterfor;
                 counterfor++;

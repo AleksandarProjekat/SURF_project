@@ -80,7 +80,7 @@ architecture Behavioral of ip is
         "0101111011101000", "0101111000111000", "0101110110010001", "0101110011101000"
     );
 	type state_type is (idle, StartLoop, InnerLoop, BoundaryCheck, PositionValidation, ProcessSample,
-		ComputeDerivatives, CalculateWeightedDerivatives, ApplyOrientationTransform,
+		ComputeDerivatives, CalculateWeightedDerivatives, CalculateDerivatives, ApplyOrientationTransform,
 		SetOrientations, UpdateIndex, ComputeWeights, UpdateIndexArray, CheckNextColumn, CheckNextRow,
 		NextSample, IncrementI, Finish);
 		
@@ -94,8 +94,8 @@ architecture Behavioral of ip is
 --	signal i_reg, i_next : integer range -to_integer(unsigned(iradius)) to to_integer(unsigned(iradius));
 --	signal j_reg, j_next : integer range -to_integer(unsigned(iradius)) to to_integer(unsigned(iradius));
 	
-	signal i_reg, i_next : signed(WIDTH - 1 downto 0);
-	signal j_reg, j_next : signed(WIDTH - 1 downto 0);
+	signal i_reg, i_next : unsigned(WIDTH - 1 downto 0) := 23;
+	signal j_reg, j_next : unsigned(WIDTH - 1 downto 0) := 23;
 	signal ri, ci : unsigned(WIDTH - 1 downto 0);
     signal ri_next, ci_next : unsigned(WIDTH - 1 downto 0);
 	signal r, c : unsigned(WIDTH - 1 downto 0);
@@ -114,6 +114,7 @@ architecture Behavioral of ip is
     signal dxx1, dxx2, dyy1, dyy2 : std_logic_vector(FIXED_SIZE-1 downto 0);
     signal dxx1_next, dxx2_next, dyy1_next, dyy2_next : std_logic_vector(FIXED_SIZE-1 downto 0);
 
+
 	signal indexMatrix : index_3d_array(0 to 3, 0 to 3, 0 to 3); 
    -- signal pixelMatrix : pixel_matrix(i_width - 1 downto 0, i_height - 1 downto 0);
     signal done : std_logic;
@@ -124,10 +125,8 @@ begin
 	begin
 		if reset = '1' then
 			state_reg <= idle;
-         --   i_reg <= -to_integer(unsigned(iradius));
-		--	j_reg <= -to_integer(unsigned(iradius));
-            i_reg <= -iradius;
-            j_reg <= -iradius;
+            i_reg <= (others => '0');
+            j_reg <= (others => '0');
 			ri <= (others => '0');
             ci <= (others => '0');
 			addSampleStep <= (others => '0');
@@ -166,14 +165,6 @@ begin
             dxx2 <= (others => '0');
             dyy1 <= (others => '0');
             dyy2 <= (others => '0');
-            
-             for i in 0 to INDEX_SIZE-1 loop
-                for j in 0 to INDEX_SIZE-1 loop
-                    for k in 0 to ORI_SIZE-1 loop
-						indexMatrix(i, j, k) <= to_signed(0, 48);
-                    end loop;
-                end loop;
-            end loop;
             
 		elsif (rising_edge(clk)) then
 			state_reg <= state_next;
@@ -273,27 +264,24 @@ begin
 				when idle =>
 					ready_o <= '1';
 					if start_i = '1' then
+					    i_next <= TO_UNSIGNED (0, WIDTH);
 						state_next <= StartLoop;
+					else
+						state_next <= idle;
 					end if;
 	
 				when StartLoop =>
-				--	i_next <= -to_integer(unsigned(iradius));
-				--	j_next <= -to_integer(unsigned(iradius));
-				    i_next <= -iradius;
-				    j_next <= -iradius;
+				  j_next <= TO_UNSIGNED (0, WIDTH);
 					state_next <= InnerLoop;
 	
 				when InnerLoop =>
-					if j_reg > to_integer(unsigned(iradius)) then
-						state_next <= IncrementI;
-					else
 						-- Compute positions
 						
                         rpos_next <= std_logic_vector(
                             resize(
                                 to_unsigned(
                                     (to_integer(unsigned(step)) *
-                                     (to_integer(unsigned(i_cose)) * to_integer(signed(i_reg)) + to_integer(unsigned(i_sine)) * to_integer(signed(j_reg))) -
+                                     (to_integer(unsigned(i_cose)) * to_integer(signed(i_reg - iradius)) + to_integer(unsigned(i_sine)) * to_integer(signed(j_reg - iradius))) -
                                      to_integer(unsigned(fracr))) / to_integer(unsigned(spacing)),
                                     FIXED_SIZE
                                 ),
@@ -307,7 +295,7 @@ begin
                                 to_unsigned(
                                     integer(
                                         (to_integer(unsigned(step)) *
-                                        (-to_integer(unsigned(i_sine)) * to_integer(signed(i_reg)) + to_integer(unsigned(i_cose)) * to_integer(signed(j_reg))) -
+                                        (-to_integer(unsigned(i_sine)) * to_integer(signed(i_reg - iradius)) + to_integer(unsigned(i_cose)) * to_integer(signed(j_reg - iradius))) -
                                         to_integer(unsigned(fracc))) / to_integer(unsigned(spacing))
                                     ),
                                     FIXED_SIZE
@@ -319,8 +307,7 @@ begin
 						rx_next <= std_logic_vector(to_unsigned(to_integer(unsigned(rpos)), rpos'length) + to_unsigned(0, rpos'length) / 2 - 1);
                         cx_next <= std_logic_vector(to_unsigned(to_integer(unsigned(cpos)), cpos'length) + to_unsigned(0, cpos'length) / 2 - 1);
 						state_next <= BoundaryCheck;
-					end if;
-	
+						
 				when BoundaryCheck =>
 					if to_integer(unsigned(rx)) <= -1 or to_integer(unsigned(rx)) >= INDEX_SIZE or to_integer(unsigned(cx)) <= -1 or to_integer(unsigned(cx)) >= INDEX_SIZE then
 						state_next <= NextSample;
@@ -330,9 +317,12 @@ begin
 	
 				when PositionValidation =>
                 addSampleStep_next <= unsigned(scale); 
+                --PREBACI r i c u VHDL SINTAKSU
+                r <= iy + (i_reg - iradius)*step;
+                c <= ix + (j_reg - iradius)*step;
  --DA LI U IF IDE _NEXT I GDE                
-                if (r_next < 1 + addSampleStep_next or r_next >= i_height - 1 - addSampleStep_next or
-					c_next < 1 + addSampleStep_next or c_next >= i_width - 1 - addSampleStep_next) then
+                if (r_next < 1 + addSampleStep or r_next >= i_height - 1 - addSampleStep or
+					c_next < 1 + addSampleStep or c_next >= i_width - 1 - addSampleStep) then
 						state_next <= NextSample;
 					else
 						state_next <= ProcessSample;
@@ -362,12 +352,20 @@ begin
                     dxx2_next <= std_logic_vector(signed(px5) + signed(px6) - signed(px7) - signed(px8));
                     dyy1_next <= std_logic_vector(signed(px9) + signed(px6) - signed(px3) - signed(px10));
                     dyy2_next <= std_logic_vector(signed(px1) + signed(px11) - signed(px12) - signed(px8));
-					state_next <= ApplyOrientationTransform;
+					state_next <= CalculateDerivatives;
 	
+	            when CalculateDerivatives =>
+	               dxx_next <= weight * (dxx1 - dxx2);
+	               dyy_next <= weight * (dyy1 - dyy2);
+	               state_next <= ApplyOrientationTransform;
+	               
 				when ApplyOrientationTransform =>
-                    dx_next <= std_logic_vector(signed(i_cose) * signed(dxx1) - signed(i_sine) * signed(dyy1));					
-                    dy_next <= std_logic_vector(signed(i_sine) * signed(dxx1) + signed(i_cose) * signed(dyy1));
-                    if signed(dy_next) < 0 then
+                    dx_next <= std_logic_vector(signed(i_cose) * signed(dxx) + signed(i_sine) * signed(dyy));					
+                    dy_next <= std_logic_vector(signed(i_sine) * signed(dxx) - signed(i_cose) * signed(dyy));
+                    state_next <= SetOrientations;
+                    
+                when SetOrientations =>    
+                    if signed(dx_next) < 0 then
 						ori1_next <= to_unsigned(0, WIDTH);
 					else
 						ori1_next <= to_unsigned(1, WIDTH);
@@ -454,22 +452,27 @@ begin
             to_integer(signed(dy)) * to_integer(signed(rfrac)) * (1 - to_integer(signed(cfrac)));			
 						end if;
 					state_next <= NextSample;
-	
+--- OD 0 DO 2*IRADIUS	
 				when NextSample =>
 					j_next <= j_reg + 1;
-					state_next <= InnerLoop;
-	
+					if (j_next > to_integer(unsigned(2*iradius))) then
+					   state_next <= IncrementI;
+					else
+					   state_next <= InnerLoop;
+	                end if;
 				when IncrementI =>
 					i_next <= i_reg + 1;
-					j_next <= -iradius;
-					state_next <= StartLoop;
-	
+					if (i_next > to_integer(unsigned(2*iradius))) then
+					   state_next <= Finish;
+	                else
+	                    state_next <= StartLoop;
+	                end if;    
 				when Finish =>
 					done <= '1';
-					state_next <= StartLoop;
+					state_next <= idle;
 	
 				when others =>
-					state_next <= StartLoop;
+					state_next <= idle;
 			end case;
 		end process;
 	
