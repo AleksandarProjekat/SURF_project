@@ -3,7 +3,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 use ieee.numeric_std.all;
 
 entity bram is
-    generic ( WIDTH: integer := 8;
+    generic ( WIDTH: integer := 11;
             BRAM_SIZE : integer := 80000
  );    
     port (    

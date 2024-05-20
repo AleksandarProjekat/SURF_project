@@ -20,7 +20,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.numeric_std.all;
-use work.MyTypes.all;  -- Uklju?ivanje definisanih tipova iz paketa
+
 
 -- Removed ieee.math_real.all; not typically needed for the types of operations described
 -- use ieee.std_logic_unsigned.all; This package is generally considered deprecated in favor of numeric_std
@@ -31,7 +31,6 @@ entity ip is
         FIXED_SIZE : integer := 48;       -- Bit width for fixed-point operations
         INDEX_SIZE : integer := 4;        -- Dimension size for the index array
         ORI_SIZE : integer := 4;          -- Dimension size for orientation data
-        PIXEL_ARRAY_SIZE : integer := 256;-- Not necessary if image size is constant
         LOOKUP2_SIZE : integer := 40;     -- Size of the lookup table
         IMG_WIDTH : integer := 128;       -- Width of the image
         IMG_HEIGHT : integer := 128       -- Height of the image
@@ -51,12 +50,17 @@ entity ip is
         i_cose : in std_logic_vector(FIXED_SIZE - 1 downto 0);
         i_sine : in std_logic_vector(FIXED_SIZE - 1 downto 0);
         scale : in std_logic_vector(FIXED_SIZE - 1 downto 0);
-        pixelMatrix : in pixel_matrix;--(IMG_WIDTH - 1 downto 0, IMG_HEIGHT - 1 downto 0);
-      --  pixelMatrix : in pixel_matrix;
-      --ROM  lookupTable2 : in real_array(0 to LOOKUP2_SIZE-1);
-        index : out index_3d_array;
-
+        ---------------MEM INTERFEJS ZA SLIKU--------------------
+		addr_di_o : out std_logic_vector (4 * WIDTH - 1 downto 0);
+		data_i : in std_logic_vector (3 * WIDTH - 1 downto 0);
+		ctrl_data_o : out std_logic;
+		---------------MEM INTERFEJS ZA IZLAZ--------------------
+		addr_do_o : out std_logic_vector (4 * WIDTH - 1 downto 0);
+		data_o : out std_logic_vector (3 * WIDTH - 1 downto 0);
+		c_data_o : out std_logic;
+		---------------KOMANDNI INTERFEJS------------------------
         start_i : in std_logic;
+         ---------------STATUSNI INTERFEJS------------------------
         ready_o : out std_logic
     );
 end ip;
@@ -80,22 +84,17 @@ architecture Behavioral of ip is
         "0101111011101000", "0101111000111000", "0101110110010001", "0101110011101000"
     );
 	type state_type is (idle, StartLoop, InnerLoop, BoundaryCheck, PositionValidation, ProcessSample,
-		ComputeDerivatives, CalculateWeightedDerivatives, CalculateDerivatives, ApplyOrientationTransform,
+		ComputeDerivatives, ReadPixels, CalculateWeightedDerivatives, CalculateDerivatives, ApplyOrientationTransform,
 		SetOrientations, UpdateIndex, ComputeWeights, UpdateIndexArray, CheckNextColumn, CheckNextRow,
 		NextSample, IncrementI, Finish);
 		
-	
-
---KOJA VREDNOST IDE	I DA LI TREBA JER IMA U PORT constant iradius : integer := 3;  -- Define the radius
 
 --za SIGNALE VIDETI KOJI JE TIP I SIRINA
 	signal state_reg, state_next : state_type;
 
---	signal i_reg, i_next : integer range -to_integer(unsigned(iradius)) to to_integer(unsigned(iradius));
---	signal j_reg, j_next : integer range -to_integer(unsigned(iradius)) to to_integer(unsigned(iradius));
 	
-	signal i_reg, i_next : unsigned(WIDTH - 1 downto 0) := 23;
-	signal j_reg, j_next : unsigned(WIDTH - 1 downto 0) := 23;
+	signal i_reg, i_next : unsigned(WIDTH - 1 downto 0) := to_unsigned(23, WIDTH);
+    signal j_reg, j_next : unsigned(WIDTH - 1 downto 0) := to_unsigned(23, WIDTH);
 	signal ri, ci : unsigned(WIDTH - 1 downto 0);
     signal ri_next, ci_next : unsigned(WIDTH - 1 downto 0);
 	signal r, c : unsigned(WIDTH - 1 downto 0);
@@ -114,9 +113,6 @@ architecture Behavioral of ip is
     signal dxx1, dxx2, dyy1, dyy2 : std_logic_vector(FIXED_SIZE-1 downto 0);
     signal dxx1_next, dxx2_next, dyy1_next, dyy2_next : std_logic_vector(FIXED_SIZE-1 downto 0);
 
-
-	signal indexMatrix : index_3d_array(0 to 3, 0 to 3, 0 to 3); 
-   -- signal pixelMatrix : pixel_matrix(i_width - 1 downto 0, i_height - 1 downto 0);
     signal done : std_logic;
 
 begin
@@ -257,6 +253,16 @@ begin
         dyy2_next <= dyy2;
         rpos_next <= rpos;
         cpos_next <= cpos;
+   
+   --VIDETI NA KOJE VREDNOSTI IDU addr_di_o    addr_do_o
+        --    addr_di_o <= --std_logic_vector ((i_reg * unsigned(cols_i) + j_reg) * 4);
+		--	addr_do_o <= --std_logic_vector((i_reg * unsigned(cols_i) + j_reg) * 4);		
+
+			ctrl_data_o <= '1';
+			
+			c_data_o <= '0';
+
+			data_o <= (others => '0');
 
 			ready_o <= '0';
  
@@ -281,29 +287,28 @@ begin
                             resize(
                                 to_unsigned(
                                     (to_integer(unsigned(step)) *
-                                     (to_integer(unsigned(i_cose)) * to_integer(signed(i_reg - iradius)) + to_integer(unsigned(i_sine)) * to_integer(signed(j_reg - iradius))) -
+                                     (to_integer(unsigned(i_cose)) * (to_integer(signed(i_reg)) - to_integer(signed(iradius))) + 
+                                      to_integer(unsigned(i_sine)) * (to_integer(signed(j_reg)) - to_integer(signed(iradius)))) -
                                      to_integer(unsigned(fracr))) / to_integer(unsigned(spacing)),
-                                    FIXED_SIZE
-                                ),
                                 FIXED_SIZE
-                            )
-                        );
-
-					
-                                            cpos_next <= std_logic_vector(
+                            ),
+                            FIXED_SIZE
+                        ));
+                        
+                        cpos_next <= std_logic_vector(
                             resize(
                                 to_unsigned(
-                                    integer(
-                                        (to_integer(unsigned(step)) *
-                                        (-to_integer(unsigned(i_sine)) * to_integer(signed(i_reg - iradius)) + to_integer(unsigned(i_cose)) * to_integer(signed(j_reg - iradius))) -
-                                        to_integer(unsigned(fracc))) / to_integer(unsigned(spacing))
-                                    ),
-                                    FIXED_SIZE
-                                ),
+                                    (to_integer(unsigned(step)) *
+                                     (-to_integer(unsigned(i_sine)) * (to_integer(signed(i_reg)) - to_integer(signed(iradius))) + 
+                                      to_integer(unsigned(i_cose)) * (to_integer(signed(j_reg)) - to_integer(signed(iradius)))) -
+                                     to_integer(unsigned(fracc))) / to_integer(unsigned(spacing)),
                                 FIXED_SIZE
-                            )
-                        );
+                            ),
+                            FIXED_SIZE
+                        ));
 
+                        
+                        
 						rx_next <= std_logic_vector(to_unsigned(to_integer(unsigned(rpos)), rpos'length) + to_unsigned(0, rpos'length) / 2 - 1);
                         cx_next <= std_logic_vector(to_unsigned(to_integer(unsigned(cpos)), cpos'length) + to_unsigned(0, cpos'length) / 2 - 1);
 						state_next <= BoundaryCheck;
@@ -317,9 +322,9 @@ begin
 	
 				when PositionValidation =>
                 addSampleStep_next <= unsigned(scale); 
-                --PREBACI r i c u VHDL SINTAKSU
-                r <= iy + (i_reg - iradius)*step;
-                c <= ix + (j_reg - iradius)*step;
+              
+                r_next <= iy + to_unsigned(to_integer(signed(i_reg)) - to_integer(iradius), WIDTH) * step;
+                c_next <= ix + to_unsigned(to_integer(signed(j_reg)) - to_integer(iradius), WIDTH) * step;
  --DA LI U IF IDE _NEXT I GDE                
                 if (r_next < 1 + addSampleStep or r_next >= i_height - 1 - addSampleStep or
 					c_next < 1 + addSampleStep or c_next >= i_width - 1 - addSampleStep) then
@@ -333,19 +338,48 @@ begin
 					state_next <= ComputeDerivatives;
 	
 				when ComputeDerivatives =>
-				    px1_next <= std_logic_vector(pixelMatrix(to_integer(r + addSampleStep + 1), to_integer(c + addSampleStep + 1)));
-                    px2_next <= std_logic_vector(pixelMatrix(to_integer(r - addSampleStep), to_integer(c)));
-                    px3_next <= std_logic_vector(pixelMatrix(to_integer(r - addSampleStep), to_integer(c + addSampleStep + 1)));
-                    px4_next <= std_logic_vector(pixelMatrix(to_integer(r + addSampleStep + 1), to_integer(c)));
-                    px5_next <= std_logic_vector(pixelMatrix(to_integer(r + addSampleStep + 1), to_integer(c + 1)));
-                    px6_next <= std_logic_vector(pixelMatrix(to_integer(r - addSampleStep), to_integer(c - addSampleStep)));
-                    px7_next <= std_logic_vector(pixelMatrix(to_integer(r - addSampleStep), to_integer(c + 1)));
-                    px8_next <= std_logic_vector(pixelMatrix(to_integer(r + addSampleStep + 1), to_integer(c - addSampleStep)));
-                    px9_next <= std_logic_vector(pixelMatrix(to_integer(r + 1), to_integer(c + addSampleStep + 1)));
-                    px10_next <= std_logic_vector(pixelMatrix(to_integer(r + 1), to_integer(c - addSampleStep)));
-                    px11_next <= std_logic_vector(pixelMatrix(to_integer(r), to_integer(c - addSampleStep)));
-                    px12_next <= std_logic_vector(pixelMatrix(to_integer(r), to_integer(c + addSampleStep + 1)));
-					state_next <= CalculateWeightedDerivatives;
+                -- Load pixel values from BRAM
+                addr_di_o <= std_logic_vector(unsigned(r + addSampleStep));
+               
+                state_next <= ReadPixels;
+
+            when ReadPixels =>
+                px1_next <= data_i;
+                    addr_di_o <= std_logic_vector(unsigned(r - addSampleStep));
+                   
+                px2_next <= data_i;
+                    addr_di_o <= std_logic_vector(unsigned(r - addSampleStep + addSampleStep));
+                   
+                px3_next <= data_i;
+                    addr_di_o <= std_logic_vector(unsigned(r + addSampleStep));
+                   
+                px4_next <= data_i;
+                    addr_di_o <= std_logic_vector(unsigned(r + addSampleStep + 1));
+                   
+                px5_next <= data_i;
+                    addr_di_o <= std_logic_vector(unsigned(r - addSampleStep - addSampleStep));
+                    
+                px6_next <= data_i;
+                    addr_di_o <= std_logic_vector(unsigned(r - addSampleStep + 1));
+                    
+                px7_next <= data_i;
+                    addr_di_o <= std_logic_vector(unsigned(r + addSampleStep - addSampleStep));
+                  
+                px8_next <= data_i;
+                    addr_di_o <= std_logic_vector(unsigned(r + 1));
+                    
+                px9_next <= data_i;
+                    addr_di_o <= std_logic_vector(unsigned(r + 1 - addSampleStep));
+                    
+                px10_next <= data_i;
+                    addr_di_o <= std_logic_vector(unsigned(r - addSampleStep));
+                   
+                px11_next <= data_i;
+                    addr_di_o <= std_logic_vector(unsigned(r + addSampleStep));
+                    
+                px12_next <= data_i;
+                state_next <= CalculateWeightedDerivatives;
+
 	
 				when CalculateWeightedDerivatives =>
 					dxx1_next <= std_logic_vector(signed(px1) + signed(px2) - signed(px3) - signed(px4));
@@ -476,6 +510,5 @@ begin
 			end case;
 		end process;
 	
-		index <= indexMatrix;
 		
 	end Behavioral;
