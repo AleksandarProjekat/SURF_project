@@ -84,7 +84,7 @@ architecture Behavioral of ip is
         "0101111011101000", "0101111000111000", "0101110110010001", "0101110011101000"
     );
 	type state_type is (idle, StartLoop, InnerLoop, BoundaryCheck, PositionValidation, ProcessSample,
-		ComputeDerivatives, ReadPixels, CalculateWeightedDerivatives, CalculateDerivatives, ApplyOrientationTransform,
+		ComputeDerivatives, CalculateDerivatives, ApplyOrientationTransform,
 		SetOrientations, UpdateIndex, ComputeWeights, UpdateIndexArray, CheckNextColumn, CheckNextRow,
 		NextSample, IncrementI, Finish);
 		
@@ -108,8 +108,7 @@ architecture Behavioral of ip is
     signal rweight1_next, rweight2_next, cweight1_next, cweight2_next : std_logic_vector(FIXED_SIZE-1 downto 0);
     signal ori1, ori2 : unsigned(WIDTH - 1 downto 0);
     signal ori1_next, ori2_next : unsigned(WIDTH - 1 downto 0);
-    signal px1, px2, px3, px4, px5, px6, px7, px8, px9, px10, px11, px12 : std_logic_vector(FIXED_SIZE-1 downto 0);
-    signal px1_next, px2_next, px3_next, px4_next, px5_next, px6_next, px7_next, px8_next, px9_next, px10_next, px11_next, px12_next : std_logic_vector(FIXED_SIZE-1 downto 0);
+   
     signal dxx1, dxx2, dyy1, dyy2 : std_logic_vector(FIXED_SIZE-1 downto 0);
     signal dxx1_next, dxx2_next, dyy1_next, dyy2_next : std_logic_vector(FIXED_SIZE-1 downto 0);
 
@@ -145,18 +144,7 @@ begin
             cweight2 <= (others => '0');
             ori1 <= (others => '0');
             ori2 <= (others => '0');
-            px1 <= (others => '0');
-            px2 <= (others => '0');
-            px3 <= (others => '0');
-            px4 <= (others => '0');
-            px5 <= (others => '0');
-            px6 <= (others => '0');
-            px7 <= (others => '0');
-            px8 <= (others => '0');
-            px9 <= (others => '0');
-            px10 <= (others => '0');
-            px11 <= (others => '0');
-            px12 <= (others => '0');
+           
             dxx1 <= (others => '0');
             dxx2 <= (others => '0');
             dyy1 <= (others => '0');
@@ -188,18 +176,7 @@ begin
 			cweight2 <= cweight2_next;
             ori1 <= ori1_next; 
 			ori2 <= ori2_next;
-            px1 <= px1_next; 
-			px2 <= px2_next; 
-			px3 <= px3_next; 
-			px4 <= px4_next;
-            px5 <= px5_next; 
-			px6 <= px6_next; 
-			px7 <= px7_next; 
-			px8 <= px8_next;
-            px9 <= px9_next; 
-			px10 <= px10_next; 
-			px11 <= px11_next; 
-			px12 <= px12_next;
+           
             dxx1 <= dxx1_next; 
 			dxx2 <= dxx2_next; 
 			dyy1 <= dyy1_next; 
@@ -209,7 +186,7 @@ begin
 
 	--Combinatorial circuits
 	    -- Kombinacioni deo
-    process (state_reg, start_i, i_height, i_width, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, i_reg, j_reg, ri, ci, r, c, rx, cx, rfrac, cfrac, dx, dy, dxx, dyy, weight, rweight1, rweight2, cweight1, cweight2, ori1, ori2, px1, px2, px3, px4, px5, px6, px7, px8, px9, px10, px11, px12, dxx1, dxx2, dyy1, dyy2, rpos, cpos)
+    process (state_reg, start_i, i_height, i_width, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, i_reg, j_reg, ri, ci, r, c, rx, cx, rfrac, cfrac, dx, dy, dxx, dyy, weight, rweight1, rweight2, cweight1, cweight2, ori1, ori2, dxx1, dxx2, dyy1, dyy2, rpos, cpos)
     begin
         -- Default assignments
         state_next <= state_reg;
@@ -235,18 +212,7 @@ begin
         cweight2_next <= cweight2;
         ori1_next <= ori1;
         ori2_next <= ori2;
-        px1_next <= px1;
-        px2_next <= px2;
-        px3_next <= px3;
-        px4_next <= px4;
-        px5_next <= px5;
-        px6_next <= px6;
-        px7_next <= px7;
-        px8_next <= px8;
-        px9_next <= px9;
-        px10_next <= px10;
-        px11_next <= px11;
-        px12_next <= px12;
+
         dxx1_next <= dxx1;
         dxx2_next <= dxx2;
         dyy1_next <= dyy1;
@@ -283,17 +249,26 @@ begin
 				when InnerLoop =>
 						-- Compute positions
 						
-                        rpos_next <= std_logic_vector(
-                            resize(
-                                to_unsigned(
-                                    (to_integer(unsigned(step)) *
-                                     (to_integer(unsigned(i_cose)) * (to_integer(signed(i_reg)) - to_integer(signed(iradius))) + 
-                                      to_integer(unsigned(i_sine)) * (to_integer(signed(j_reg)) - to_integer(signed(iradius)))) -
-                                     to_integer(unsigned(fracr))) / to_integer(unsigned(spacing)),
-                                FIXED_SIZE
-                            ),
-                            FIXED_SIZE
-                        ));
+rpos_next <= std_logic_vector(
+    resize(
+        to_unsigned(
+            shift_right(
+                to_integer(
+                    unsigned(step) * (  -- Convert 'step' to integer after casting to unsigned
+                        to_integer(unsigned(i_cose)) * (to_integer(unsigned(i_reg)) - to_integer(unsigned(iradius))) + 
+                        to_integer(unsigned(i_sine)) * (to_integer(unsigned(j_reg)) - to_integer(unsigned(iradius))) -
+                        to_integer(unsigned(fracr))
+                    )
+                ), 30  -- Shift right to adjust the fixed-point scale
+            ) / to_integer(unsigned(spacing)),  -- Division by 'spacing' after converting it to integer
+            FIXED_SIZE  -- Resize to the FIXED_SIZE
+        ), 
+        FIXED_SIZE  -- Ensure the final output matches the fixed size needed
+    )
+);
+
+
+
                         
                         cpos_next <= std_logic_vector(
                             resize(
@@ -338,55 +313,25 @@ begin
 					state_next <= ComputeDerivatives;
 	
 				when ComputeDerivatives =>
-                -- Load pixel values from BRAM
-                addr_di_o <= std_logic_vector(unsigned(r + addSampleStep));
-               
-                state_next <= ReadPixels;
-
-            when ReadPixels =>
-                px1_next <= data_i;
-                    addr_di_o <= std_logic_vector(unsigned(r - addSampleStep));
-                   
-                px2_next <= data_i;
-                    addr_di_o <= std_logic_vector(unsigned(r - addSampleStep + addSampleStep));
-                   
-                px3_next <= data_i;
-                    addr_di_o <= std_logic_vector(unsigned(r + addSampleStep));
-                   
-                px4_next <= data_i;
-                    addr_di_o <= std_logic_vector(unsigned(r + addSampleStep + 1));
-                   
-                px5_next <= data_i;
-                    addr_di_o <= std_logic_vector(unsigned(r - addSampleStep - addSampleStep));
-                    
-                px6_next <= data_i;
-                    addr_di_o <= std_logic_vector(unsigned(r - addSampleStep + 1));
-                    
-                px7_next <= data_i;
-                    addr_di_o <= std_logic_vector(unsigned(r + addSampleStep - addSampleStep));
-                  
-                px8_next <= data_i;
-                    addr_di_o <= std_logic_vector(unsigned(r + 1));
-                    
-                px9_next <= data_i;
-                    addr_di_o <= std_logic_vector(unsigned(r + 1 - addSampleStep));
-                    
-                px10_next <= data_i;
-                    addr_di_o <= std_logic_vector(unsigned(r - addSampleStep));
-                   
-                px11_next <= data_i;
-                    addr_di_o <= std_logic_vector(unsigned(r + addSampleStep));
-                    
-                px12_next <= data_i;
-                state_next <= CalculateWeightedDerivatives;
-
-	
-				when CalculateWeightedDerivatives =>
-					dxx1_next <= std_logic_vector(signed(px1) + signed(px2) - signed(px3) - signed(px4));
-                    dxx2_next <= std_logic_vector(signed(px5) + signed(px6) - signed(px7) - signed(px8));
-                    dyy1_next <= std_logic_vector(signed(px9) + signed(px6) - signed(px3) - signed(px10));
-                    dyy2_next <= std_logic_vector(signed(px1) + signed(px11) - signed(px12) - signed(px8));
-					state_next <= CalculateDerivatives;
+                        dxx1 = pixels1D[(r + addSampleStep + 1) * i_width + (c + addSampleStep + 1)] 
+                             + pixels1D[(r - addSampleStep) * i_width + c]
+                             - pixels1D[(r - addSampleStep) * i_width + (c + addSampleStep + 1)]
+                             - pixels1D[(r + addSampleStep + 1) * i_width + c];
+         
+                        dxx2 = pixels1D[(r + addSampleStep + 1) * i_width + (c + 1)]
+                             + pixels1D[(r - addSampleStep) * i_width + (c - addSampleStep)]
+                             - pixels1D[(r - addSampleStep) * i_width + (c + 1)]
+                             - pixels1D[(r + addSampleStep + 1) * i_width + (c - addSampleStep)];
+        
+                        dyy1 = pixels1D[(r + 1) * i_width + (c + addSampleStep + 1)]
+                             + pixels1D[(r - addSampleStep) * i_width + (c - addSampleStep)]
+                             - pixels1D[(r - addSampleStep) * i_width + (c + addSampleStep + 1)]
+                             - pixels1D[(r + 1) * i_width + (c - addSampleStep)];
+         
+                        dyy2 = pixels1D[(r + addSampleStep + 1) * i_width + (c + addSampleStep + 1)]
+                             + pixels1D[r * i_width + (c - addSampleStep)]
+                             - pixels1D[r * i_width + (c + addSampleStep + 1)]
+                             - pixels1D[(r + addSampleStep + 1) * i_width + (c - addSampleStep)];             
 	
 	            when CalculateDerivatives =>
 	               dxx_next <= weight * (dxx1 - dxx2);
@@ -394,7 +339,8 @@ begin
 	               state_next <= ApplyOrientationTransform;
 	               
 				when ApplyOrientationTransform =>
-                    dx_next <= std_logic_vector(signed(i_cose) * signed(dxx) + signed(i_sine) * signed(dyy));					
+                    --dx_next <= std_logic_vector(signed(i_cose) * signed(dxx) + signed(i_sine) * signed(dyy)); -- Old
+                    dx_next <= std_logic_vector(shift_right(signed(i_cose) * signed(dxx) + signed(i_sine) * signed(dyy), 30)); -- Adjusted for fixed-point
                     dy_next <= std_logic_vector(signed(i_sine) * signed(dxx) - signed(i_cose) * signed(dyy));
                     state_next <= SetOrientations;
                     
@@ -458,33 +404,27 @@ begin
 --PROVERITI GDE IDE _NEXT A GDE NE IDE
 				when UpdateIndexArray =>
                 	if ri >= 0 and ri < INDEX_SIZE and ci >= 0 and ci < INDEX_SIZE then
-                        indexMatrix(to_integer(ri), to_integer(ci), to_integer(ori1)) <= indexMatrix(to_integer(ri), to_integer(ci), to_integer(ori1)) + to_integer(signed(cweight1));
-                        indexMatrix(to_integer(ri), to_integer(ci), to_integer(ori2)) <= indexMatrix(to_integer(ri), to_integer(ci), to_integer(ori2)) + to_integer(signed(cweight2));
+                        index1D[ri * (INDEX_SIZE * 4) + ci * 4 + ori1] += cweight1;
+			            index1D[ri * (INDEX_SIZE * 4) + ci * 4 + ori2] += cweight2;
+                    	
                     	state_next <= CheckNextColumn;
                 	end if;
 
 				when CheckNextColumn =>
 					if ci + 1 < INDEX_SIZE then
-                        indexMatrix(to_integer(ri), to_integer(ci) + 1, to_integer(ori1)) <= 
-            indexMatrix(to_integer(ri), to_integer(ci) + 1, to_integer(ori1)) + 
-            to_integer(unsigned(rweight1)) * to_integer(unsigned(cfrac));
-
-        indexMatrix(to_integer(ri), to_integer(ci) + 1, to_integer(ori2)) <= 
-            indexMatrix(to_integer(ri), to_integer(ci) + 1, to_integer(ori2)) + 
-            to_integer(unsigned(rweight2)) * to_integer(unsigned(cfrac));
+                        index1D[ri * (INDEX_SIZE * 4) + (ci + 1) * 4 + ori1] += rweight1 * cfrac;
+			            index1D[ri * (INDEX_SIZE * 4) + (ci + 1) * 4 + ori2] += rweight2 * cfrac;
+			            
                         state_next <= CheckNextRow;
 					end if;
 	
 				when CheckNextRow =>
 					if ri + 1 < INDEX_SIZE then
-						 indexMatrix(to_integer(ri) + 1, to_integer(ci), to_integer(ori1)) <= 
-            indexMatrix(to_integer(ri) + 1, to_integer(ci), to_integer(ori1)) + 
-            to_integer(signed(dx)) * to_integer(signed(rfrac)) * (1 - to_integer(signed(cfrac)));
-
-        indexMatrix(to_integer(ri) + 1, to_integer(ci), to_integer(ori2)) <= 
-            indexMatrix(to_integer(ri) + 1, to_integer(ci), to_integer(ori2)) + 
-            to_integer(signed(dy)) * to_integer(signed(rfrac)) * (1 - to_integer(signed(cfrac)));			
-						end if;
+						 index1D[(ri + 1) * (INDEX_SIZE * 4) + ci * 4 + ori1] += dx * rfrac * (1.0 - cfrac);
+			             index1D[(ri + 1) * (INDEX_SIZE * 4) + ci * 4 + ori2] += dy * rfrac * (1.0 - cfrac);	
+			             	
+					end if;
+					
 					state_next <= NextSample;
 --- OD 0 DO 2*IRADIUS	
 				when NextSample =>
