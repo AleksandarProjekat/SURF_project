@@ -3,9 +3,11 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 entity rom is
-    generic (WIDTH: positive := 32;
-             SIZE: positive := 40;  -- Match the number of lookup values
-             SIZE_WIDTH: positive := 6);  -- Log2(40) rounded up for addressing
+    generic (
+        WIDTH: positive := 48;  -- Izmenjena sirina da odgovara formatu
+        SIZE: positive := 40;   -- Broj lookup vrijednosti
+        SIZE_WIDTH: positive := 6  -- Log2(40) za adresiranje
+    );
     port (
         clk_a : in std_logic;
         clk_b : in std_logic;
@@ -21,13 +23,46 @@ end rom;
 architecture Behavioral of rom is
     type rom_type is array (0 to SIZE - 1) of std_logic_vector(WIDTH - 1 downto 0);
     signal ROM: rom_type := (
-        X"783EAFEF", X"6A1DA04B", X"5DA594B7", X"52A49C64", X"48EEA4C3", X"405CC8FF", 
-        X"38CCB63C", X"32202217", X"2C3C515A", X"2709ACE4", X"22736336", X"1E67150B", 
-        X"1AD48BC2", X"17AD7873", X"14E53A9C", X"1270AD90", X"1045FBD3", X"0E5C77BB", 
-        X"0CAC78AB", X"0B2F3C65", X"09DECBFD", X"08B5E3F0", X"07AFDF11", X"06C8A3EF", 
-        X"05FC946A", X"05487F33", X"04A99306", X"041D535C", X"03A18E7D", X"033454B1", 
-        X"02D3F07D", X"027EDFD1", X"0233CDF9", X"01F18E48", X"01B71769", X"01837F31", 
-        X"0155F6FA", X"012DC868", X"010A528A", X"00EB075A"
+        x"00003c1f5000",
+        x"0000350ed000",
+        x"00002ed2c000",
+        x"000029524000",
+        x"000024775000",
+        x"0000202e6000",
+        x"00001c665000",
+        x"000019101000",
+        x"0000161e2000",
+        x"00001384d000",
+        x"00001139b000",
+        x"00000f338000",
+        x"00000d6a4000",
+        x"00000bd6b000",
+        x"00000a729000",
+        x"000009385000",
+        x"00000822f000",
+        x"0000072e3000",
+        x"000006563000",
+        x"000005979000",
+        x"000004ef6000",
+        x"0000045af000",
+        x"000003d7e000",
+        x"000003645000",
+        x"000002fe4000",
+        x"000002a43000",
+        x"00000254c000",
+        x"0000020ea000",
+        x"000001d0c000",
+        x"0000019a2000",
+        x"00000169f000",
+        x"0000013f6000",
+        x"00000119e000",
+        x"000000f8c000",
+        x"000000db8000",
+        x"000000c1b000",
+        x"000000aaf000",
+        x"00000096e000",
+        x"000000852000",
+        x"000000758000"
     );
     attribute ram_style : string;
     attribute ram_style of ROM : signal is "block";

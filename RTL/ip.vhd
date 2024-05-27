@@ -34,6 +34,7 @@ entity ip is
         LOOKUP2_SIZE : integer := 40;     -- Size of the lookup table
         IMG_WIDTH : integer := 128;       -- Width of the image
         IMG_HEIGHT : integer := 128       -- Height of the image
+        --
     );
     port (
         i_height : in unsigned(WIDTH - 1 downto 0);
@@ -52,12 +53,15 @@ entity ip is
         scale : in std_logic_vector(FIXED_SIZE - 1 downto 0);
         ---------------MEM INTERFEJS ZA SLIKU--------------------
 		addr_di_o : out std_logic_vector (4 * WIDTH - 1 downto 0);
-		data_i : in std_logic_vector (3 * WIDTH - 1 downto 0);
+		data_i : in std_logic_vector (7 downto 0);
 		ctrl_data_o : out std_logic;
 		---------------MEM INTERFEJS ZA IZLAZ--------------------
 		addr_do_o : out std_logic_vector (4 * WIDTH - 1 downto 0);
 		data_o : out std_logic_vector (3 * WIDTH - 1 downto 0);
 		c_data_o : out std_logic;
+		---------------INTERFEJS ZA ROM--------------------
+        rom_addr : out std_logic_vector(5 downto 0);  -- Izlazna adresa za ROM, pretpostavlja se 6 bita za adresiranje
+        rom_data : in std_logic_vector(FIXED_SIZE - 1 downto 0);  -- Ulazni podaci iz ROM-a
 		---------------KOMANDNI INTERFEJS------------------------
         start_i : in std_logic;
          ---------------STATUSNI INTERFEJS------------------------
@@ -67,22 +71,8 @@ end ip;
 
 
 architecture Behavioral of ip is
--- Define the type for the lookup table
-    type lookup_table_type is array (0 to LOOKUP2_SIZE-1) of std_logic_vector(15 downto 0);
 
-    -- Define the constant lookup table
-    constant lookupTable2 : lookup_table_type := (
-        "1111000001100111", "1110000100010001", "1101010101000111", "1100101000111110",
-        "1011111001010001", "1011011000110101", "1010110011100110", "1010010001000101",
-        "1001110100101000", "1001011111011000", "1001000110011011", "1000110010111100",
-        "1000011100011111", "1000001011100011", "0111111101101100", "0111110001010000",
-        "0111100101000100", "0111011010010001", "0111010000100011", "0111000111111110",
-        "0110111111011001", "0110111000100111", "0110110010110111", "0110101101100101",
-        "0110101000101111", "0110100011101110", "0110011111001010", "0110011010110101",
-        "0110010110101011", "0110010010100110", "0110001110111001", "0110001011010011",
-        "0110000111101100", "0110000100100111", "0110000001011111", "0101111110100000",
-        "0101111011101000", "0101111000111000", "0101110110010001", "0101110011101000"
-    );
+
 	type state_type is (idle, StartLoop, InnerLoop, BoundaryCheck, PositionValidation, ProcessSample,
 		ComputeDerivatives, CalculateDerivatives, ApplyOrientationTransform,
 		SetOrientations, UpdateIndex, ComputeWeights, UpdateIndexArray, CheckNextColumn, CheckNextRow,
@@ -113,6 +103,8 @@ architecture Behavioral of ip is
     signal dxx1_next, dxx2_next, dyy1_next, dyy2_next : std_logic_vector(FIXED_SIZE-1 downto 0);
 
     signal done : std_logic;
+    
+    signal pixels1D : std_logic_vector(IMG_WIDTH * IMG_HEIGHT * 8 - 1 downto 0);
 
 begin
 	--State and data registers
@@ -221,7 +213,10 @@ begin
         cpos_next <= cpos;
    
    --VIDETI NA KOJE VREDNOSTI IDU addr_di_o    addr_do_o
-        --    addr_di_o <= --std_logic_vector ((i_reg * unsigned(cols_i) + j_reg) * 4);
+      
+        addr_di_o <= std_logic_vector(unsigned(r) * unsigned(i_width) + unsigned(c));
+        pixels1D(to_integer(unsigned(r) * unsigned(i_width) + unsigned(c)) * 3 + 2 downto to_integer(unsigned(r) * unsigned(i_width) + unsigned(c)) * 3) <= data_i;
+
 		--	addr_do_o <= --std_logic_vector((i_reg * unsigned(cols_i) + j_reg) * 4);		
 
 			ctrl_data_o <= '1';
@@ -309,30 +304,30 @@ rpos_next <= std_logic_vector(
 					end if;
 	
 				when ProcessSample =>
-					weight_next <= lookupTable2(to_integer(unsigned(rpos) * unsigned(rpos) + unsigned(cpos) * unsigned(cpos)));
+					rom_addr <= std_logic_vector(to_unsigned(to_integer(unsigned(rpos) * unsigned(rpos) + unsigned(cpos) * unsigned(cpos)), 6)); -- Izra?unavanje adrese za ROM
+                    weight_next <= rom_data;  -- ?itanje težine direktno iz ROM-a
 					state_next <= ComputeDerivatives;
 	
 				when ComputeDerivatives =>
-                        dxx1 = pixels1D[(r + addSampleStep + 1) * i_width + (c + addSampleStep + 1)] 
-                             + pixels1D[(r - addSampleStep) * i_width + c]
-                             - pixels1D[(r - addSampleStep) * i_width + (c + addSampleStep + 1)]
-                             - pixels1D[(r + addSampleStep + 1) * i_width + c];
-         
-                        dxx2 = pixels1D[(r + addSampleStep + 1) * i_width + (c + 1)]
-                             + pixels1D[(r - addSampleStep) * i_width + (c - addSampleStep)]
-                             - pixels1D[(r - addSampleStep) * i_width + (c + 1)]
-                             - pixels1D[(r + addSampleStep + 1) * i_width + (c - addSampleStep)];
-        
-                        dyy1 = pixels1D[(r + 1) * i_width + (c + addSampleStep + 1)]
-                             + pixels1D[(r - addSampleStep) * i_width + (c - addSampleStep)]
-                             - pixels1D[(r - addSampleStep) * i_width + (c + addSampleStep + 1)]
-                             - pixels1D[(r + 1) * i_width + (c - addSampleStep)];
-         
-                        dyy2 = pixels1D[(r + addSampleStep + 1) * i_width + (c + addSampleStep + 1)]
-                             + pixels1D[r * i_width + (c - addSampleStep)]
-                             - pixels1D[r * i_width + (c + addSampleStep + 1)]
-                             - pixels1D[(r + addSampleStep + 1) * i_width + (c - addSampleStep)];             
-	
+                        dxx1_next <= pixels1D(to_integer((unsigned(r) + unsigned(addSampleStep) + 1) * unsigned(i_width) + (unsigned(c) + unsigned(addSampleStep) + 1)) * 3 + 2 downto to_integer((unsigned(r) + unsigned(addSampleStep) + 1) * unsigned(i_width) + (unsigned(c) + unsigned(addSampleStep) + 1)) * 3)
+                      + pixels1D(to_integer((unsigned(r) - unsigned(addSampleStep)) * unsigned(i_width) + unsigned(c)) * 3 + 2 downto to_integer((unsigned(r) - unsigned(addSampleStep)) * unsigned(i_width) + unsigned(c)) * 3)
+                      - pixels1D(to_integer((unsigned(r) - unsigned(addSampleStep)) * unsigned(i_width) + (unsigned(c) + unsigned(addSampleStep) + 1)) * 3 + 2 downto to_integer((unsigned(r) - unsigned(addSampleStep)) * unsigned(i_width) + (unsigned(c) + unsigned(addSampleStep) + 1)) * 3)
+                      - pixels1D(to_integer((unsigned(r) + unsigned(addSampleStep) + 1) * unsigned(i_width) + unsigned(c)) * 3 + 2 downto to_integer((unsigned(r) + unsigned(addSampleStep) + 1) * unsigned(i_width) + unsigned(c)) * 3);
+
+                dxx2_next <= pixels1D(to_integer((unsigned(r) + unsigned(addSampleStep) + 1) * unsigned(i_width) + (unsigned(c) + 1)) * 3 + 2 downto to_integer((unsigned(r) + unsigned(addSampleStep) + 1) * unsigned(i_width) + (unsigned(c) + 1)) * 3)
+                      + pixels1D(to_integer((unsigned(r) - unsigned(addSampleStep)) * unsigned(i_width) + (unsigned(c) - unsigned(addSampleStep))) * 3 + 2 downto to_integer((unsigned(r) - unsigned(addSampleStep)) * unsigned(i_width) + (unsigned(c) - unsigned(addSampleStep))) * 3)
+                      - pixels1D(to_integer((unsigned(r) - unsigned(addSampleStep)) * unsigned(i_width) + (unsigned(c) + 1)) * 3 + 2 downto to_integer((unsigned(r) - unsigned(addSampleStep)) * unsigned(i_width) + (unsigned(c) + 1)) * 3)
+                      - pixels1D(to_integer((unsigned(r) + unsigned(addSampleStep) + 1) * unsigned(i_width) + (unsigned(c) - unsigned(addSampleStep))) * 3 + 2 downto to_integer((unsigned(r) + unsigned(addSampleStep) + 1) * unsigned(i_width) + (unsigned(c) - unsigned(addSampleStep))) * 3);
+
+                dyy1_next <= pixels1D(to_integer((unsigned(r) + 1) * unsigned(i_width) + (unsigned(c) + unsigned(addSampleStep) + 1)) * 3 + 2 downto to_integer((unsigned(r) + 1) * unsigned(i_width) + (unsigned(c) + unsigned(addSampleStep) + 1)) * 3)
+                      + pixels1D(to_integer((unsigned(r) - unsigned(addSampleStep)) * unsigned(i_width) + (unsigned(c) - unsigned(addSampleStep))) * 3 + 2 downto to_integer((unsigned(r) - unsigned(addSampleStep)) * unsigned(i_width) + (unsigned(c) - unsigned(addSampleStep))) * 3)
+                      - pixels1D(to_integer((unsigned(r) - unsigned(addSampleStep)) * unsigned(i_width) + (unsigned(c) + unsigned(addSampleStep) + 1)) * 3 + 2 downto to_integer((unsigned(r) - unsigned(addSampleStep)) * unsigned(i_width) + (unsigned(c) + unsigned(addSampleStep) + 1)) * 3)
+                      - pixels1D(to_integer((unsigned(r) + 1) * unsigned(i_width) + (unsigned(c) - unsigned(addSampleStep))) * 3 + 2 downto to_integer((unsigned(r) + 1) * unsigned(i_width) + (unsigned(c) - unsigned(addSampleStep))) * 3);
+
+                dyy2_ne <= pixels1D(to_integer((unsigned(r) + unsigned(addSampleStep) + 1) * unsigned(i_width) + (unsigned(c) + unsigned(addSampleStep) + 1)) * 3 + 2 downto to_integer((unsigned(r) + unsigned(addSampleStep) + 1) * unsigned(i_width) + (unsigned(c) + unsigned(addSampleStep) + 1)) * 3)
+                      + pixels1D(to_integer(unsigned(r) * unsigned(i_width) + (unsigned(c) - unsigned(addSampleStep))) * 3 + 2 downto to_integer(unsigned(r) * unsigned(i_width) + (unsigned(c) - unsigned(addSampleStep))) * 3)
+                      - pixels1D(to_integer(unsigned(r) * unsigned(i_width) + (unsigned(c) + unsigned(addSampleStep) + 1)) * 3 + 2 downto to_integer(unsigned(r) * unsigned(i_width) + (unsigned(c) + unsigned(addSampleStep) + 1)) * 3)
+                      - pixels1D(to_integer((unsigned(r) + unsigned(addSampleStep) + 1) * unsigned(i_width) + (unsigned(c) - unsigned(addSampleStep))) * 3 + 2 downto to_integer((unsigned(r) + unsigned(addSampleStep) + 1) * unsigned(i_width) + (unsigned(c) - unsigned(addSampleStep))) * 3);
 	            when CalculateDerivatives =>
 	               dxx_next <= weight * (dxx1 - dxx2);
 	               dyy_next <= weight * (dyy1 - dyy2);
