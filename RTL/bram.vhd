@@ -3,7 +3,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 use ieee.numeric_std.all;
 
 entity bram is
-    generic ( WIDTH: integer := 11;
+    generic ( WIDTH: integer := 8;
             BRAM_SIZE : integer := 80000
  );    
     port (    
@@ -25,7 +25,7 @@ entity bram is
 end bram;
 
 architecture Behavioral of bram is
---type ram_type is array ( (2**(2*WIDTH))-1 downto 0) of std_logic_vector(3*WIDTH-1 downto 0);
+
 type ram_type is array (BRAM_SIZE-1 downto 0) of std_logic_vector(3*WIDTH-1 downto 0);
 shared variable RAM: ram_type;
 begin

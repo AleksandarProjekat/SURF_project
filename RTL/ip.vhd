@@ -335,8 +335,10 @@ rpos_next <= std_logic_vector(
                         state_next <= CalculateDerivatives;
                         
 	            when CalculateDerivatives =>
-	               dxx_next <= weight * (dxx1 - dxx2);
-	               dyy_next <= weight * (dyy1 - dyy2);
+	            
+	                dxx_next <= std_logic_vector(signed(weight) * (signed(dxx1) - signed(dxx2)));
+                    dyy_next <= std_logic_vector(signed(weight) * (signed(dyy1) - signed(dyy2)));
+
 	               state_next <= ApplyOrientationTransform;
 	               
 				when ApplyOrientationTransform =>
@@ -405,11 +407,11 @@ rpos_next <= std_logic_vector(
 --PROVERITI GDE IDE _NEXT A GDE NE IDE
 				 when UpdateIndexArray =>
                 if ri >= 0 and ri < INDEX_SIZE and ci >= 0 and ci < INDEX_SIZE then
-                    addr_do1_o <= std_logic_vector(to_unsigned(ri * (INDEX_SIZE * 4) + ci * 4 + ori1, addr_do1_o'length));
+                    addr_do1_o <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori1)), addr_do1_o'length));
                     data1_o <= cweight1;
                     c1_data_o <= '1';
 
-                    addr_do2_o <= std_logic_vector(to_unsigned(ri * (INDEX_SIZE * 4) + ci * 4 + ori2, addr_do2_o'length));
+                    addr_do2_o <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori2)), addr_do1_o'length));
                     data2_o <= cweight2;
                     c2_data_o <= '1';
 
@@ -418,12 +420,12 @@ rpos_next <= std_logic_vector(
 
             when CheckNextColumn =>
                 if ci + 1 < INDEX_SIZE then
-                    addr_do1_o <= std_logic_vector(to_unsigned(ri * (INDEX_SIZE * 4) + (ci + 1) * 4 + ori1, addr_do1_o'length));
-                    data1_o <= rweight1 * cfrac;
+                    addr_do1_o <= std_logic_vector(to_unsigned(to_integer(unsigned(ri)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci+1)) * 4 + to_integer(unsigned(ori1)), addr_do1_o'length));
+                    data1_o <= std_logic_vector(signed(rweight1) * signed(cfrac));
                     c1_data_o <= '1';
 
-                    addr_do2_o <= std_logic_vector(to_unsigned(ri * (INDEX_SIZE * 4) + (ci + 1) * 4 + ori2, addr_do2_o'length));
-                    data2_o <= rweight2 * cfrac;
+                    addr_do2_o <= std_logic_vector(to_unsigned(to_integer(unsigned(ri)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci+1)) * 4 + to_integer(unsigned(ori2)), addr_do2_o'length));
+                    data2_o <= std_logic_vector(signed(rweight2) * signed(cfrac));
                     c2_data_o <= '1';
 
                     state_next <= CheckNextRow;
@@ -431,12 +433,12 @@ rpos_next <= std_logic_vector(
 
             when CheckNextRow =>
                if ri + 1 < INDEX_SIZE then
-                    addr_do1_o <= std_logic_vector(to_unsigned((ri + 1) * (INDEX_SIZE * 4) + ci * 4 + ori1, addr_do1_o'length));
-                    data1_o <= dx * rfrac * (1.0 - cfrac);
+                    addr_do1_o <= std_logic_vector(to_unsigned(to_integer(unsigned(ri+1)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori1)), addr_do1_o'length));
+                    data1_o <= std_logic_vector(signed(dx) * signed(rfrac) * (to_signed(1, cfrac'length) - signed(cfrac)));
                     c1_data_o <= '1';
 
-                    addr_do2_o <= std_logic_vector(to_unsigned((ri + 1) * (INDEX_SIZE * 4) + ci * 4 + ori2, addr_do2_o'length));
-                    data2_o <= dy * rfrac * (1.0 - cfrac);
+                    addr_do2_o <= std_logic_vector(to_unsigned(to_integer(unsigned(ri+1)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori2)), addr_do2_o'length));
+                    data2_o <= std_logic_vector(signed(dy) * signed(rfrac) * (to_signed(1, cfrac'length) - signed(cfrac)));
                     c2_data_o <= '1';
                 end if;
                 
