@@ -57,10 +57,10 @@ entity ip is
 		ctrl_data_o : out std_logic;
 		---------------MEM INTERFEJS ZA IZLAZ--------------------
 		addr_do1_o : out std_logic_vector (4 * WIDTH - 1 downto 0);
-        data1_o : out std_logic_vector (3 * WIDTH - 1 downto 0);
+        data1_o_reg, data1_o_next : inout std_logic_vector (3 * WIDTH - 1 downto 0);
         c1_data_o : out std_logic;
         addr_do2_o : out std_logic_vector (4 * WIDTH - 1 downto 0);
-        data2_o : out std_logic_vector (3 * WIDTH - 1 downto 0);
+        data2_o_reg, data2_o_next : inout std_logic_vector (3 * WIDTH - 1 downto 0);
         c2_data_o : out std_logic;
 		---------------INTERFEJS ZA ROM--------------------
         rom_addr : out std_logic_vector(5 downto 0);  -- Izlazna adresa za ROM, pretpostavlja se 6 bita za adresiranje
@@ -94,7 +94,7 @@ architecture Behavioral of ip is
 	signal r_next, c_next : unsigned(WIDTH - 1 downto 0);	
 	signal addSampleStep, addSampleStep_next : unsigned(WIDTH - 1 downto 0);		
 	signal rpos, cpos : std_logic_vector(FIXED_SIZE-1 downto 0);
-    signal rpos_next, cpos_next : std_logic_vector(FIXED_SIZE-1 downto 0);
+    signal rpos_next, cpos_next : std_logic_vector(FIXED_SIZE-1 downto 0); --AKO SE MNOZE DVA BROJA ONDA CE ZA REZULTAT ICI 2*FIXED_SIZE
     signal rx, cx, rfrac, cfrac, dx, dy, dxx, dyy, weight :  std_logic_vector(FIXED_SIZE-1 downto 0);
     signal rx_next, cx_next, rfrac_next, cfrac_next, dx_next, dy_next, dxx_next, dyy_next, weight_next : std_logic_vector(FIXED_SIZE-1 downto 0);
     signal rweight1, rweight2, cweight1, cweight2 : std_logic_vector(FIXED_SIZE-1 downto 0);
@@ -144,8 +144,10 @@ begin
             dyy1 <= (others => '0');
             dyy2 <= (others => '0');
             
+            data1_o_reg <= (others => '0');
+            data2_o_reg <= (others => '0');
             
-            
+           
 		elsif (rising_edge(clk)) then
 			state_reg <= state_next;
             i_reg <= i_next;
@@ -177,6 +179,10 @@ begin
 			dxx2 <= dxx2_next; 
 			dyy1 <= dyy1_next; 
 			dyy2 <= dyy2_next;
+			
+			data1_o_reg <= data1_o_next;
+			data2_o_reg <= data2_o_next;
+
         end if;
 	end process;
 
@@ -216,17 +222,15 @@ begin
         rpos_next <= rpos;
         cpos_next <= cpos;
    
-   --VIDETI NA KOJE VREDNOSTI IDU addr_di_o    addr_do_o
-      
-
-		--	addr_do_o <= --std_logic_vector((i_reg * unsigned(cols_i) + j_reg) * 4);		
-
-			ctrl_data_o <= '1';
+        data1_o_next <= data1_o_reg;
+        data2_o_next <= data2_o_reg;
+  
+    	ctrl_data_o <= '1';
 			
 			c1_data_o <= '0';
             c2_data_o <= '0';
-            data1_o <= (others => '0');
-            data2_o <= (others => '0');
+            data1_o_reg <= (others => '0');
+            data1_o_reg <= (others => '0');
 
 			ready_o <= '0';
  
@@ -247,23 +251,18 @@ begin
 				when InnerLoop =>
 						-- Compute positions
 						
-rpos_next <= std_logic_vector(
-    resize(
-        to_unsigned(
-            shift_right(
-                to_integer(
-                    unsigned(step) * (  -- Convert 'step' to integer after casting to unsigned
-                        to_integer(unsigned(i_cose)) * (to_integer(unsigned(i_reg)) - to_integer(unsigned(iradius))) + 
-                        to_integer(unsigned(i_sine)) * (to_integer(unsigned(j_reg)) - to_integer(unsigned(iradius))) -
-                        to_integer(unsigned(fracr))
-                    )
-                ), 30  -- Shift right to adjust the fixed-point scale
-            ) / to_integer(unsigned(spacing)),  -- Division by 'spacing' after converting it to integer
-            FIXED_SIZE  -- Resize to the FIXED_SIZE
-        ), 
-        FIXED_SIZE  -- Ensure the final output matches the fixed size needed
-    )
-);
+                        rpos_next <= std_logic_vector(
+                            resize(
+                                to_unsigned(
+                                    (to_integer(unsigned(step)) *
+                                     (-to_integer(unsigned(i_cose)) * (to_integer(signed(i_reg)) - to_integer(signed(iradius))) + 
+                                      to_integer(unsigned(i_sine)) * (to_integer(signed(j_reg)) - to_integer(signed(iradius)))) -
+                                     to_integer(unsigned(fracc))) / to_integer(unsigned(spacing)),
+                                FIXED_SIZE
+                            ),
+                            FIXED_SIZE
+                        ));
+
 
 
 
@@ -312,10 +311,13 @@ rpos_next <= std_logic_vector(
 					state_next <= ComputeDerivatives;
 	
 				when ComputeDerivatives =>
+				--20 LABELA, U SVAKOJ LABELI DA CITA PO JEDNU ADRESU, A ADRESA REGISTAR JE ISTA  TJ addr_di_o
                        dxx1 = _pixels1D[(r + addSampleStep + 1) * _width + (c + addSampleStep + 1)] 
                              + _pixels1D[(r - addSampleStep) * _width + c]
                              - _pixels1D[(r - addSampleStep) * _width + (c + addSampleStep + 1)]
                              - _pixels1D[(r + addSampleStep + 1) * _width + c];
+                            
+                             addr_di_o <= std_logic_vector((r + addSampleStep + 1) * _width + (c + addSampleStep + 1)) + 
          
                         dxx2 = _pixels1D[(r + addSampleStep + 1) * _width + (c + 1)]
                              + _pixels1D[(r - addSampleStep) * _width + (c - addSampleStep)]
@@ -408,11 +410,11 @@ rpos_next <= std_logic_vector(
 				 when UpdateIndexArray =>
                 if ri >= 0 and ri < INDEX_SIZE and ci >= 0 and ci < INDEX_SIZE then
                     addr_do1_o <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori1)), addr_do1_o'length));
-                    data1_o <= cweight1;
+                    data1_o_next <= data1_o_reg + cweight1;
                     c1_data_o <= '1';
 
                     addr_do2_o <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori2)), addr_do1_o'length));
-                    data2_o <= cweight2;
+                    data2_o_next <= data1_o_reg + cweight2;
                     c2_data_o <= '1';
 
                     state_next <= CheckNextColumn;
@@ -421,11 +423,11 @@ rpos_next <= std_logic_vector(
             when CheckNextColumn =>
                 if ci + 1 < INDEX_SIZE then
                     addr_do1_o <= std_logic_vector(to_unsigned(to_integer(unsigned(ri)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci+1)) * 4 + to_integer(unsigned(ori1)), addr_do1_o'length));
-                    data1_o <= std_logic_vector(signed(rweight1) * signed(cfrac));
+                    data1_o_next <= data1_o_reg + std_logic_vector(signed(rweight1) * signed(cfrac));
                     c1_data_o <= '1';
 
                     addr_do2_o <= std_logic_vector(to_unsigned(to_integer(unsigned(ri)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci+1)) * 4 + to_integer(unsigned(ori2)), addr_do2_o'length));
-                    data2_o <= std_logic_vector(signed(rweight2) * signed(cfrac));
+                    data2_o_next <= data1_o_reg + std_logic_vector(signed(rweight2) * signed(cfrac));
                     c2_data_o <= '1';
 
                     state_next <= CheckNextRow;
@@ -434,11 +436,11 @@ rpos_next <= std_logic_vector(
             when CheckNextRow =>
                if ri + 1 < INDEX_SIZE then
                     addr_do1_o <= std_logic_vector(to_unsigned(to_integer(unsigned(ri+1)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori1)), addr_do1_o'length));
-                    data1_o <= std_logic_vector(signed(dx) * signed(rfrac) * (to_signed(1, cfrac'length) - signed(cfrac)));
+                    data1_o_next <= data1_o_reg + std_logic_vector(signed(dx) * signed(rfrac) * (to_signed(1, cfrac'length) - signed(cfrac)));
                     c1_data_o <= '1';
 
                     addr_do2_o <= std_logic_vector(to_unsigned(to_integer(unsigned(ri+1)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori2)), addr_do2_o'length));
-                    data2_o <= std_logic_vector(signed(dy) * signed(rfrac) * (to_signed(1, cfrac'length) - signed(cfrac)));
+                    data2_o_next <= data2_o_reg + std_logic_vector(signed(dy) * signed(rfrac) * (to_signed(1, cfrac'length) - signed(cfrac)));
                     c2_data_o <= '1';
                 end if;
                 
