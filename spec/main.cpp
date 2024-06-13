@@ -355,14 +355,14 @@ void createVector(double scale, double row, double col) {
   
     // Examine all points from the gradient image that could lie within the
     // _index square.
-    for (int i = -iradius; i <= iradius; i++)
-        for (int j = -iradius; j <= iradius; j++) {
+	for (int i = 0; i <= 2 * iradius; i++) {
+        	for (int j = 0; j <= 2 * iradius; j++) {
       
             // Rotate sample offset to make it relative to key orientation.
             // Uses (x,y) coords.  Also, make subpixel correction as later image
             // offset must be an integer.  Divide by spacing to put in _index units.
-            rpos = (step*(_cose * i + _sine * j) - fracr) / spacing;
-            cpos = (step*(- _sine * i + _cose * j) - fracc) / spacing;
+            rpos = (step*(_cose * (i - iradius) + _sine * (j - iradius)) - fracr) / spacing;
+            cpos = (step*(- _sine * (i - iradius) + _cose * (j - iradius)) - fracc) / spacing;
 
             // Compute location of sample in terms of real-valued _index array
             // coordinates.  Subtract 0.5 so that rx of 1.0 means to put full
@@ -374,10 +374,11 @@ void createVector(double scale, double row, double col) {
             if (rx > -1.0 && rx < (double) _IndexSize  &&
                 cx > -1.0 && cx < (double) _IndexSize) {
 
-                num_i r = iy + i*step;
-                num_i c = ix + j*step;
-		num_i ori1, ori2;
+                num_i r = iy + (i - iradius) * step;
+                num_i c = ix + (j - iradius) * step;
+                num_i ori1, ori2;
                 num_i ri, ci;
+
 
                 num_i addSampleStep = int(scale);
 
