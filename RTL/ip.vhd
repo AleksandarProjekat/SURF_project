@@ -504,7 +504,7 @@ begin
                     c1_data_o <= '1';
 
                     addr_do2_o <= std_logic_vector(to_unsigned(to_integer(unsigned(ri)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci+1)) * 4 + to_integer(unsigned(ori2)), addr_do2_o'length));
-                    data2_o_next_int <= std_logic_vector(unsigned(data1_o_reg) + unsigned(cweight2) * to_unsigned(to_integer(signed(cfrac)), cweight2'length));
+                    data2_o_next_int <= std_logic_vector(unsigned(data2_o_reg) + unsigned(cweight2) * to_unsigned(to_integer(signed(cfrac)), cweight2'length));
                     c2_data_o <= '1';
 
                     state_next <= CheckNextRow;
