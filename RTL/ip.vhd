@@ -54,7 +54,7 @@ entity ip is
         bram_we2_o : out std_logic;
         ---------------MEM INTERFEJS ZA IZLAZ--------------------
         addr_do1_o : out std_logic_vector (5 downto 0);
-        data1_o_next : out std_logic_vector (2* FIXED_SIZE - 1 downto 0);
+        data1_o_next : out std_logic_vector (2*FIXED_SIZE - 1 downto 0);
         c1_data_o : out std_logic;
         addr_do2_o : out std_logic_vector (5 downto 0);
         data2_o_next : out std_logic_vector (2*FIXED_SIZE - 1 downto 0);
@@ -69,13 +69,11 @@ entity ip is
     );
 end ip;
 
-
-
 architecture Behavioral of ip is
     -- Definisanje internog signala za kombinatornu logiku
     signal data1_o_next_int, data2_o_next_int : std_logic_vector (2*FIXED_SIZE - 1 downto 0);  -- Interne signale za kombinatornu logiku
 
-   type state_type is (
+    type state_type is (
         idle, StartLoop, InnerLoop, 
         ComputeRPos1, ComputeRPos2, ComputeRPos3, ComputeRPos4, ComputeRPos5,
         ComputeCPos1, ComputeCPos2, ComputeCPos3, ComputeCPos4, ComputeCPos5,
@@ -87,42 +85,38 @@ architecture Behavioral of ip is
         NextSample, IncrementI, Finish
     );
 
-
-    -- za SIGNALE VIDETI KOJI JE TIP I SIRINA
     signal state_reg, state_next : state_type;
 
-
     signal bram_data1, bram_data2 : std_logic_vector(7 downto 0);
-    signal dxx1_sum_next, dxx2_sum_next, dyy1_sum_next, dyy2_sum_next : std_logic_vector(FIXED_SIZE-1 downto 0); -- Accumulators for sum of BRAM data
-    signal dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg : std_logic_vector(FIXED_SIZE-1 downto 0);
+    signal dxx1_sum_next, dxx2_sum_next, dyy1_sum_next, dyy2_sum_next : std_logic_vector(2*FIXED_SIZE-1 downto 0); -- Accumulators for sum of BRAM data
+    signal dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg : std_logic_vector(2*FIXED_SIZE-1 downto 0);
 
-    signal data1_o_reg, data2_o_reg : std_logic_vector (2*FIXED_SIZE - 1 downto 0);  -- KOLIKA SIRINA
-
+    signal data1_o_reg, data2_o_reg : std_logic_vector (2*FIXED_SIZE - 1 downto 0);  -- Prilago?avanje širine signala
 
     signal i_reg, i_next : unsigned(WIDTH - 1 downto 0) := to_unsigned(23, WIDTH); -- STA OVDE IDE
     signal j_reg, j_next : unsigned(WIDTH - 1 downto 0) := to_unsigned(23, WIDTH);
     
-    signal temp1_rpos_reg, temp1_rpos_next, temp2_rpos_reg, temp2_rpos_next : std_logic_vector(FIXED_SIZE-1 downto 0);
-    signal temp3_rpos_reg, temp3_rpos_next, temp4_rpos_reg, temp4_rpos_next : std_logic_vector(FIXED_SIZE-1 downto 0);
-    signal temp1_cpos_reg, temp1_cpos_next, temp2_cpos_reg, temp2_cpos_next : std_logic_vector(FIXED_SIZE-1 downto 0);
-    signal temp3_cpos_reg, temp3_cpos_next, temp4_cpos_reg, temp4_cpos_next : std_logic_vector(FIXED_SIZE-1 downto 0);
+    signal temp1_rpos_reg, temp1_rpos_next, temp2_rpos_reg, temp2_rpos_next : std_logic_vector(3*FIXED_SIZE-1 downto 0);
+    signal temp3_rpos_reg, temp3_rpos_next, temp4_rpos_reg, temp4_rpos_next : std_logic_vector(3*FIXED_SIZE-1 downto 0);
+    signal temp1_cpos_reg, temp1_cpos_next, temp2_cpos_reg, temp2_cpos_next : std_logic_vector(3*FIXED_SIZE-1 downto 0);
+    signal temp3_cpos_reg, temp3_cpos_next, temp4_cpos_reg, temp4_cpos_next : std_logic_vector(3*FIXED_SIZE-1 downto 0);
 
     signal ri, ci : unsigned(WIDTH - 1 downto 0);
     signal ri_next, ci_next : unsigned(WIDTH - 1 downto 0);
     signal r, c : signed(WIDTH - 1 downto 0);
     signal r_next, c_next : signed(WIDTH - 1 downto 0);
     signal addSampleStep, addSampleStep_next : unsigned(WIDTH - 1 downto 0);
-    signal rpos, cpos : std_logic_vector(FIXED_SIZE-1 downto 0);
-    signal rpos_next, cpos_next : std_logic_vector(FIXED_SIZE-1 downto 0); -- AKO SE MNOZE DVA BROJA ONDA CE ZA REZULTAT ICI 2*FIXED_SIZE
-    signal rx, cx, rfrac, cfrac, dx, dy, dxx, dyy, weight :  std_logic_vector(FIXED_SIZE-1 downto 0);
-    signal rx_next, cx_next, rfrac_next, cfrac_next, dx_next, dy_next, dxx_next, dyy_next, weight_next : std_logic_vector(FIXED_SIZE-1 downto 0);
-    signal rweight1, rweight2, cweight1, cweight2 : std_logic_vector(FIXED_SIZE-1 downto 0);
-    signal rweight1_next, rweight2_next, cweight1_next, cweight2_next : std_logic_vector(FIXED_SIZE-1 downto 0);
+    signal rpos, cpos : std_logic_vector(3*FIXED_SIZE-1 downto 0);
+    signal rpos_next, cpos_next : std_logic_vector(3*FIXED_SIZE-1 downto 0); -- AKO SE MNOZE DVA BROJA ONDA CE ZA REZULTAT ICI 2*FIXED_SIZE
+    signal rx, cx, rfrac, cfrac, dx, dy, dxx, dyy, weight :  std_logic_vector(2*FIXED_SIZE-1 downto 0);
+    signal rx_next, cx_next, rfrac_next, cfrac_next, dx_next, dy_next, dxx_next, dyy_next, weight_next : std_logic_vector(2*FIXED_SIZE-1 downto 0);
+    signal rweight1, rweight2, cweight1, cweight2 : std_logic_vector(3*FIXED_SIZE-1 downto 0);
+    signal rweight1_next, rweight2_next, cweight1_next, cweight2_next : std_logic_vector(3*FIXED_SIZE-1 downto 0);
     signal ori1, ori2 : unsigned(WIDTH - 1 downto 0);
     signal ori1_next, ori2_next : unsigned(WIDTH - 1 downto 0);
 
-    signal dxx1, dxx2, dyy1, dyy2 : std_logic_vector(FIXED_SIZE-1 downto 0);
-    signal dxx1_next, dxx2_next, dyy1_next, dyy2_next : std_logic_vector(FIXED_SIZE-1 downto 0);
+    signal dxx1, dxx2, dyy1, dyy2 : std_logic_vector(2*FIXED_SIZE-1 downto 0);
+    signal dxx1_next, dxx2_next, dyy1_next, dyy2_next : std_logic_vector(2*FIXED_SIZE-1 downto 0);
 
     signal done : std_logic;
 
@@ -324,11 +318,13 @@ begin
             when ComputeRPos1 =>
             -- rpos = (step*(_cose * (i - iradius) + _sine * (j - iradius)) - fracr) / spacing;
                 temp1_rpos_next <= std_logic_vector(
-                    to_unsigned(
-                        to_integer(unsigned(step)) *
-                        (to_integer(unsigned(i_cose)) *
-                        (to_integer(signed(i_reg)) - to_integer(signed(iradius))))
-                    , FIXED_SIZE
+                    resize(
+                        to_unsigned(
+                            to_integer(unsigned(step)) *
+                            (to_integer(unsigned(i_cose)) *
+                            (to_integer(signed(i_reg)) - to_integer(signed(iradius))))
+                        , 3*FIXED_SIZE
+                    ), 3*FIXED_SIZE
                 ));
                 state_next <= ComputeRPos2;
 
@@ -338,40 +334,48 @@ begin
 
             when ComputeRPos3 =>
                 temp3_rpos_next <= std_logic_vector(
-                    to_unsigned(
-                        to_integer(unsigned(temp2_rpos_reg)) +
-                        (to_integer(unsigned(i_sine)) *
-                        (to_integer(signed(j_reg)) - to_integer(signed(iradius))))
-                    , FIXED_SIZE
+                    resize(
+                        to_unsigned(
+                            to_integer(unsigned(temp2_rpos_reg)) +
+                            (to_integer(unsigned(i_sine)) *
+                            (to_integer(signed(j_reg)) - to_integer(signed(iradius))))
+                        , 3*FIXED_SIZE
+                    ), 3*FIXED_SIZE
                 ));
                 state_next <= ComputeRPos4;
 
             when ComputeRPos4 =>
                 temp4_rpos_next <= std_logic_vector(
-                    to_unsigned(
-                        to_integer(signed(temp3_rpos_reg)) -
-                        to_integer(unsigned(fracr))
-                    , FIXED_SIZE
+                    resize(
+                        to_unsigned(
+                            to_integer(signed(temp3_rpos_reg)) -
+                            to_integer(unsigned(fracr))
+                        , 3*FIXED_SIZE
+                    ), 3*FIXED_SIZE
                 ));
                 state_next <= ComputeRPos5;
 
             when ComputeRPos5 =>
                 rpos_next <= std_logic_vector(
-                    to_unsigned(
-                        to_integer(signed(temp4_rpos_reg)) /
-                        to_integer(unsigned(spacing))
-                    , FIXED_SIZE
+                    resize(
+                        to_unsigned(
+                            to_integer(signed(temp4_rpos_reg)) /
+                            to_integer(unsigned(spacing))
+                        , 3*FIXED_SIZE
+                    ), 3*FIXED_SIZE
                 ));
                 state_next <= ComputeCPos1;
 
             when ComputeCPos1 =>
             --cpos = (step*(- _sine * (i - iradius) + _cose * (j - iradius)) - fracc) / spacing;
                 temp1_cpos_next <= std_logic_vector(
-                    to_unsigned(
-                        to_integer(unsigned(step)) *
-                        (-to_integer(unsigned(i_sine)) *
-                        (to_integer(signed(i_reg)) - to_integer(signed(iradius))))
-                    , FIXED_SIZE
+                    resize(
+                        to_unsigned(
+                            to_integer(unsigned(step)) *
+                            (-to_integer(unsigned(i_sine)) *
+                            (to_integer(signed(i_reg)) - to_integer(signed(iradius))))
+                        , 3*FIXED_SIZE
+                    ), 3*FIXED_SIZE
                 ));
                 state_next <= ComputeCPos2;
 
@@ -381,36 +385,42 @@ begin
 
             when ComputeCPos3 =>
                 temp3_cpos_next <= std_logic_vector(
-                    to_unsigned(
-                        to_integer(unsigned(temp2_cpos_reg)) +
-                        (to_integer(unsigned(i_cose)) *
-                        (to_integer(signed(j_reg)) - to_integer(signed(iradius))))
-                    , FIXED_SIZE
+                    resize(
+                        to_unsigned(
+                            to_integer(unsigned(temp2_cpos_reg)) +
+                            (to_integer(unsigned(i_cose)) *
+                            (to_integer(signed(j_reg)) - to_integer(signed(iradius))))
+                        , 3*FIXED_SIZE
+                    ), 3*FIXED_SIZE
                 ));
                 state_next <= ComputeCPos4;
 
             when ComputeCPos4 =>
                 temp4_cpos_next <= std_logic_vector(
-                    to_unsigned(
-                        to_integer(signed(temp3_cpos_reg)) -
-                        to_integer(unsigned(fracc))
-                    , FIXED_SIZE
+                    resize(
+                        to_unsigned(
+                            to_integer(signed(temp3_cpos_reg)) -
+                            to_integer(unsigned(fracc))
+                        , 3*FIXED_SIZE
+                    ), 3*FIXED_SIZE
                 ));
                 state_next <= ComputeCPos5;
 
             when ComputeCPos5 =>
                 cpos_next <= std_logic_vector(
-                    to_unsigned(
-                        to_integer(signed(temp4_cpos_reg)) /
-                        to_integer(unsigned(spacing))
-                    , FIXED_SIZE
+                    resize(
+                        to_unsigned(
+                            to_integer(signed(temp4_cpos_reg)) /
+                            to_integer(unsigned(spacing))
+                        , 3*FIXED_SIZE
+                    ), 3*FIXED_SIZE
                 ));
                 state_next <= SetRXandCX;
 
-
             when SetRXandCX =>
-                rx_next <= std_logic_vector(to_unsigned(to_integer(unsigned(rpos)), rpos'length) + to_unsigned(0, rpos'length) / 2 - 1);
-                cx_next <= std_logic_vector(to_unsigned(to_integer(unsigned(cpos)), cpos'length) + to_unsigned(0, cpos'length) / 2 - 1);
+                rx_next <= std_logic_vector(resize(to_unsigned(to_integer(unsigned(rpos)), WIDTH), 2*FIXED_SIZE) + resize(to_unsigned(0, WIDTH), 2*FIXED_SIZE) / 2 - 1);
+                cx_next <= std_logic_vector(resize(to_unsigned(to_integer(unsigned(cpos)), WIDTH), 2*FIXED_SIZE) + resize(to_unsigned(0, WIDTH), 2*FIXED_SIZE) / 2 - 1);
+
                 state_next <= BoundaryCheck;
 
             when BoundaryCheck =>
@@ -438,7 +448,7 @@ begin
 
             when ProcessSample =>
                 rom_addr_next <= std_logic_vector(to_unsigned(to_integer(unsigned(rpos) * unsigned(rpos) + unsigned(cpos) * unsigned(cpos)), 6)); -- Izra?unavanje adrese za ROM
-                weight_next <= rom_data;  -- ?itanje težine direktno iz ROM-a
+                weight_next <= std_logic_vector(resize(signed(rom_data), 2*FIXED_SIZE));
                 state_next <= ComputeDerivatives;
 
             when ComputeDerivatives =>
@@ -451,7 +461,7 @@ begin
 
             when FetchDXX1_1 =>
                 -- Capture the data from BRAM for dxx1
-                dxx1_sum_next <= std_logic_vector(resize(signed(bram_data1_i), FIXED_SIZE) + resize(signed(bram_data2_i), FIXED_SIZE));
+                dxx1_sum_next <= std_logic_vector(resize(signed(bram_data1_i), 2*FIXED_SIZE) + resize(signed(bram_data2_i), 2*FIXED_SIZE));
                 -- Set BRAM addresses for the second pair of pixels for dxx1
                 bram_addr1_next <= std_logic_vector(to_unsigned((to_integer(r) - to_integer(addSampleStep)) * IMG_WIDTH + (to_integer(c) + to_integer(addSampleStep) + 1), PIXEL_SIZE));
                 bram_addr2_next <= std_logic_vector(to_unsigned((to_integer(r) + to_integer(addSampleStep) + 1) * IMG_WIDTH + to_integer(c), PIXEL_SIZE));
@@ -459,7 +469,7 @@ begin
 
             when FetchDXX1_2 =>
                 -- Capture the data from BRAM for dxx1
-                dxx1_sum_next <= std_logic_vector(resize(signed(dxx1_sum_reg), FIXED_SIZE) - resize(signed(bram_data1_i), FIXED_SIZE) - resize(signed(bram_data2_i), FIXED_SIZE));
+                dxx1_sum_next <= std_logic_vector(resize(signed(dxx1_sum_reg), 2*FIXED_SIZE) - resize(signed(bram_data1_i), 2*FIXED_SIZE) - resize(signed(bram_data2_i), 2*FIXED_SIZE));
                 state_next <= ComputeDXX1;
 
             when ComputeDXX1 =>
@@ -472,7 +482,7 @@ begin
 
             when FetchDXX2_1 =>
                 -- Capture the data from BRAM for dxx2
-                dxx2_sum_next <= std_logic_vector(resize(signed(bram_data1_i), FIXED_SIZE) + resize(signed(bram_data2_i), FIXED_SIZE));
+                dxx2_sum_next <= std_logic_vector(resize(signed(bram_data1_i), 2*FIXED_SIZE) + resize(signed(bram_data2_i), 2*FIXED_SIZE));
                 -- Set BRAM addresses for the second pair of pixels for dxx2
                 bram_addr1_next <= std_logic_vector(to_unsigned((to_integer(r) - to_integer(addSampleStep)) * IMG_WIDTH + (to_integer(c) + 1), PIXEL_SIZE));
                 bram_addr2_next <= std_logic_vector(to_unsigned((to_integer(r) + to_integer(addSampleStep) + 1) * IMG_WIDTH + to_integer(c - to_integer(addSampleStep)), PIXEL_SIZE));
@@ -480,7 +490,7 @@ begin
 
             when FetchDXX2_2 =>
                 -- Capture the data from BRAM for dxx2
-                dxx2_sum_next <= std_logic_vector(resize(signed(dxx2_sum_reg), FIXED_SIZE) - resize(signed(bram_data1_i), FIXED_SIZE) - resize(signed(bram_data2_i), FIXED_SIZE));
+                dxx2_sum_next <= std_logic_vector(resize(signed(dxx2_sum_reg), 2*FIXED_SIZE) - resize(signed(bram_data1_i), 2*FIXED_SIZE) - resize(signed(bram_data2_i), 2*FIXED_SIZE));
                 state_next <= ComputeDXX2;
 
             when ComputeDXX2 =>
@@ -493,7 +503,7 @@ begin
 
             when FetchDYY1_1 =>
                 -- Capture the data from BRAM for dyy1
-                dyy1_sum_next <= std_logic_vector(resize(signed(bram_data1_i), FIXED_SIZE) + resize(signed(bram_data2_i), FIXED_SIZE));
+                dyy1_sum_next <= std_logic_vector(resize(signed(bram_data1_i), 2*FIXED_SIZE) + resize(signed(bram_data2_i), 2*FIXED_SIZE));
                 -- Set BRAM addresses for the second pair of pixels for dyy1
                 bram_addr1_next <= std_logic_vector(to_unsigned((to_integer(r + 1) * IMG_WIDTH + to_integer(c - to_integer(addSampleStep))), PIXEL_SIZE));
                 bram_addr2_next <= std_logic_vector(to_unsigned((to_integer(r - to_integer(addSampleStep)) * IMG_WIDTH + to_integer(c + to_integer(addSampleStep) + 1)), PIXEL_SIZE));
@@ -501,7 +511,7 @@ begin
 
             when FetchDYY1_2 =>
                 -- Capture the data from BRAM for dyy1
-                dyy1_sum_next <= std_logic_vector(resize(signed(dyy1_sum_reg), FIXED_SIZE) - resize(signed(bram_data1_i), FIXED_SIZE) - resize(signed(bram_data2_i), FIXED_SIZE));
+                dyy1_sum_next <= std_logic_vector(resize(signed(dyy1_sum_reg), 2*FIXED_SIZE) - resize(signed(bram_data1_i), 2*FIXED_SIZE) - resize(signed(bram_data2_i), 2*FIXED_SIZE));
                 state_next <= ComputeDYY1;
 
             when ComputeDYY1 =>
@@ -514,7 +524,7 @@ begin
 
             when FetchDYY2_1 =>
                 -- Capture the data from BRAM for dyy2
-                dyy2_sum_next <= std_logic_vector(resize(signed(bram_data1_i), FIXED_SIZE) + resize(signed(bram_data2_i), FIXED_SIZE));
+                dyy2_sum_next <= std_logic_vector(resize(signed(bram_data1_i), 2*FIXED_SIZE) + resize(signed(bram_data2_i), 2*FIXED_SIZE));
                 -- Set BRAM addresses for the second pair of pixels for dyy2
                 bram_addr1_next <= std_logic_vector(to_unsigned((to_integer(r + to_integer(addSampleStep) + 1) * IMG_WIDTH + to_integer(c - to_integer(addSampleStep))), PIXEL_SIZE));
                 bram_addr2_next <= std_logic_vector(to_unsigned(to_integer(r) * IMG_WIDTH + to_integer(c + to_integer(addSampleStep) + 1), PIXEL_SIZE));
@@ -522,7 +532,7 @@ begin
 
             when FetchDYY2_2 =>
                 -- Capture the data from BRAM for dyy2
-                dyy2_sum_next <= std_logic_vector(resize(signed(dyy2_sum_reg), FIXED_SIZE) - resize(signed(bram_data1_i), FIXED_SIZE) - resize(signed(bram_data2_i), FIXED_SIZE));
+                dyy2_sum_next <= std_logic_vector(resize(signed(dyy2_sum_reg), 2*FIXED_SIZE) - resize(signed(bram_data1_i), 2*FIXED_SIZE) - resize(signed(bram_data2_i), 2*FIXED_SIZE));
                 state_next <= ComputeDYY2;
 
             when ComputeDYY2 =>
@@ -531,13 +541,13 @@ begin
                 state_next <= CalculateDerivatives;
 
             when CalculateDerivatives =>
-                dxx_next <= std_logic_vector(resize(signed(weight) * (signed(dxx1) - signed(dxx2)), FIXED_SIZE)); -- ILI MOŽDA 2 PUTA FIXED_SIZE
-                dyy_next <= std_logic_vector(resize(signed(weight) * (signed(dyy1) - signed(dyy2)), FIXED_SIZE));
+                dxx_next <= std_logic_vector(resize(signed(weight) * (signed(dxx1) - signed(dxx2)), 2*FIXED_SIZE)); -- Prilagoditi širinu
+                dyy_next <= std_logic_vector(resize(signed(weight) * (signed(dyy1) - signed(dyy2)), 2*FIXED_SIZE)); -- Prilagoditi širinu
                 state_next <= ApplyOrientationTransform;
 
             when ApplyOrientationTransform =>
-                dx_next <= std_logic_vector(resize(signed(i_cose) * signed(dxx) + signed(i_sine) * signed(dyy), FIXED_SIZE));
-                dy_next <= std_logic_vector(resize(signed(i_sine) * signed(dxx) - signed(i_cose) * signed(dyy), FIXED_SIZE));
+                dx_next <= std_logic_vector(resize(signed(i_cose) * signed(dxx) + signed(i_sine) * signed(dyy), 2*FIXED_SIZE)); -- Prilagoditi širinu
+                dy_next <= std_logic_vector(resize(signed(i_sine) * signed(dxx) - signed(i_cose) * signed(dyy), 2*FIXED_SIZE)); -- Prilagoditi širinu
                 state_next <= SetOrientations;
 
             when SetOrientations =>
@@ -573,69 +583,69 @@ begin
                 end if;
 
                 -- Compute fractional components
-                rfrac_next <= std_logic_vector(signed(rx) - signed(ri));
-                cfrac_next <= std_logic_vector(signed(cx) - signed(ci));
+                rfrac_next <= std_logic_vector(resize(signed(rx) - signed(ri), 2*FIXED_SIZE));
+                cfrac_next <= std_logic_vector(resize(signed(cx) - signed(ci), 2*FIXED_SIZE));
 
                 if signed(rfrac) < 0 then
-                    rfrac_next <= std_logic_vector(to_signed(0, rfrac_next'length));
+                    rfrac_next <= std_logic_vector(to_signed(0, 2*FIXED_SIZE));
                 elsif signed(rfrac) >= 2**WIDTH then
-                    rfrac_next <= std_logic_vector(to_signed(2**WIDTH - 1, rfrac_next'length));
+                    rfrac_next <= std_logic_vector(to_signed(2**WIDTH - 1, 2*FIXED_SIZE));
                 end if;
 
                 if signed(cfrac) < 0 then
-                    cfrac_next <= std_logic_vector(to_signed(0, cfrac_next'length));
+                    cfrac_next <= std_logic_vector(to_signed(0, 2*FIXED_SIZE));
                 elsif signed(cfrac) >= 2**WIDTH then
-                    cfrac_next <= std_logic_vector(to_signed(2**WIDTH - 1, cfrac_next'length));
+                    cfrac_next <= std_logic_vector(to_signed(2**WIDTH - 1, 2*FIXED_SIZE));
                 end if;
 
                 state_next <= ComputeWeights;
 
             when ComputeWeights =>
-                rweight1_next <= std_logic_vector(resize(unsigned(dx) * (unsigned((2**WIDTH - 1) - unsigned(rfrac))), FIXED_SIZE));
-                rweight2_next <= std_logic_vector(resize(unsigned(dx) * unsigned(rfrac), FIXED_SIZE));
-                cweight1_next <= std_logic_vector(resize(unsigned(rweight1) * (unsigned((2**WIDTH - 1) - unsigned(cfrac))), FIXED_SIZE));
-                cweight2_next <= std_logic_vector(resize(unsigned(rweight2) * unsigned(cfrac), FIXED_SIZE));
+                rweight1_next <= std_logic_vector(resize(unsigned(dx) * (unsigned((2**WIDTH - 1) - unsigned(rfrac))), 3*FIXED_SIZE));
+                rweight2_next <= std_logic_vector(resize(unsigned(dx) * unsigned(rfrac), 3*FIXED_SIZE));
+                cweight1_next <= std_logic_vector(resize(unsigned(rweight1) * (unsigned((2**WIDTH - 1) - unsigned(cfrac))), 3*FIXED_SIZE));
+                cweight2_next <= std_logic_vector(resize(unsigned(rweight2) * unsigned(cfrac), 3*FIXED_SIZE));
                 state_next <= UpdateIndexArray;
 
             when UpdateIndexArray =>
                 if ri >= 0 and ri < INDEX_SIZE and ci >= 0 and ci < INDEX_SIZE then
-                    addr_do1_o <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori1)), addr_do1_o'length));
-                    data1_o_next_int <= std_logic_vector(resize(unsigned(data1_o_reg) + unsigned(cweight1), data1_o_next_int'length));  -- Koriš?enje internog signala
+                    addr_do1_o <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori1)), 6));
+                    data1_o_next_int <= std_logic_vector(resize(unsigned(data1_o_reg), 2*FIXED_SIZE) + resize(unsigned(cweight1) * resize(to_unsigned(to_integer(signed(cfrac)), 2*FIXED_SIZE), 2*FIXED_SIZE), 2*FIXED_SIZE));
                     c1_data_o <= '1';
-
-                    addr_do2_o <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori2)), addr_do1_o'length));
-                    data2_o_next_int <= std_logic_vector(resize(unsigned(data2_o_reg) + unsigned(cweight2), data2_o_next_int'length));  -- Koriš?enje internog signala
+            
+                    addr_do2_o <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori2)), 6));
+                    data2_o_next_int <= std_logic_vector(resize(unsigned(data2_o_reg), 2*FIXED_SIZE) + resize(unsigned(cweight2) * resize(to_unsigned(to_integer(signed(cfrac)), 2*FIXED_SIZE), 2*FIXED_SIZE), 2*FIXED_SIZE));
                     c2_data_o <= '1';
-
+            
                     state_next <= CheckNextColumn;
                 end if;
-
+            
             when CheckNextColumn =>
                 if ci + 1 < INDEX_SIZE then
-                    addr_do1_o <= std_logic_vector(to_unsigned(to_integer(unsigned(ri)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci+1)) * 4 + to_integer(unsigned(ori1)), addr_do1_o'length));
-                    data1_o_next_int <= std_logic_vector(unsigned(data1_o_reg) + unsigned(cweight1) * to_unsigned(to_integer(signed(cfrac)), cweight1'length));
+                    addr_do1_o <= std_logic_vector(to_unsigned(to_integer(unsigned(ri)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci+1)) * 4 + to_integer(unsigned(ori1)), 6));
+                    data1_o_next_int <= std_logic_vector(resize(unsigned(data1_o_reg), 2*FIXED_SIZE) + resize(unsigned(cweight1) * resize(to_unsigned(to_integer(signed(cfrac)), 2*FIXED_SIZE), 2*FIXED_SIZE), 2*FIXED_SIZE));
                     c1_data_o <= '1';
-
-                    addr_do2_o <= std_logic_vector(to_unsigned(to_integer(unsigned(ri)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci+1)) * 4 + to_integer(unsigned(ori2)), addr_do2_o'length));
-                    data2_o_next_int <= std_logic_vector(unsigned(data2_o_reg) + unsigned(cweight2) * to_unsigned(to_integer(signed(cfrac)), cweight2'length));
+            
+                    addr_do2_o <= std_logic_vector(to_unsigned(to_integer(unsigned(ri)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci+1)) * 4 + to_integer(unsigned(ori2)), 6));
+                    data2_o_next_int <= std_logic_vector(resize(unsigned(data2_o_reg), 2*FIXED_SIZE) + resize(unsigned(cweight2) * resize(to_unsigned(to_integer(signed(cfrac)), 2*FIXED_SIZE), 2*FIXED_SIZE), 2*FIXED_SIZE));
                     c2_data_o <= '1';
-
+            
                     state_next <= CheckNextRow;
                 end if;
-
+            
             when CheckNextRow =>
                 if ri + 1 < INDEX_SIZE then
-                    addr_do1_o <= std_logic_vector(to_unsigned(to_integer(unsigned(ri+1)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori1)), addr_do1_o'length));
-                    data1_o_next_int <= std_logic_vector(unsigned(data1_o_reg) + unsigned(cweight1) * resize(to_unsigned(to_integer(signed(cfrac)), cweight1'length), cweight1'length));
+                    addr_do1_o <= std_logic_vector(to_unsigned(to_integer(unsigned(ri+1)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori1)), 6));
+                    data1_o_next_int <= std_logic_vector(resize(unsigned(data1_o_reg), 2*FIXED_SIZE) + resize(unsigned(cweight1) * resize(to_unsigned(to_integer(signed(cfrac)), 2*FIXED_SIZE), 2*FIXED_SIZE), 2*FIXED_SIZE));
                     c1_data_o <= '1';
-
-                    addr_do2_o <= std_logic_vector(to_unsigned(to_integer(unsigned(ri+1)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori2)), addr_do1_o'length));
-                    data2_o_next_int <= std_logic_vector(unsigned(data2_o_reg) + unsigned(cweight2) * resize(to_unsigned(to_integer(signed(cfrac)), cweight2'length), cweight2'length));
+            
+                    addr_do2_o <= std_logic_vector(to_unsigned(to_integer(unsigned(ri+1)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori2)), 6));
+                    data2_o_next_int <= std_logic_vector(resize(unsigned(data2_o_reg), 2*FIXED_SIZE) + resize(unsigned(cweight2) * resize(to_unsigned(to_integer(signed(cfrac)), 2*FIXED_SIZE), 2*FIXED_SIZE), 2*FIXED_SIZE));
                     c2_data_o <= '1';
                 end if;
-
+            
                 state_next <= NextSample;
-
+            
             when NextSample =>
                 j_next <= j_reg + 1;
                 if (j_reg > to_integer(unsigned(2*iradius))) then
@@ -664,10 +674,6 @@ begin
     -- Ažuriranje izlaznih portova iz internog signala za adrese
     bram_addr1_o <= bram_addr1_int;
     bram_addr2_o <= bram_addr2_int;
---bram_en1_o <= '1' when state_next /= idle else '0';
-  --  bram_we1_o <= '0';
---bram_en2_o <= '1' when state_next /= idle else '0';
-   -- bram_we2_o <= '0';
     rom_addr <= rom_addr_next;  -- Ažuriranje rom_addr signala
 
 end Behavioral;
