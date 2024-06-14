@@ -114,9 +114,6 @@ constant HALF_INDEX_SIZE_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_l
 constant HALF_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_unsigned(1, FIXED_SIZE - 1) & '0'); -- 0.5 u fiksnoj ta?ki
 
 
-    signal data1_o_reg, data2_o_reg : std_logic_vector (2*FIXED_SIZE - 1 downto 0);  -- Prilago?avanje širine signala
-
-
     signal i_reg, i_next : unsigned(WIDTH - 1 downto 0) := to_unsigned(23, WIDTH); -- STA OVDE IDE
     signal j_reg, j_next : unsigned(WIDTH - 1 downto 0) := to_unsigned(23, WIDTH);
     
@@ -124,22 +121,19 @@ constant HALF_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector
     signal temp3_rpos_reg, temp3_rpos_next, temp4_rpos_reg, temp4_rpos_next : std_logic_vector(2*WIDTH + 2*FIXED_SIZE - 1 downto 0);
     signal temp1_cpos_reg, temp1_cpos_next, temp2_cpos_reg, temp2_cpos_next : std_logic_vector(2*WIDTH + FIXED_SIZE - 1 downto 0);
     signal temp3_cpos_reg, temp3_cpos_next, temp4_cpos_reg, temp4_cpos_next : std_logic_vector(2*WIDTH + 2*FIXED_SIZE - 1 downto 0);
+    signal rpos, cpos : std_logic_vector(2*WIDTH + 2*FIXED_SIZE - 1 downto 0);
+    signal rpos_next, cpos_next : std_logic_vector(2*WIDTH + 2*FIXED_SIZE - 1 downto 0);
     signal rx, cx, rx_next, cx_next : std_logic_vector( 2*WIDTH + 2*FIXED_SIZE - 1 downto 0);
+    signal addSampleStep, addSampleStep_next : unsigned(WIDTH - 1 downto 0);
+    signal r, c : signed(2*WIDTH - 1 downto 0);
+    signal r_next, c_next : signed(2*WIDTH - 1 downto 0);
     
     signal ri, ci : unsigned(WIDTH - 1 downto 0);
     signal ri_next, ci_next : unsigned(WIDTH - 1 downto 0);
-    signal r, c : signed(2*WIDTH - 1 downto 0);
-    signal r_next, c_next : signed(2*WIDTH - 1 downto 0);
-    signal addSampleStep, addSampleStep_next : unsigned(WIDTH - 1 downto 0);
-    signal rpos, cpos : std_logic_vector(3*WIDTH-1 downto 0);
-    signal rpos_next, cpos_next : std_logic_vector(3*WIDTH-1 downto 0); -- AKO SE MNOZE DVA BROJA ONDA CE ZA REZULTAT ICI 2*WIDTH
-    
     signal rfrac, cfrac, dx, dy, dxx, dyy, weight :  std_logic_vector(2*FIXED_SIZE-1 downto 0);
-    
     signal rfrac_next, cfrac_next, dx_next, dy_next, dxx_next, dyy_next, weight_next : std_logic_vector(2*FIXED_SIZE-1 downto 0);
     signal rweight1, rweight2, cweight1, cweight2 : std_logic_vector(3*WIDTH-1 downto 0);
     signal rweight1_next, rweight2_next, cweight1_next, cweight2_next : std_logic_vector(3*WIDTH-1 downto 0);
-    
     signal bram_data1, bram_data2 : std_logic_vector(7 downto 0);
     signal dxx1_sum_next, dxx2_sum_next, dyy1_sum_next, dyy2_sum_next : std_logic_vector(3*WIDTH-1 downto 0); -- Accumulators for sum of BRAM data
     signal dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg : std_logic_vector(3*WIDTH-1 downto 0);
@@ -151,6 +145,7 @@ constant HALF_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector
 
     signal done : std_logic;
 
+    signal data1_o_reg, data2_o_reg : std_logic_vector (2*FIXED_SIZE - 1 downto 0);  -- Prilago?avanje širine signala
     signal data1_o_next_int, data2_o_next_int : std_logic_vector (2*FIXED_SIZE - 1 downto 0);  -- Interne signale za kombinatornu logiku
 
     -- Definisanje internog signala za adrese
