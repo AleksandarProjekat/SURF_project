@@ -182,9 +182,10 @@ begin
     rom_addr_int <= rom_addr_next;
 
     -- Sekvencijalni proces za registre
-    process (clk, reset)
+    process (clk)
     begin
-        if reset = '1' then
+        if (rising_edge(clk)) then
+            if (reset = '1') then
             state_reg <= idle;
             -- Resetovanje svih signala na po?etne vrednosti
             i_reg <= (others => '0');
@@ -233,7 +234,7 @@ begin
             temp2_cpos_reg <= (others => '0');
             temp3_cpos_reg <= (others => '0');
             temp4_cpos_reg <= (others => '0');
-        elsif (rising_edge(clk)) then
+        else
             state_reg <= state_next;
             -- A?uriranje registara sa internim signalima
             i_reg <= i_next;
@@ -283,6 +284,7 @@ begin
             temp2_cpos_reg <= temp2_cpos_next;
             temp3_cpos_reg <= temp3_cpos_next;
             temp4_cpos_reg <= temp4_cpos_next;
+            end if;
         end if;
     end process;
 
