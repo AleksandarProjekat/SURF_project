@@ -705,11 +705,11 @@ begin
             when CheckNextColumn =>
                 if ci + 1 < INDEX_SIZE then
                     addr_do1_o <= std_logic_vector(to_unsigned(to_integer(unsigned(ri)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci+1)) * 4 + to_integer(unsigned(ori1)), 6));
-                    data1_o_next_int <= std_logic_vector(resize(unsigned(data1_o_reg), 2*FIXED_SIZE) + resize(unsigned(rweight1) * resize(to_unsigned(to_integer(signed(cfrac)), 2*FIXED_SIZE), 2*FIXED_SIZE), 8*FIXED_SIZE + 4*WIDTH + 2*SUM_WIDTH));
+                    data1_o_next_int <= std_logic_vector(resize(unsigned(data1_o_reg), 8*FIXED_SIZE + 4*WIDTH + 2*SUM_WIDTH) + resize(unsigned(rweight1) * resize(to_unsigned(to_integer(signed(cfrac)), 2*FIXED_SIZE + 2*WIDTH), 2*FIXED_SIZE + 2*WIDTH), 8*FIXED_SIZE + 4*WIDTH + 2*SUM_WIDTH));
                     c1_data_o <= '1';
             
                     addr_do2_o <= std_logic_vector(to_unsigned(to_integer(unsigned(ri)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci+1)) * 4 + to_integer(unsigned(ori2)), 6));
-                    data2_o_next_int <= std_logic_vector(resize(unsigned(data2_o_reg), 2*FIXED_SIZE) + resize(unsigned(rweight2) * resize(to_unsigned(to_integer(signed(cfrac)), 2*FIXED_SIZE), 2*FIXED_SIZE), 8*FIXED_SIZE + 4*WIDTH + 2*SUM_WIDTH));
+                    data2_o_next_int <= std_logic_vector(resize(unsigned(data2_o_reg), 8*FIXED_SIZE + 4*WIDTH + 2*SUM_WIDTH) + resize(unsigned(rweight2) * resize(to_unsigned(to_integer(signed(cfrac)), 2*FIXED_SIZE + 2*WIDTH), 2*FIXED_SIZE + 2*WIDTH), 8*FIXED_SIZE + 4*WIDTH + 2*SUM_WIDTH));
                     c2_data_o <= '1';
             
                     state_next <= CheckNextRow;
