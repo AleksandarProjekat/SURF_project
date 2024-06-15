@@ -235,7 +235,7 @@ begin
             temp4_cpos_reg <= (others => '0');
         elsif (rising_edge(clk)) then
             state_reg <= state_next;
-            -- Ažuriranje registara sa internim signalima
+            -- A?uriranje registara sa internim signalima
             i_reg <= i_next;
             j_reg <= j_next;
             ri <= ri_next;
@@ -272,7 +272,7 @@ begin
             
             data1_o_reg <= data1_o_next_int;
             data2_o_reg <= data2_o_next_int;
-            bram_addr1_int <= bram_addr1_next;  -- Ažuriranje internog signala za adrese
+            bram_addr1_int <= bram_addr1_next;  -- A?uriranje internog signala za adrese
             bram_addr2_int <= bram_addr2_next;
             
             temp1_rpos_reg <= temp1_rpos_next;
@@ -335,7 +335,7 @@ begin
         dxx2_sum_next <= dxx2_sum_reg;
         dyy1_sum_next <= dyy1_sum_reg;
         dyy2_sum_next <= dyy2_sum_reg;
-        bram_addr1_next <= bram_addr1_int;  -- Ažuriranje internog signala za adrese
+        bram_addr1_next <= bram_addr1_int;  -- A?uriranje internog signala za adrese
         bram_addr2_next <= bram_addr2_int;
         
         bram_en1_o <= '0'; -- Defaultna vrednost za bram_en1_o
@@ -714,19 +714,21 @@ begin
             
                     state_next <= CheckNextRow;
                 end if;
-  --DATA NISU DOBRI data vrednosti stavljene          
-             when CheckNextRow =>
+                
+            when CheckNextRow =>
                 if ri + 1 < INDEX_SIZE then
-                    addr_do1_o <= std_logic_vector(to_unsigned(to_integer(unsigned(ri+1)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori1)), 6));
-                    data1_o_next_int <= std_logic_vector(resize(unsigned(data1_o_reg), 2*FIXED_SIZE) + resize(unsigned(cweight1) * resize(to_unsigned(to_integer(signed(cfrac)), 2*FIXED_SIZE), 2*FIXED_SIZE), 2*FIXED_SIZE));
+                    addr_do1_o <= std_logic_vector(to_unsigned(to_integer(unsigned(ri + 1)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori1)), 6));
+                    data1_o_next_int <= std_logic_vector(resize(unsigned(data1_o_reg), 8 * FIXED_SIZE + 4 * WIDTH + 2 * SUM_WIDTH) + resize(unsigned(dx) * unsigned(rfrac) * (unsigned(to_signed(1, 2 * WIDTH + 2 * FIXED_SIZE)) - unsigned(cfrac)), 8 * FIXED_SIZE + 4 * WIDTH + 2 * SUM_WIDTH));
                     c1_data_o <= '1';
             
-                    addr_do2_o <= std_logic_vector(to_unsigned(to_integer(unsigned(ri+1)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori2)), 6));
-                    data2_o_next_int <= std_logic_vector(resize(unsigned(data2_o_reg), 2*FIXED_SIZE) + resize(unsigned(cweight2) * resize(to_unsigned(to_integer(signed(cfrac)), 2*FIXED_SIZE), 2*FIXED_SIZE), 2*FIXED_SIZE));
+                    addr_do2_o <= std_logic_vector(to_unsigned(to_integer(unsigned(ri + 1)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori2)), 6));
+                    data2_o_next_int <= std_logic_vector(resize(unsigned(data2_o_reg), 8 * FIXED_SIZE + 4 * WIDTH + 2 * SUM_WIDTH) + resize(unsigned(dy) * unsigned(rfrac) * (unsigned(to_signed(1, 2 * WIDTH + 2 * FIXED_SIZE)) - unsigned(cfrac)), 8 * FIXED_SIZE + 4 * WIDTH + 2 * SUM_WIDTH));
                     c2_data_o <= '1';
                 end if;
-            
-                state_next <= NextSample;
+
+    state_next <= NextSample;
+
+
             
             when NextSample =>
                 j_next <= j_reg + 1;
@@ -753,9 +755,9 @@ begin
         end case;
     end process;
 
-    -- Ažuriranje izlaznih portova iz internog signala za adrese
+    -- A?uriranje izlaznih portova iz internog signala za adrese
     bram_addr1_o <= bram_addr1_int;
     bram_addr2_o <= bram_addr2_int;
-    rom_addr <= rom_addr_next;  -- Ažuriranje rom_addr signala
+    rom_addr <= rom_addr_next;  -- A?uriranje rom_addr signala
 
 end Behavioral;
