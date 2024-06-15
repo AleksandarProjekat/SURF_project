@@ -20,6 +20,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.numeric_std.all;
+use work.ip_pkg.all;  -- Dodajte ovu liniju
 
 entity ip is
     generic (
@@ -67,11 +68,14 @@ entity ip is
         ---------------KOMANDNI INTERFEJS------------------------
         start_i : in std_logic;
         ---------------STATUSNI INTERFEJS------------------------
-        ready_o : out std_logic
+        ready_o : out std_logic;
+        ---------------STATUS STANJE------------------------
+        state_o : out state_type  -- Dodavanje izlaznog porta za stanje
     );
 end ip;
 
 architecture Behavioral of ip is
+    signal state_reg, state_next : state_type;
 
     component rom
         generic (
@@ -105,7 +109,7 @@ architecture Behavioral of ip is
         NextSample, IncrementI, Finish
     );
 
-    signal state_reg, state_next : state_type;
+    --signal state_reg, state_next : state_type;
     
 constant INDEX_SIZE_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_unsigned(INDEX_SIZE, FIXED_SIZE));
 constant HALF_INDEX_SIZE_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_unsigned(INDEX_SIZE / 2, FIXED_SIZE));
@@ -761,5 +765,6 @@ begin
     bram_addr1_o <= bram_addr1_int;
     bram_addr2_o <= bram_addr2_int;
     rom_addr <= rom_addr_next;  -- A?uriranje rom_addr signala
+    state_o <= state_reg;
 
 end Behavioral;
