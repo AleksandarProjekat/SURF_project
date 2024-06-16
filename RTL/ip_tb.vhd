@@ -218,6 +218,7 @@ begin
         start_i <= '1';
         wait for clk_period*2;
         start_i <= '0';
+        
 
         -- ?ekanje da se obrada završi
         wait until ready_o = '1';

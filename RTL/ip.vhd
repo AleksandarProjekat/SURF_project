@@ -374,107 +374,107 @@ begin
             when InnerLoop =>
                 state_next <= ComputeRPos1;
 
-            when ComputeRPos1 =>
-            -- rpos = (step*(_cose * (i - iradius) + _sine * (j - iradius)) - fracr) / spacing;
-                temp1_rpos_next <= std_logic_vector(
-                    resize(
-                        to_unsigned(
-                            to_integer(unsigned(step)) *
-                            (to_integer(unsigned(i_cose)) *
-                            (to_integer(signed(i_reg)) - to_integer(signed(iradius))))
-                        , 2*WIDTH + FIXED_SIZE 
-                    ), 2*WIDTH + FIXED_SIZE 
-                ));
-                state_next <= ComputeRPos2;
+                          when ComputeRPos1 =>
+                        -- rpos = (step * (i_cose * (i - iradius) + i_sine * (j - iradius)) - fracr) / spacing;
+                        temp1_rpos_next <= std_logic_vector(
+                            resize(
+                                to_signed(
+                                    to_integer(unsigned(step)) *
+                                    (to_integer(unsigned(i_cose)) *
+                                    (to_integer(signed(i_reg)) - to_integer(signed(iradius))))
+                                , 2*WIDTH + FIXED_SIZE
+                            ), 2*WIDTH + FIXED_SIZE
+                        ));
+                        state_next <= ComputeRPos2;
+                    
+                    when ComputeRPos2 =>
+                        temp2_rpos_next <= temp1_rpos_reg;
+                        state_next <= ComputeRPos3;
+                    
+                    when ComputeRPos3 =>
+                        temp3_rpos_next <= std_logic_vector(
+                            resize(
+                                to_signed(
+                                    to_integer(signed(temp2_rpos_reg)) +
+                                    (to_integer(unsigned(i_sine)) *
+                                    (to_integer(signed(j_reg)) - to_integer(signed(iradius))))
+                                , 2*WIDTH + 2*FIXED_SIZE
+                            ), 2*WIDTH + 2*FIXED_SIZE
+                        ));
+                        state_next <= ComputeRPos4;
+                    
+                    when ComputeRPos4 =>
+                        temp4_rpos_next <= std_logic_vector(
+                            resize(
+                                to_signed(
+                                    to_integer(signed(temp3_rpos_reg)) -
+                                    to_integer(signed(fracr))
+                                , 2*WIDTH + 2*FIXED_SIZE
+                            ), 2*WIDTH + 2*FIXED_SIZE
+                        ));
+                        state_next <= ComputeRPos5;
+                    
+                    when ComputeRPos5 =>
+                        rpos_next <= std_logic_vector(
+                            resize(
+                                to_signed(
+                                    to_integer(signed(temp4_rpos_reg)) /
+                                    to_integer(signed(spacing))
+                                , 2*WIDTH + 2*FIXED_SIZE
+                            ), 2*WIDTH + 2*FIXED_SIZE
+                        ));
+                        state_next <= ComputeCPos1;
+                    
+                    when ComputeCPos1 =>
+                        temp1_cpos_next <= std_logic_vector(
+                            resize(
+                                to_unsigned(
+                                    to_integer(unsigned(step)) *
+                                    (-to_integer(unsigned(i_sine)) *
+                                    (to_integer(signed(i_reg)) - to_integer(signed(iradius))))
+                                , 2*WIDTH + FIXED_SIZE 
+                            ), 2*WIDTH + FIXED_SIZE 
+                        ));
+                        state_next <= ComputeCPos2;
+                    
+                    when ComputeCPos2 =>
+                        temp2_cpos_next <= temp1_cpos_reg;
+                        state_next <= ComputeCPos3;
+                    
+                    when ComputeCPos3 =>
+                        temp3_cpos_next <= std_logic_vector(
+                            resize(
+                                to_unsigned(
+                                    to_integer(unsigned(temp2_cpos_reg)) +
+                                    (to_integer(unsigned(i_cose)) *
+                                    (to_integer(signed(j_reg)) - to_integer(signed(iradius))))
+                                , 2*WIDTH + 2*FIXED_SIZE
+                            ), 2*WIDTH + 2*FIXED_SIZE
+                        ));
+                        state_next <= ComputeCPos4;
+                    when ComputeCPos4 =>
+                        temp4_cpos_next <= std_logic_vector(
+                            resize(
+                                to_signed(
+                                    to_integer(signed(temp3_cpos_reg)) -
+                                    to_integer(signed(fracc))
+                                , 2*WIDTH + 2*FIXED_SIZE
+                            ), 2*WIDTH + 2*FIXED_SIZE
+                        ));
+                        
+                 state_next <= ComputeCPos5;
+   
+               when ComputeCPos5 =>
+                    cpos_next <= std_logic_vector(
+                        resize(
+                            to_signed(
+                                to_integer(signed(temp4_cpos_reg)) / to_integer(signed(spacing))
+                            , 2*WIDTH + 2*FIXED_SIZE
+                        ), 2*WIDTH + 2*FIXED_SIZE
+                    ));
+                    state_next <= SetRXandCX;
 
-            when ComputeRPos2 =>
-                temp2_rpos_next <= temp1_rpos_reg;
-                state_next <= ComputeRPos3;
 
-            when ComputeRPos3 =>
-                temp3_rpos_next <= std_logic_vector(
-                    resize(
-                        to_unsigned(
-                            to_integer(unsigned(temp2_rpos_reg)) +
-                            (to_integer(unsigned(i_sine)) *
-                            (to_integer(signed(j_reg)) - to_integer(signed(iradius))))
-                        , 2*WIDTH + 2*FIXED_SIZE
-                    ), 2*WIDTH + 2*FIXED_SIZE
-                ));
-                state_next <= ComputeRPos4;
-
-            when ComputeRPos4 =>
-                temp4_rpos_next <= std_logic_vector(
-                    resize(
-                        to_unsigned(
-                            to_integer(signed(temp3_rpos_reg)) -
-                            to_integer(unsigned(fracr))
-                        , 2*WIDTH + 2*FIXED_SIZE
-                    ), 2*WIDTH + 2*FIXED_SIZE
-                ));
-                state_next <= ComputeRPos5;
-
-            when ComputeRPos5 =>
-                rpos_next <= std_logic_vector(
-                    resize(
-                        to_unsigned(
-                            to_integer(signed(temp4_rpos_reg)) /
-                            to_integer(unsigned(spacing))
-                        , 2*WIDTH + 2*FIXED_SIZE
-                    ), 2*WIDTH + 2*FIXED_SIZE
-                ));
-                state_next <= ComputeCPos1;
-
-            when ComputeCPos1 =>
-            --cpos = (step*(- _sine * (i - iradius) + _cose * (j - iradius)) - fracc) / spacing;
-                temp1_cpos_next <= std_logic_vector(
-                    resize(
-                        to_unsigned(
-                            to_integer(unsigned(step)) *
-                            (-to_integer(unsigned(i_sine)) *
-                            (to_integer(signed(i_reg)) - to_integer(signed(iradius))))
-                        , 2*WIDTH + FIXED_SIZE 
-                    ), 2*WIDTH + FIXED_SIZE 
-                ));
-                state_next <= ComputeCPos2;
-
-            when ComputeCPos2 =>
-                temp2_cpos_next <= temp1_cpos_reg;
-                state_next <= ComputeCPos3;
-
-            when ComputeCPos3 =>
-                temp3_cpos_next <= std_logic_vector(
-                    resize(
-                        to_unsigned(
-                            to_integer(unsigned(temp2_cpos_reg)) +
-                            (to_integer(unsigned(i_cose)) *
-                            (to_integer(signed(j_reg)) - to_integer(signed(iradius))))
-                        , 2*WIDTH + 2*FIXED_SIZE
-                    ), 2*WIDTH + 2*FIXED_SIZE
-                ));
-                state_next <= ComputeCPos4;
-
-            when ComputeCPos4 =>
-                temp4_cpos_next <= std_logic_vector(
-                    resize(
-                        to_unsigned(
-                            to_integer(signed(temp3_cpos_reg)) -
-                            to_integer(unsigned(fracc))
-                        , 2*WIDTH + 2*FIXED_SIZE
-                    ), 2*WIDTH + 2*FIXED_SIZE
-                ));
-                state_next <= ComputeCPos5;
-
-            when ComputeCPos5 =>
-                cpos_next <= std_logic_vector(
-                    resize(
-                        to_unsigned(
-                            to_integer(signed(temp4_cpos_reg)) /
-                            to_integer(unsigned(spacing))
-                        , 2*WIDTH + 2*FIXED_SIZE
-                    ), 2*WIDTH + 2*FIXED_SIZE
-                ));
-                state_next <= SetRXandCX;
 
            when SetRXandCX =>
                 rx_next <= std_logic_vector(
