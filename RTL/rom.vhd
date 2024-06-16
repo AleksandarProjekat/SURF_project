@@ -10,13 +10,13 @@ entity rom is
     );
     port (
         clk_a : in std_logic;
-        clk_b : in std_logic;
+        --clk_b : in std_logic;
         en_a : in std_logic;
-        en_b : in std_logic;
+        --en_b : in std_logic;
         addr_a : in std_logic_vector(SIZE_WIDTH - 1 downto 0);
-        addr_b : in std_logic_vector(SIZE_WIDTH - 1 downto 0);
-        data_a_o : out std_logic_vector(WIDTH - 1 downto 0);
-        data_b_o : out std_logic_vector(WIDTH - 1 downto 0)
+       -- addr_b : in std_logic_vector(SIZE_WIDTH - 1 downto 0);
+        data_a_o : out std_logic_vector(WIDTH - 1 downto 0)
+        --data_b_o : out std_logic_vector(WIDTH - 1 downto 0)
     );
 end rom;
 
@@ -68,7 +68,7 @@ architecture Behavioral of rom is
     attribute ram_style of ROM : signal is "block";
 
 begin
-    process(clk_a, clk_b)
+    process(clk_a)
     begin
         if rising_edge(clk_a) then
             if en_a = '1' then
@@ -76,11 +76,11 @@ begin
             end if;
         end if;
         
-        if rising_edge(clk_b) then
-            if en_b = '1' then
-                data_b_o <= ROM(to_integer(unsigned(addr_b)));
-            end if;
-        end if;
+        --if rising_edge(clk_b) then
+            --if en_b = '1' then
+                --data_b_o <= ROM(to_integer(unsigned(addr_b)));
+           -- end if;
+        --end if;
     end process;
 end Behavioral;
 

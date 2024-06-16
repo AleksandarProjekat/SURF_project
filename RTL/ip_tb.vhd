@@ -57,8 +57,7 @@ architecture Behavioral of tb_ip is
             rom_data : in std_logic_vector(FIXED_SIZE - 1 downto 0);
             rom_addr : out std_logic_vector(5 downto 0);  
             start_i : in std_logic;
-            ready_o : out std_logic;
-            state_o : out state_type
+            ready_o : out std_logic
         );
     end component;
 
@@ -70,13 +69,13 @@ architecture Behavioral of tb_ip is
         );
         port (
             clk_a : in std_logic;
-            clk_b : in std_logic;
+            --clk_b : in std_logic;
             en_a : in std_logic;
-            en_b : in std_logic;
+            --en_b : in std_logic;
             addr_a : in std_logic_vector(SIZE_WIDTH - 1 downto 0);
-            addr_b : in std_logic_vector(SIZE_WIDTH - 1 downto 0);
-            data_a_o : out std_logic_vector(WIDTH - 1 downto 0);
-            data_b_o : out std_logic_vector(WIDTH - 1 downto 0)
+            --addr_b : in std_logic_vector(SIZE_WIDTH - 1 downto 0);
+            data_a_o : out std_logic_vector(WIDTH - 1 downto 0)
+            --data_b_o : out std_logic_vector(WIDTH - 1 downto 0)
         );
     end component;
 
@@ -129,13 +128,13 @@ begin
         )
         port map (
             clk_a => clk,
-            clk_b => clk,
+            --clk_b => clk,
             en_a => rom_en_a,
-            en_b => '0',
+            --en_b => '0',
             addr_a => rom_addr,
-            addr_b => (others => '0'),
-            data_a_o => rom_data,
-            data_b_o => open
+            --addr_b => (others => '0'),
+            data_a_o => rom_data
+            --data_b_o => open
         );
 
     -- Instanciranje testirane jedinice (DUT)
@@ -179,8 +178,7 @@ begin
             rom_data => rom_data,
             rom_addr => rom_addr,
             start_i => start_i,
-            ready_o => ready_o,
-            state_o => state_o
+            ready_o => ready_o
         );
 
     -- Proces za generisanje taktnog signala

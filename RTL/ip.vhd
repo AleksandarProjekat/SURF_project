@@ -68,9 +68,8 @@ entity ip is
         ---------------KOMANDNI INTERFEJS------------------------
         start_i : in std_logic;
         ---------------STATUSNI INTERFEJS------------------------
-        ready_o : out std_logic;
-        ---------------STATUS STANJE------------------------
-        state_o : out state_type  -- Dodavanje izlaznog porta za stanje
+        ready_o : out std_logic
+
     );
 end ip;
 
@@ -85,13 +84,13 @@ architecture Behavioral of ip is
         );
         port (
             clk_a : in std_logic;
-            clk_b : in std_logic;
+            --clk_b : in std_logic;
             en_a : in std_logic;
-            en_b : in std_logic;
+            --en_b : in std_logic;
             addr_a : in std_logic_vector(SIZE_WIDTH - 1 downto 0);
-            addr_b : in std_logic_vector(SIZE_WIDTH - 1 downto 0);
-            data_a_o : out std_logic_vector(WIDTH - 1 downto 0);
-            data_b_o : out std_logic_vector(WIDTH - 1 downto 0)
+            --addr_b : in std_logic_vector(SIZE_WIDTH - 1 downto 0);
+            data_a_o : out std_logic_vector(WIDTH - 1 downto 0)
+            --data_b_o : out std_logic_vector(WIDTH - 1 downto 0)
         );
     end component;
 
@@ -172,13 +171,13 @@ begin
         )
         port map (
             clk_a => clk,
-            clk_b => clk,
+            --clk_b => clk,
             en_a => rom_enable,
-            en_b => '0',
+            --en_b => '0',
             addr_a => rom_addr_int,
-            addr_b => (others => '0'),
-            data_a_o => rom_data_internal,
-            data_b_o => open
+            --addr_b => (others => '0'),
+            data_a_o => rom_data_internal
+            --data_b_o => open
         );
 
     -- Povezivanje signala za ROM
@@ -766,6 +765,5 @@ begin
     bram_addr1_o <= bram_addr1_int;
     bram_addr2_o <= bram_addr2_int;
     rom_addr <= rom_addr_next;  -- A?uriranje rom_addr signala
-    state_o <= state_reg;
 
 end Behavioral;
