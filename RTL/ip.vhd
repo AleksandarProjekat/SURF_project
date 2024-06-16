@@ -428,7 +428,7 @@ begin
                     when ComputeCPos1 =>
                         temp1_cpos_next <= std_logic_vector(
                             resize(
-                                to_unsigned(
+                                to_signed(
                                     to_integer(unsigned(step)) *
                                     (-to_integer(unsigned(i_sine)) *
                                     (to_integer(signed(i_reg)) - to_integer(signed(iradius))))
@@ -444,7 +444,7 @@ begin
                     when ComputeCPos3 =>
                         temp3_cpos_next <= std_logic_vector(
                             resize(
-                                to_unsigned(
+                                to_signed(
                                     to_integer(unsigned(temp2_cpos_reg)) +
                                     (to_integer(unsigned(i_cose)) *
                                     (to_integer(signed(j_reg)) - to_integer(signed(iradius))))
@@ -497,7 +497,8 @@ begin
                 state_next <= BoundaryCheck;
 
             when BoundaryCheck =>
-                if to_integer(unsigned(rx)) <= -1 or to_integer(unsigned(rx)) >= INDEX_SIZE or to_integer(unsigned(cx)) <= -1 or to_integer(unsigned(cx)) >= INDEX_SIZE then
+                 if (signed(rx) > -1 and signed(rx) < to_signed(INDEX_SIZE, rx'length)) and
+       (signed(cx) > -1 and signed(cx) < to_signed(INDEX_SIZE, cx'length)) then
                     state_next <= NextSample;
                 else
                     state_next <= PositionValidation;
