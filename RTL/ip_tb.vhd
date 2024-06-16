@@ -7,7 +7,6 @@ entity tb_ip is
 end tb_ip;
 
 architecture Behavioral of tb_ip is
-
     -- Constants
     constant WIDTH : integer := 11;
     constant PIXEL_SIZE : integer := 14;
@@ -17,9 +16,73 @@ architecture Behavioral of tb_ip is
     constant IMG_WIDTH : integer := 128;
     constant IMG_HEIGHT : integer := 128;
 
-    -- Signals
+    -- Komponente za testiranje
+    component ip
+        generic (
+            WIDTH : integer := 11;            
+            PIXEL_SIZE : integer := 14;       
+            SUM_WIDTH : integer := 16;        
+            FIXED_SIZE : integer := 48;       
+            INDEX_SIZE : integer := 4;        
+            IMG_WIDTH : integer := 128;       
+            IMG_HEIGHT : integer := 128      
+        );
+        port (
+            clk : in std_logic;
+            reset : in std_logic;
+            iradius : in unsigned(WIDTH - 1 downto 0);
+            fracr : in std_logic_vector(FIXED_SIZE - 1 downto 0);
+            fracc : in std_logic_vector(FIXED_SIZE - 1 downto 0);
+            spacing : in std_logic_vector(FIXED_SIZE - 1 downto 0);
+            iy : in unsigned(WIDTH - 1 downto 0);
+            ix : in unsigned(WIDTH - 1 downto 0);
+            step : in unsigned(WIDTH - 1 downto 0);
+            i_cose : in std_logic_vector(FIXED_SIZE - 1 downto 0);
+            i_sine : in std_logic_vector(FIXED_SIZE - 1 downto 0);
+            scale : in std_logic_vector(FIXED_SIZE - 1 downto 0);
+            bram_addr1_o : out std_logic_vector(PIXEL_SIZE-1 downto 0);
+            bram_addr2_o : out std_logic_vector(PIXEL_SIZE-1 downto 0);
+            bram_data1_i : in std_logic_vector(7 downto 0);
+            bram_data2_i : in std_logic_vector(7 downto 0);
+            bram_en1_o : out std_logic;
+            bram_we1_o : out std_logic;
+            bram_en2_o : out std_logic;
+            bram_we2_o : out std_logic;
+            addr_do1_o : out std_logic_vector (5 downto 0);
+            data1_o_next : out std_logic_vector (8*FIXED_SIZE + 4*WIDTH + 2*SUM_WIDTH - 1 downto 0);
+            c1_data_o : out std_logic;
+            addr_do2_o : out std_logic_vector (5 downto 0);
+            data2_o_next : out std_logic_vector (8*FIXED_SIZE + 4*WIDTH + 2*SUM_WIDTH - 1 downto 0);
+            c2_data_o : out std_logic;
+            rom_data : in std_logic_vector(FIXED_SIZE - 1 downto 0);
+            rom_addr : out std_logic_vector(5 downto 0);  
+            start_i : in std_logic;
+            ready_o : out std_logic;
+            state_o : out state_type
+        );
+    end component;
+
+    component rom
+        generic (
+            WIDTH: positive := 48;  -- Izmenjena sirina da odgovara formatu
+            SIZE: positive := 40;   -- Broj lookup vrednosti
+            SIZE_WIDTH: positive := 6  -- Log2(40) za adresiranje
+        );
+        port (
+            clk_a : in std_logic;
+            clk_b : in std_logic;
+            en_a : in std_logic;
+            en_b : in std_logic;
+            addr_a : in std_logic_vector(SIZE_WIDTH - 1 downto 0);
+            addr_b : in std_logic_vector(SIZE_WIDTH - 1 downto 0);
+            data_a_o : out std_logic_vector(WIDTH - 1 downto 0);
+            data_b_o : out std_logic_vector(WIDTH - 1 downto 0)
+        );
+    end component;
+
+    -- Signali za testiranje
     signal clk : std_logic := '0';
-    signal reset : std_logic := '1';
+    signal reset : std_logic := '0';
     signal iradius : unsigned(WIDTH - 1 downto 0) := (others => '0');
     signal fracr : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
     signal fracc : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
@@ -49,28 +112,42 @@ architecture Behavioral of tb_ip is
     signal start_i : std_logic := '0';
     signal ready_o : std_logic;
     signal state_o : state_type;
+    signal rom_data_a : std_logic_vector(FIXED_SIZE - 1 downto 0);
+    signal rom_en_a : std_logic := '0';
 
-    -- Clock generation
+    -- Clock period definition
     constant clk_period : time := 10 ns;
-    begin
-    clk_process : process
-    begin
-        clk <= '0';
-        wait for clk_period/2;
-        clk <= '1';
-        wait for clk_period/2;
-    end process;
 
-    -- Instantiate the Unit Under Test (UUT)
-    uut: entity work.ip
+begin
+
+    -- Instanciranje ROM-a
+    rom_inst : rom
         generic map (
-            WIDTH => 11,
-            PIXEL_SIZE => 14,
-            SUM_WIDTH => 16,
-            FIXED_SIZE => 48,
-            INDEX_SIZE => 4,
-            IMG_WIDTH => 128,
-            IMG_HEIGHT => 128
+            WIDTH => FIXED_SIZE,
+            SIZE => 40,
+            SIZE_WIDTH => 6
+        )
+        port map (
+            clk_a => clk,
+            clk_b => clk,
+            en_a => rom_en_a,
+            en_b => '0',
+            addr_a => rom_addr,
+            addr_b => (others => '0'),
+            data_a_o => rom_data,
+            data_b_o => open
+        );
+
+    -- Instanciranje testirane jedinice (DUT)
+    uut: ip
+        generic map (
+            WIDTH => WIDTH,
+            PIXEL_SIZE => PIXEL_SIZE,
+            SUM_WIDTH => SUM_WIDTH,
+            FIXED_SIZE => FIXED_SIZE,
+            INDEX_SIZE => INDEX_SIZE,
+            IMG_WIDTH => IMG_WIDTH,
+            IMG_HEIGHT => IMG_HEIGHT
         )
         port map (
             clk => clk,
@@ -106,47 +183,52 @@ architecture Behavioral of tb_ip is
             state_o => state_o
         );
 
-    -- Stimulus process
-    stim_proc: process
+    -- Proces za generisanje taktnog signala
+    clk_process :process
     begin
-        -- hold reset state for 100 ns.
-        wait for 100 ns;
-        reset <= '0';
-
-        -- Initialize Inputs
-        iradius <= to_unsigned(2, WIDTH);
-        fracr <= std_logic_vector(to_signed(1, FIXED_SIZE));
-        fracc <= std_logic_vector(to_signed(1, FIXED_SIZE));
-        spacing <= std_logic_vector(to_signed(1, FIXED_SIZE));
-        iy <= to_unsigned(10, WIDTH);
-        ix <= to_unsigned(10, WIDTH);
-        step <= to_unsigned(1, WIDTH);
-        i_cose <= std_logic_vector(to_signed(1, FIXED_SIZE));
-        i_sine <= std_logic_vector(to_signed(1, FIXED_SIZE));
-        scale <= std_logic_vector(to_signed(1, FIXED_SIZE));
-        bram_data1_i <= x"FF"; -- Example data
-        bram_data2_i <= x"FF"; -- Example data
-        rom_data <= std_logic_vector(to_signed(1, FIXED_SIZE)); -- Example data
-        
-        -- Apply stimulus
-        wait for 20 ns;
-        start_i <= '1';
-        wait for clk_period;
-        start_i <= '0';
-        
-        -- Wait for the processing to complete
-        wait until ready_o = '1';
-
-        -- Wait for global reset to finish
-        wait;
+        clk <= '0';
+        wait for clk_period/2;
+        clk <= '1';
+        wait for clk_period/2;
     end process;
 
-    -- Process to monitor state changes and print them
-    monitor_proc: process(clk)
-    begin
-        if rising_edge(clk) then
-            report "Current state: " & state_to_string(state_o);
-        end if;
+    -- Stimulus process
+    stim_proc: process
+    begin	
+        -- Resetovanje sistema
+        reset <= '1';
+        wait for clk_period*10; -- Duže trajanje reset signala
+        reset <= '0';
+        wait for clk_period*2;
+        
+        -- Unos ulaznih signala
+        iradius <= to_unsigned(3, WIDTH);
+        fracr <= std_logic_vector(to_unsigned(100, FIXED_SIZE));
+        fracc <= std_logic_vector(to_unsigned(200, FIXED_SIZE));
+        spacing <= std_logic_vector(to_unsigned(2, FIXED_SIZE));
+        iy <= to_unsigned(10, WIDTH);
+        ix <= to_unsigned(10, WIDTH);
+        step <= to_unsigned(2, WIDTH);
+        i_cose <= std_logic_vector(to_unsigned(2, FIXED_SIZE)); -- 
+        i_sine <= std_logic_vector(to_unsigned(5, FIXED_SIZE)); -- 
+        scale <= std_logic_vector(to_unsigned(1, FIXED_SIZE));
+        rom_en_a <= '1';
+        
+        -- Pokretanje
+        start_i <= '1';
+        wait for clk_period*2;
+        start_i <= '0';
+
+        -- ?ekanje da se obrada završi
+        wait until ready_o = '1';
+        
+        -- Prolazak kroz razli?ite stanja
+        for i in 0 to 1000 loop
+            wait for clk_period;
+        end loop;
+        
+        -- Završetak simulacije
+        wait;
     end process;
 
 end Behavioral;
