@@ -1,7 +1,7 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
-use work.ip_pkg.all;  -- Dodajte ovu liniju
+use work.ip_pkg.all;  
 
 entity tb_ip is
 end tb_ip;
@@ -117,6 +117,10 @@ architecture Behavioral of tb_ip is
     -- Clock period definition
     constant clk_period : time := 10 ns;
 
+    -- Simulacija BRAM memorije
+    type bram_type is array (0 to (2**PIXEL_SIZE)-1) of std_logic_vector(7 downto 0);
+    signal bram_memory : bram_type := (others => (others => '0'));
+
 begin
 
     -- Instanciranje ROM-a
@@ -128,13 +132,9 @@ begin
         )
         port map (
             clk_a => clk,
-            --clk_b => clk,
             en_a => rom_en_a,
-            --en_b => '0',
             addr_a => rom_addr,
-            --addr_b => (others => '0'),
             data_a_o => rom_data
-            --data_b_o => open
         );
 
     -- Instanciranje testirane jedinice (DUT)
@@ -190,9 +190,22 @@ begin
         wait for clk_period/2;
     end process;
 
+    -- Proces za simulaciju BRAM ponašanja
+    bram_process: process(clk)
+    begin
+        if rising_edge(clk) then
+            if bram_en1_o = '1' then
+                bram_data1_i <= bram_memory(to_integer(unsigned(bram_addr1_o)));
+            end if;
+            if bram_en2_o = '1' then
+                bram_data2_i <= bram_memory(to_integer(unsigned(bram_addr2_o)));
+            end if;
+        end if;
+    end process;
+
     -- Stimulus process
     stim_proc: process
-    begin	
+    begin    
         -- Resetovanje sistema
         reset <= '1';
         wait for clk_period*10; -- Duže trajanje reset signala
@@ -212,12 +225,16 @@ begin
         scale <= std_logic_vector(to_unsigned(1, FIXED_SIZE));
         rom_en_a <= '1';
         
+        -- Popunjavanje BRAM memorije simuliranim podacima
+        for i in 0 to (2**PIXEL_SIZE)-1 loop
+            bram_memory(i) <= std_logic_vector(to_unsigned(i mod 256, 8));
+        end loop;
+        
         -- Pokretanje
         start_i <= '1';
         wait for clk_period*2;
         start_i <= '0';
         
-
         -- ?ekanje da se obrada završi
         wait until ready_o = '1';
         
