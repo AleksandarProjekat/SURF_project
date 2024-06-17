@@ -652,6 +652,10 @@ begin
                     ori2_next <= to_unsigned(3, WIDTH);
                 end if;
                 state_next <= UpdateIndex;
+                
+                
+-----DO OVDE TESTIRANO, SAMO GORE ZA BRAM VIDETI KAD CITA I PISE DA LI RACUNA DOBRO KAD TREBA, I ZA ROM ZASTO NEKAD BUDE NEGATIVNA ADRESA
+
 
             when UpdateIndex =>
                 -- Check rx and set ri accordingly
@@ -660,8 +664,8 @@ begin
                 elsif signed(rx) >= to_signed(INDEX_SIZE, 2*WIDTH + 2*FIXED_SIZE) then
                     ri_next <= to_unsigned(INDEX_SIZE - 1, WIDTH);
                 else
-                    --ri_next <= to_unsigned(to_integer(signed(rx)), WIDTH);
-                    ri_next <= unsigned(rx(2*WIDTH + 2*FIXED_SIZE - 1 downto 2*WIDTH + 2*FIXED_SIZE - WIDTH));
+                    ri_next <= to_unsigned(to_integer(signed(rx)), WIDTH);
+                    --ri_next <= unsigned(rx(2*WIDTH + 2*FIXED_SIZE - 1 downto 2*WIDTH + 2*FIXED_SIZE - WIDTH));
 
                 end if;
 
@@ -671,8 +675,8 @@ begin
                 elsif signed(cx) >= to_signed(INDEX_SIZE, 2*WIDTH + 2*FIXED_SIZE) then
                     ci_next <= to_unsigned(INDEX_SIZE - 1, WIDTH);
                 else
-                    --ci_next <= to_unsigned(to_integer(signed(cx)), WIDTH);
-                    ci_next <= unsigned(cx(2*WIDTH + 2*FIXED_SIZE - 1 downto 2*WIDTH + 2*FIXED_SIZE - WIDTH));
+                    ci_next <= to_unsigned(to_integer(signed(cx)), WIDTH);
+                    --ci_next <= unsigned(cx(2*WIDTH + 2*FIXED_SIZE - 1 downto 2*WIDTH + 2*FIXED_SIZE - WIDTH));
 
                 end if;
                     state_next <= ComputeFractionalComponents;
@@ -697,6 +701,9 @@ begin
                 end if;
             
                 state_next <= ComputeWeightsR;
+                
+                
+-----DO OVDE TESTIRANO, SAMO GORE ZA BRAM VIDETI KAD CITA I PISE DA LI RACUNA DOBRO KAD TREBA, I ZA ROM ZASTO NEKAD BUDE NEGATIVNA ADRESA
 
 
             when ComputeWeightsR =>
