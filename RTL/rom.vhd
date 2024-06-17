@@ -10,13 +10,9 @@ entity rom is
     );
     port (
         clk_a : in std_logic;
-        --clk_b : in std_logic;
         en_a : in std_logic;
-        --en_b : in std_logic;
         addr_a : in std_logic_vector(SIZE_WIDTH - 1 downto 0);
-       -- addr_b : in std_logic_vector(SIZE_WIDTH - 1 downto 0);
         data_a_o : out std_logic_vector(WIDTH - 1 downto 0)
-        --data_b_o : out std_logic_vector(WIDTH - 1 downto 0)
     );
 end rom;
 
@@ -75,12 +71,6 @@ begin
                 data_a_o <= ROM(to_integer(unsigned(addr_a)));
             end if;
         end if;
-        
-        --if rising_edge(clk_b) then
-            --if en_b = '1' then
-                --data_b_o <= ROM(to_integer(unsigned(addr_b)));
-           -- end if;
-        --end if;
     end process;
 end Behavioral;
 

@@ -84,13 +84,9 @@ architecture Behavioral of ip is
         );
         port (
             clk_a : in std_logic;
-            --clk_b : in std_logic;
             en_a : in std_logic;
-            --en_b : in std_logic;
             addr_a : in std_logic_vector(SIZE_WIDTH - 1 downto 0);
-            --addr_b : in std_logic_vector(SIZE_WIDTH - 1 downto 0);
             data_a_o : out std_logic_vector(WIDTH - 1 downto 0)
-            --data_b_o : out std_logic_vector(WIDTH - 1 downto 0)
         );
     end component;
 
@@ -171,13 +167,9 @@ begin
         )
         port map (
             clk_a => clk,
-            --clk_b => clk,
             en_a => rom_enable,
-            --en_b => '0',
             addr_a => rom_addr_int,
-            --addr_b => (others => '0'),
             data_a_o => rom_data_internal
-            --data_b_o => open
         );
 
     -- Povezivanje signala za ROM
@@ -237,6 +229,7 @@ begin
             temp2_cpos_reg <= (others => '0');
             temp3_cpos_reg <= (others => '0');
             temp4_cpos_reg <= (others => '0');
+            
         else
             state_reg <= state_next;
             -- A?uriranje registara sa internim signalima
@@ -287,12 +280,13 @@ begin
             temp2_cpos_reg <= temp2_cpos_next;
             temp3_cpos_reg <= temp3_cpos_next;
             temp4_cpos_reg <= temp4_cpos_next;
+            
             end if;
         end if;
     end process;
 
     -- Kombinacioni proces za odre?ivanje slede?ih stanja i vrednosti signala
-    process (state_reg, start_i, temp1_rpos_reg, temp2_rpos_reg, temp3_rpos_reg, temp4_rpos_reg, temp1_cpos_reg, temp2_cpos_reg, temp3_cpos_reg, temp4_cpos_reg, bram_data1_i, bram_data2_i, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, i_reg, j_reg, ri, ci, r, c, rx, cx, rfrac, cfrac, dx, dy, dxx, dyy, weight, rweight1, rweight2, cweight1, cweight2, ori1, ori2, dxx1, dxx2, dyy1, dyy2, rpos, cpos, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_internal, data1_o_reg, data2_o_reg, bram_addr1_int, bram_addr2_int, dxx1_sum_next, dxx2_sum_next, dyy1_sum_next, dyy2_sum_next)
+    process (state_reg, start_i, temp1_rpos_reg, temp2_rpos_reg, temp3_rpos_reg, temp4_rpos_reg, temp1_cpos_reg, temp2_cpos_reg, temp3_cpos_reg, temp4_cpos_reg, bram_data1_i, bram_data2_i, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, i_reg, j_reg, ri, ci, r, c, rx, cx, rfrac, cfrac, dx, dy, dxx, dyy, weight, rweight1, rweight2, cweight1, cweight2, ori1, ori2, dxx1, dxx2, dyy1, dyy2, rpos, cpos, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_internal, data1_o_reg, data2_o_reg, bram_addr1_int, bram_addr2_int)
     begin
         -- Default assignments
         state_next <= state_reg;
@@ -422,6 +416,7 @@ begin
                                 , 2*WIDTH + 2*FIXED_SIZE
                             ), 2*WIDTH + 2*FIXED_SIZE
                         ));
+
                         state_next <= ComputeCPos1;
                     
                     when ComputeCPos1 =>
@@ -519,11 +514,16 @@ begin
                     state_next <= ProcessSample;
                 end if;
 
-            when ProcessSample =>
-                rom_addr_next <= std_logic_vector(to_unsigned(to_integer(unsigned(rpos) * unsigned(rpos) + unsigned(cpos) * unsigned(cpos)), 6)); -- Izra?unavanje adrese za ROM
-                weight_next <= std_logic_vector(resize(signed(rom_data_internal), FIXED_SIZE));
-                state_next <= ComputeDerivatives;
+           when ProcessSample =>
+    -- Generisanje adrese za ROM sa modifikacijom da bude u validnom opsegu
+    rom_addr_next <= std_logic_vector(to_unsigned(
+        ((to_integer(unsigned(rpos)) * to_integer(unsigned(rpos)) + 
+          to_integer(unsigned(cpos)) * to_integer(unsigned(cpos))) + 100000) mod 40, 6));
+    weight_next <= std_logic_vector(resize(signed(rom_data_internal), FIXED_SIZE));
+    state_next <= ComputeDerivatives;
 
+
+------ VEROVATNO TREBA NAMESTITI DA SE NE MENJAJU R, C, ADDSAMPLESTEP SVE DOK SE NE OBRADI SVE ADRESE I PODACI OD DXX1 DO DYY2
             when ComputeDerivatives =>
                 -- Set BRAM addresses for the first pair of pixels for dxx1
                 bram_addr1_next <= std_logic_vector(to_unsigned((to_integer(r) + to_integer(addSampleStep) + 1) * IMG_WIDTH + (to_integer(c) + to_integer(addSampleStep) + 1), PIXEL_SIZE));
