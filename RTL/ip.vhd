@@ -523,12 +523,11 @@ begin
                 rom_addr_next <= std_logic_vector(resize(to_unsigned(
                     abs((to_integer(unsigned(rpos)) * to_integer(unsigned(rpos)) + 
                          to_integer(unsigned(cpos)) * to_integer(unsigned(cpos))) + 100000) mod 40, rom_addr_next'length), rom_addr_next'length));
-    weight_next <= std_logic_vector(resize(signed(rom_data_reg), FIXED_SIZE));
-    state_next <= ComputeDerivatives;
+                weight_next <= std_logic_vector(resize(signed(rom_data_reg), FIXED_SIZE));
+            state_next <= ComputeDerivatives;
+ 
 
-
------- VEROVATNO TREBA NAMESTITI DA SE NE MENJAJU R, C, ADDSAMPLESTEP SVE DOK SE NE OBRADI SVE ADRESE I PODACI OD DXX1 DO DYY2
-            when ComputeDerivatives =>
+           when ComputeDerivatives =>
                 -- Set BRAM addresses for the first pair of pixels for dxx1
                 bram_en1_o <= '1';  -- Enable BRAM port 1
                 bram_en2_o <= '1';  -- Enable BRAM port 2
@@ -542,9 +541,9 @@ begin
                 dxx1_sum_next <= std_logic_vector(resize(signed(bram_data1_i), SUM_WIDTH) + resize(signed(bram_data2_i), SUM_WIDTH));
                 -- Set BRAM addresses for the second pair of pixels for dxx1
                 bram_en1_o <= '1';  -- Enable BRAM port 1
-                bram_en2_o <= '1';  -- Enable BRAM port 2
+                bram_en2_o <= '1';  -- Enable BRAM port 2                
                 bram_addr1_next <= std_logic_vector(to_unsigned((to_integer(r) - to_integer(addSampleStep)) * IMG_WIDTH + (to_integer(c) + to_integer(addSampleStep) + 1), PIXEL_SIZE));
-                bram_addr2_next <= std_logic_vector(to_unsigned((to_integer(r) + to_integer(addSampleStep) + 1) * IMG_WIDTH + to_integer(c), PIXEL_SIZE));
+                bram_addr2_next <= std_logic_vector(to_unsigned((to_integer(r) + to_integer(addSampleStep) + 1) * IMG_WIDTH + (to_integer(c)), PIXEL_SIZE));
                 state_next <= FetchDXX1_2;
 
             when FetchDXX1_2 =>
@@ -583,8 +582,8 @@ begin
                 -- Set BRAM addresses for the first pair of pixels for dyy1
                 bram_en1_o <= '1';  -- Enable BRAM port 1
                 bram_en2_o <= '1';  -- Enable BRAM port 2
-                bram_addr1_next <= std_logic_vector(to_unsigned((to_integer(r + 1) * IMG_WIDTH + to_integer(c - to_integer(addSampleStep))), PIXEL_SIZE));
-                bram_addr2_next <= std_logic_vector(to_unsigned((to_integer(r - to_integer(addSampleStep)) * IMG_WIDTH + to_integer(c + to_integer(addSampleStep) + 1)), PIXEL_SIZE));
+                bram_addr1_next <= std_logic_vector(to_unsigned((to_integer(r + 1) * IMG_WIDTH + to_integer(c + to_integer(addSampleStep) + 1)), PIXEL_SIZE));
+                bram_addr2_next <= std_logic_vector(to_unsigned((to_integer(r - to_integer(addSampleStep)) * IMG_WIDTH + to_integer(c - to_integer(addSampleStep))), PIXEL_SIZE));
                 state_next <= FetchDYY1_1;
 
             when FetchDYY1_1 =>
@@ -593,8 +592,8 @@ begin
                 -- Set BRAM addresses for the second pair of pixels for dyy1
                 bram_en1_o <= '1';  -- Enable BRAM port 1
                 bram_en2_o <= '1';  -- Enable BRAM port 2
-                bram_addr1_next <= std_logic_vector(to_unsigned((to_integer(r + 1) * IMG_WIDTH + to_integer(c - to_integer(addSampleStep))), PIXEL_SIZE));
-                bram_addr2_next <= std_logic_vector(to_unsigned((to_integer(r - to_integer(addSampleStep)) * IMG_WIDTH + to_integer(c + to_integer(addSampleStep) + 1)), PIXEL_SIZE));
+                bram_addr1_next <= std_logic_vector(to_unsigned((to_integer(r - to_integer(addSampleStep)) * IMG_WIDTH + to_integer(c + to_integer(addSampleStep) + 1)), PIXEL_SIZE));
+                bram_addr2_next <= std_logic_vector(to_unsigned((to_integer(r + 1) * IMG_WIDTH + to_integer(c - to_integer(addSampleStep))), PIXEL_SIZE));
                 state_next <= FetchDYY1_2;
 
             when FetchDYY1_2 =>
@@ -618,13 +617,13 @@ begin
                 -- Set BRAM addresses for the second pair of pixels for dyy2
                 bram_en1_o <= '1';  -- Enable BRAM port 1
                 bram_en2_o <= '1';  -- Enable BRAM port 2
-                bram_addr1_next <= std_logic_vector(to_unsigned((to_integer(r + to_integer(addSampleStep) + 1) * IMG_WIDTH + to_integer(c - to_integer(addSampleStep))), PIXEL_SIZE));
-                bram_addr2_next <= std_logic_vector(to_unsigned(to_integer(r) * IMG_WIDTH + to_integer(c + to_integer(addSampleStep) + 1), PIXEL_SIZE));
+                bram_addr1_next <= std_logic_vector(to_unsigned(to_integer(r) * IMG_WIDTH + to_integer(c + to_integer(addSampleStep) + 1), PIXEL_SIZE));
+                bram_addr2_next <= std_logic_vector(to_unsigned((to_integer(r + to_integer(addSampleStep) + 1) * IMG_WIDTH + to_integer(c - to_integer(addSampleStep))), PIXEL_SIZE));
                 state_next <= FetchDYY2_2;
 
             when FetchDYY2_2 =>
                 -- Capture the data from BRAM for dyy2
-                dyy2_sum_next <= std_logic_vector(resize(signed(dyy2_sum_reg), SUM_WIDTH) - resize(signed(bram_data1_i), SUM_WIDTH) - resize(signed(bram_data2_i), SUM_WIDTH));
+            dyy2_sum_next <= std_logic_vector(resize(signed(dyy2_sum_reg), SUM_WIDTH) - resize(signed(bram_data1_i), SUM_WIDTH) - resize(signed(bram_data2_i), SUM_WIDTH));
                 state_next <= ComputeDYY2;
 
             when ComputeDYY2 =>
