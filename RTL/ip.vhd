@@ -351,7 +351,7 @@ begin
 
         c1_data_o <= '0';
         c2_data_o <= '0';
-        ready_o <= '1';
+        ready_o <= '0';
 
         -- Logika FSM-a
         case state_reg is
@@ -761,22 +761,23 @@ begin
 
 
             
-            when NextSample =>
-                j_next <= j_reg + 1;
-                if (j_reg > to_integer(unsigned(2*iradius))) then
-                    state_next <= IncrementI;
-                else
-                    state_next <= InnerLoop;
-                end if;
-
-            when IncrementI =>
-                i_next <= i_reg + 1;
-                if (i_reg > to_integer(unsigned(2*iradius))) then
-                    state_next <= Finish;
-                else
-                    state_next <= StartLoop;
-                end if;
-
+                when NextSample =>
+                    j_next <= j_reg + 1;
+                    if (j_next >= to_unsigned(2 * to_integer(iradius), WIDTH)) then
+                        state_next <= IncrementI;
+                    else
+                        state_next <= InnerLoop;
+                    end if;
+                
+                
+                when IncrementI =>
+                    i_next <= i_reg + 1;
+                    if (i_next >= to_unsigned(2 * to_integer(iradius), WIDTH)) then
+                        state_next <= Finish;
+                    else
+                        state_next <= StartLoop;
+                    end if;
+                
             when Finish =>
                 done <= '1';
                 state_next <= idle;
