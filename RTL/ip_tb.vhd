@@ -212,7 +212,7 @@ begin
         wait for clk_period*2;
         
         -- Unos ulaznih signala
-        iradius <= to_unsigned(11, WIDTH);
+        iradius <= to_unsigned(4, WIDTH);
         fracr <= std_logic_vector(to_unsigned(100, FIXED_SIZE));
         fracc <= std_logic_vector(to_unsigned(200, FIXED_SIZE));
         spacing <= std_logic_vector(to_unsigned(2, FIXED_SIZE));
