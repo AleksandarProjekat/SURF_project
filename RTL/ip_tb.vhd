@@ -110,7 +110,6 @@ architecture Behavioral of tb_ip is
     signal rom_addr : std_logic_vector(5 downto 0);
     signal start_i : std_logic := '0';
     signal ready_o : std_logic;
-    signal state_o : state_type;
     signal rom_data_a : std_logic_vector(FIXED_SIZE - 1 downto 0);
     signal rom_en_a : std_logic := '0';
 

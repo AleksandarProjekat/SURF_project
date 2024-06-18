@@ -141,10 +141,10 @@ constant HALF_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector
     signal done : std_logic;
 
      -- Definisanje internog signala za kombinatornu logiku
+    signal rom_data_reg : std_logic_vector(FIXED_SIZE - 1 downto 0);
     signal rom_data_internal : std_logic_vector(FIXED_SIZE - 1 downto 0);
     signal rom_enable : std_logic;
-    signal rom_addr_next : std_logic_vector(5 downto 0);
-    signal rom_addr_int : std_logic_vector(5 downto 0);  -- Dodato za internu adresu
+    signal rom_addr_int, rom_addr_next : std_logic_vector(5 downto 0);  -- Dodato za internu adresu
     
     -- Definisanje internog signala za adrese ULAZNI bram
     signal bram_addr1_int, bram_addr2_int : std_logic_vector(PIXEL_SIZE-1 downto 0);
@@ -174,7 +174,6 @@ begin
 
     -- Povezivanje signala za ROM
     rom_enable <= '1' when state_reg = ProcessSample else '0';
-    rom_addr_int <= rom_addr_next;
 
     -- Sekvencijalni proces za registre
     process (clk)
@@ -230,6 +229,8 @@ begin
             temp3_cpos_reg <= (others => '0');
             temp4_cpos_reg <= (others => '0');
             
+            rom_addr_int <= (others => '0');
+            rom_data_reg <= (others => '0'); -- Resetovanje signala za zadržavanje podataka            
         else
             state_reg <= state_next;
             -- A?uriranje registara sa internim signalima
@@ -280,13 +281,16 @@ begin
             temp2_cpos_reg <= temp2_cpos_next;
             temp3_cpos_reg <= temp3_cpos_next;
             temp4_cpos_reg <= temp4_cpos_next;
-            
+            if rom_enable = '1' then
+                    rom_data_reg <= rom_data_internal;
+                    rom_addr_int <= rom_addr_next;               
+                     end if;
             end if;
         end if;
     end process;
 
     -- Kombinacioni proces za odre?ivanje slede?ih stanja i vrednosti signala
-    process (state_reg, start_i, temp1_rpos_reg, temp2_rpos_reg, temp3_rpos_reg, temp4_rpos_reg, temp1_cpos_reg, temp2_cpos_reg, temp3_cpos_reg, temp4_cpos_reg, bram_data1_i, bram_data2_i, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, i_reg, j_reg, ri, ci, r, c, rx, cx, rfrac, cfrac, dx, dy, dxx, dyy, weight, rweight1, rweight2, cweight1, cweight2, ori1, ori2, dxx1, dxx2, dyy1, dyy2, rpos, cpos, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_internal, data1_o_reg, data2_o_reg, bram_addr1_int, bram_addr2_int)
+    process (state_reg, start_i, temp1_rpos_reg, temp2_rpos_reg, temp3_rpos_reg, temp4_rpos_reg, temp1_cpos_reg, temp2_cpos_reg, temp3_cpos_reg, temp4_cpos_reg, bram_data1_i, bram_data2_i, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, i_reg, j_reg, ri, ci, r, c, rx, cx, rfrac, cfrac, dx, dy, dxx, dyy, weight, rweight1, rweight2, cweight1, cweight2, ori1, ori2, dxx1, dxx2, dyy1, dyy2, rpos, cpos, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_reg,rom_addr_int, data1_o_reg, data2_o_reg, bram_addr1_int, bram_addr2_int)
     begin
         -- Default assignments
         state_next <= state_reg;
@@ -341,7 +345,7 @@ begin
         bram_we1_o <= '0'; -- Defaultna vrednost za bram_we1_o
         bram_en2_o <= '0'; -- Defaultna vrednost za bram_en2_o
         bram_we2_o <= '0'; -- Defaultna vrednost za bram_we2_o
-        rom_addr_next <= (others => '0'); -- Defaultna vrednost za rom_addr
+         rom_addr_next <= rom_addr_int; -- Defaultna vrednost za rom_addr_next
         addr_do1_o <= (others => '0'); -- Defaultna vrednost za addr_do1_o
         addr_do2_o <= (others => '0'); -- Defaultna vrednost za addr_do2_o
 
@@ -514,12 +518,12 @@ begin
                     state_next <= ProcessSample;
                 end if;
 
-           when ProcessSample =>
-    -- Generisanje adrese za ROM sa modifikacijom da bude u validnom opsegu
-    rom_addr_next <= std_logic_vector(to_unsigned(
-        ((to_integer(unsigned(rpos)) * to_integer(unsigned(rpos)) + 
-          to_integer(unsigned(cpos)) * to_integer(unsigned(cpos))) + 100000) mod 40, 6));
-    weight_next <= std_logic_vector(resize(signed(rom_data_internal), FIXED_SIZE));
+         when ProcessSample =>
+                -- Ensure the address is always non-negative
+                rom_addr_next <= std_logic_vector(resize(to_unsigned(
+                    abs((to_integer(unsigned(rpos)) * to_integer(unsigned(rpos)) + 
+                         to_integer(unsigned(cpos)) * to_integer(unsigned(cpos))) + 100000) mod 40, rom_addr_next'length), rom_addr_next'length));
+    weight_next <= std_logic_vector(resize(signed(rom_data_reg), FIXED_SIZE));
     state_next <= ComputeDerivatives;
 
 
@@ -786,6 +790,6 @@ begin
     -- A?uriranje izlaznih portova iz internog signala za adrese
     bram_addr1_o <= bram_addr1_int;
     bram_addr2_o <= bram_addr2_int;
-    rom_addr <= rom_addr_next;  -- A?uriranje rom_addr signala
+    rom_addr <= rom_addr_int;  -- A?uriranje rom_addr signala
 
 end Behavioral;
