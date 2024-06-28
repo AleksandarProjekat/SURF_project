@@ -230,7 +230,7 @@ begin
             temp4_cpos_reg <= (others => '0');
             
             rom_addr_int <= (others => '0');
-            rom_data_reg <= (others => '0'); -- Resetovanje signala za zadržavanje podataka            
+            rom_data_reg <= (others => '0'); -- Resetovanje signala za zadr?avanje podataka            
         else
             state_reg <= state_next;
             -- A?uriranje registara sa internim signalima
@@ -282,7 +282,7 @@ begin
             temp3_cpos_reg <= temp3_cpos_next;
             temp4_cpos_reg <= temp4_cpos_next;
             if rom_enable = '1' then
-                    rom_data_reg <= rom_data_internal;
+                    rom_data_reg <= rom_data;
                     rom_addr_int <= rom_addr_next;               
                      end if;
             end if;
@@ -290,7 +290,7 @@ begin
     end process;
 
     -- Kombinacioni proces za odre?ivanje slede?ih stanja i vrednosti signala
-    process (state_reg, start_i, temp1_rpos_reg, temp2_rpos_reg, temp3_rpos_reg, temp4_rpos_reg, temp1_cpos_reg, temp2_cpos_reg, temp3_cpos_reg, temp4_cpos_reg, bram_data1_i, bram_data2_i, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, i_reg, j_reg, ri, ci, r, c, rx, cx, rfrac, cfrac, dx, dy, dxx, dyy, weight, rweight1, rweight2, cweight1, cweight2, ori1, ori2, dxx1, dxx2, dyy1, dyy2, rpos, cpos, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_reg,rom_addr_int, data1_o_reg, data2_o_reg, bram_addr1_int, bram_addr2_int)
+    process (state_reg, start_i, i_reg, j_reg, temp1_rpos_reg, temp2_rpos_reg, temp3_rpos_reg, temp4_rpos_reg, temp1_cpos_reg, temp2_cpos_reg, temp3_cpos_reg, temp4_cpos_reg, bram_data1_i, bram_data2_i, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, ri, ci, r, c, rx, cx, rfrac, cfrac, dx, dy, dxx, dyy, weight, rweight1, rweight2, cweight1, cweight2, ori1, ori2, dxx1, dxx2, dyy1, dyy2, rpos, cpos, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_reg,rom_addr_int, data1_o_reg, data2_o_reg, bram_addr1_int, bram_addr2_int)
     begin
         -- Default assignments
         state_next <= state_reg;
@@ -520,9 +520,10 @@ begin
 
          when ProcessSample =>
                 -- Ensure the address is always non-negative
-                rom_addr_next <= std_logic_vector(resize(to_unsigned(
-                    abs((to_integer(unsigned(rpos)) * to_integer(unsigned(rpos)) + 
-                         to_integer(unsigned(cpos)) * to_integer(unsigned(cpos))) + 100000) mod 40, rom_addr_next'length), rom_addr_next'length));
+               rom_addr_next <= std_logic_vector(to_unsigned(
+    abs((to_integer(unsigned(rpos)) * to_integer(unsigned(rpos)) + 
+         to_integer(unsigned(cpos)) * to_integer(unsigned(cpos))) + 100000) mod 40, 
+    rom_addr_next'length));
                 weight_next <= std_logic_vector(resize(signed(rom_data_reg), FIXED_SIZE));
             state_next <= ComputeDerivatives;
  
@@ -717,7 +718,7 @@ begin
             when ComputeWeightsC =>                
 
                 cweight1_next <= std_logic_vector(resize(unsigned(rweight1) * (unsigned(to_signed(1, 2*FIXED_SIZE + 2*WIDTH)) - unsigned(cfrac)), 8*FIXED_SIZE + 4*WIDTH + 2*SUM_WIDTH));
-                cweight1_next <= std_logic_vector(resize(unsigned(rweight2) * (unsigned(to_signed(1, 2*FIXED_SIZE + 2*WIDTH)) - unsigned(cfrac)), 8*FIXED_SIZE + 4*WIDTH + 2*SUM_WIDTH));
+                cweight2_next <= std_logic_vector(resize(unsigned(rweight2) * (unsigned(to_signed(1, 2*FIXED_SIZE + 2*WIDTH)) - unsigned(cfrac)), 8*FIXED_SIZE + 4*WIDTH + 2*SUM_WIDTH));
                 state_next <= UpdateIndexArray;
 
             when UpdateIndexArray =>
@@ -727,7 +728,7 @@ begin
                     c1_data_o <= '1';
             
                     addr_do2_o <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori2)), 6));
-                    data1_o_next_int <= std_logic_vector(resize(unsigned(data2_o_reg), 8*FIXED_SIZE + 4*WIDTH + 2*SUM_WIDTH) + resize(unsigned(cweight2) , 8*FIXED_SIZE + 4*WIDTH + 2*SUM_WIDTH));
+                    data2_o_next_int <= std_logic_vector(resize(unsigned(data2_o_reg), 8*FIXED_SIZE + 4*WIDTH + 2*SUM_WIDTH) + resize(unsigned(cweight2) , 8*FIXED_SIZE + 4*WIDTH + 2*SUM_WIDTH));
                     c2_data_o <= '1';
             
                     state_next <= CheckNextColumn;
@@ -791,5 +792,5 @@ begin
     bram_addr1_o <= bram_addr1_int;
     bram_addr2_o <= bram_addr2_int;
     rom_addr <= rom_addr_int;  -- A?uriranje rom_addr signala
-
+    
 end Behavioral;
