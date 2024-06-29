@@ -188,7 +188,53 @@ begin
             start_i => start_i,
             ready_o => ready_o
         );
+ -- Instanciranje BRAM-a za ulazne podatke
+    bram_in: entity work.bram
+        generic map (
+            WIDTH => 8,  -- širina podataka
+            BRAM_SIZE => IMG_WIDTH*IMG_HEIGHT  -- dubina memorije
+        )
+        port map (
+            clka => clk,
+            clkb => clk,
+            ena => bram_en1_o,
+            enb => bram_en2_o,
+            reseta => reset,
+            resetb => reset,
+            wea => open,
+            web => open,
+            addra => bram_addr1_o,
+            addrb => bram_addr2_o,
+            dia => bram_data1_i,
+            dib => bram_data2_i,
+            doa => open,
+            dob => open
+        );
 
+    -- Instanciranje BRAM-a za izlazne podatke
+     bram_out: entity work.bram
+        generic map (
+            WIDTH => 8,  -- širina podataka
+            BRAM_SIZE => IMG_WIDTH*IMG_HEIGHT  -- dubina memorije
+        )
+        port map (
+            clka => clk,
+            clkb => clk,
+            ena => c1_data_o,
+            enb => c2_data_o,
+            reseta => reset,
+            resetb => reset,
+            wea => bram_we1_o,
+            web => bram_we2_o,
+            addra => addr_do1_o,
+            addrb => addr_do2_o,
+            dia => open,
+            dib => open,
+            doa => data1_o_next,
+            dob => data2_o_next
+        );
+        
+        
     -- Proces za generisanje taktnog signala
     clk_process :process
     begin
