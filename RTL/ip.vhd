@@ -52,9 +52,7 @@ entity ip is
         bram_data1_i : in std_logic_vector(7 downto 0);
         bram_data2_i : in std_logic_vector(7 downto 0);
         bram_en1_o : out std_logic;
-        bram_we1_o : out std_logic;
         bram_en2_o : out std_logic;
-        bram_we2_o : out std_logic;
         ---------------MEM INTERFEJS ZA IZLAZ--------------------
         addr_do1_o : out std_logic_vector (5 downto 0);
         data1_o_next : out std_logic_vector (8*FIXED_SIZE + 4*WIDTH + 2*SUM_WIDTH - 1 downto 0);           --VIDETI SA CIM POVEZUJEM INTERNO
@@ -62,6 +60,9 @@ entity ip is
         addr_do2_o : out std_logic_vector (5 downto 0);
         data2_o_next : out std_logic_vector (8*FIXED_SIZE + 4*WIDTH + 2*SUM_WIDTH - 1 downto 0);         --VIDETI SA CIM POVEZUJEM INTERNO
         c2_data_o : out std_logic;
+        bram_we1_o : out std_logic;
+        bram_we2_o : out std_logic;
+
         ---------------INTERFEJS ZA ROM--------------------
         rom_data : in std_logic_vector(FIXED_SIZE - 1 downto 0);
         rom_addr : out std_logic_vector(5 downto 0);  

@@ -225,7 +225,7 @@ begin
             reseta => reset,
             resetb => reset,
             wea => bram_we1_o,
-            web => bram_we2_o,
+            web => bram_we1_o,
             addra => addr_do1_o,
             addrb => addr_do2_o,
             dia => open,
