@@ -1,12 +1,23 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
+--use ieee.std_logic_arith.all;
+
 use work.ip_pkg.all;  
+use std.textio.all;
+use work.txt_util.all;
 
 entity tb_ip is
 end tb_ip;
 
 architecture Behavioral of tb_ip is
+
+file pixels1D : text open read_mode is
+	"C:\Users\coa\Desktop\pixels1D.txt";
+	file index1Dbin : text open read_mode is
+	"C:\Users\coa\Desktop\index1Dbin.txt";
+	file izlaz : text open write_mode is "C:\Users\coa\Desktop\izlaz.txt";
+
     -- Constants
     constant WIDTH : integer := 11;
     constant PIXEL_SIZE : integer := 14;
@@ -23,7 +34,7 @@ architecture Behavioral of tb_ip is
             PIXEL_SIZE : integer := 14;       
             SUM_WIDTH : integer := 16;        
             FIXED_SIZE : integer := 48;       
-            INDEX_SIZE : integer := 4;        
+            INDEX_SIZE : integer := 4;      
             IMG_WIDTH : integer := 128;       
             IMG_HEIGHT : integer := 128      
         );
@@ -116,9 +127,7 @@ architecture Behavioral of tb_ip is
     -- Clock period definition
     constant clk_period : time := 10 ns;
 
-    -- Simulacija BRAM memorije
-    type bram_type is array (0 to (2**PIXEL_SIZE)-1) of std_logic_vector(7 downto 0);
-    signal bram_memory : bram_type := (others => (others => '0'));
+
 
 begin
 
@@ -189,18 +198,7 @@ begin
         wait for clk_period/2;
     end process;
 
-    -- Proces za simulaciju BRAM ponašanja
-    bram_process: process(clk)
-    begin
-        if rising_edge(clk) then
-            if bram_en1_o = '1' then
-                bram_data1_i <= bram_memory(to_integer(unsigned(bram_addr1_o)));
-            end if;
-            if bram_en2_o = '1' then
-                bram_data2_i <= bram_memory(to_integer(unsigned(bram_addr2_o)));
-            end if;
-        end if;
-    end process;
+ 
 
     -- Stimulus process
     stim_proc: process
@@ -212,22 +210,23 @@ begin
         wait for clk_period*2;
         
         -- Unos ulaznih signala
-        iradius <= to_unsigned(23, WIDTH);
-        fracr <= std_logic_vector(to_unsigned(100, FIXED_SIZE));
-        fracc <= std_logic_vector(to_unsigned(200, FIXED_SIZE));
-        spacing <= std_logic_vector(to_unsigned(2, FIXED_SIZE));
-        iy <= to_unsigned(10, WIDTH);
-        ix <= to_unsigned(10, WIDTH);
-        step <= to_unsigned(2, WIDTH);
-        i_cose <= std_logic_vector(to_unsigned(2, FIXED_SIZE)); -- 
-        i_sine <= std_logic_vector(to_unsigned(5, FIXED_SIZE)); -- 
-        scale <= std_logic_vector(to_unsigned(1, FIXED_SIZE));
-        rom_en_a <= '1';
+    iradius <= to_unsigned(17, WIDTH); -- 17 je decimalna vrednost za iradius
+    fracr <= "000000000000000000000000000000001010000011000010"; --  0.15699263069083616 u binarnom formatu
+                                                                
+
+    fracc <= "000000000000000000000000000000011100110110110110"; --  0.45089018167010253 u binarnom formatu
+    spacing <= "000000000000000000000000001001101011111000001110"; -- 9.685600969817237 u binarnom formatu
+                                                                  
+
+    iy <= to_unsigned(38, WIDTH); -- 38 je decimalna vrednost za iy
+    ix <= to_unsigned(64, WIDTH); -- 64 je decimalna vrednost za ix
+    step <= to_unsigned(2, WIDTH); -- 2 je decimalna vrednost za step
+    i_cose <= "000000000000000000000000000000011011011001010001"; --  0.428043365478515625 u binarnom formatu
+    i_sine <= "000000000000000000000000000000111001110101110010"; -- 0.90375518798828125 u binarnom formatu
+    scale <= "000000000000000000000000000011001110101000000100"; -- 3.2285336566057454 u binarnom formatu
+    rom_en_a <= '1';
+
         
-        -- Popunjavanje BRAM memorije simuliranim podacima
-        for i in 0 to (2**PIXEL_SIZE)-1 loop
-            bram_memory(i) <= std_logic_vector(to_unsigned(i mod 256, 8));
-        end loop;
         
         -- Pokretanje
         start_i <= '1';

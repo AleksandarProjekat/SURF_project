@@ -1,0 +1,15 @@
+# Postavljanje krajeva linija na LF za sve tekstualne fajlove
+* text=auto
+
+# Specifični fajlovi sa LF krajevima linija
+*.sh text eol=lf
+*.txt text eol=lf
+*.vhd text eol=lf
+
+# Specifični fajlovi sa CRLF krajevima linija
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Ignorisanje krajeva linija za binarne fajlove
+*.png binary
+*.jpg binary
