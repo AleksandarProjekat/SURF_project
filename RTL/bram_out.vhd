@@ -2,10 +2,10 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use ieee.numeric_std.all;
 
-entity bram is
-    generic (WIDTH : integer := 48;            -- Bit width for various unsigned signals
+entity bram_out is
+    generic (WIDTH : integer := 8*48 + 4*11 + 2*16;        
             BRAM_SIZE : integer := 80000;
-            ADDR_WIDTH  : integer := 15       -- 129 x 129 pixels
+            ADDR_WIDTH  : integer := 6      
  );    
     port (
         clka : in std_logic;
@@ -23,9 +23,9 @@ entity bram is
         doa : out std_logic_vector(WIDTH-1 downto 0);       
         dob : out std_logic_vector(WIDTH-1 downto 0)        
     );
-end bram;
+end bram_out;
 
-architecture Behavioral of bram is
+architecture Behavioral of bram_out is
 
 type ram_type is array (BRAM_SIZE-1 downto 0) of std_logic_vector(WIDTH-1 downto 0);
 shared variable RAM: ram_type;
