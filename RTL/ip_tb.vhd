@@ -23,7 +23,6 @@ file pixels1D : text open read_mode is
     -- Constants
     constant WIDTH : integer := 11;
     constant PIXEL_SIZE : integer := 14;
-    constant SUM_WIDTH : integer := 16;
     constant FIXED_SIZE : integer := 48;
     constant INDEX_SIZE : integer := 4;
     constant IMG_WIDTH : integer := 128;
@@ -45,8 +44,8 @@ file pixels1D : text open read_mode is
     signal scale_s : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
     signal bram_addr1_o_s : std_logic_vector(PIXEL_SIZE-1 downto 0);
     signal bram_addr2_o_s : std_logic_vector(PIXEL_SIZE-1 downto 0);
-    signal bram_data1_i_s : std_logic_vector(FIXED_SIZE downto 0) := (others => '0');
-    signal bram_data2_i_s : std_logic_vector(FIXED_SIZE downto 0) := (others => '0');
+    signal bram_data1_i_s : std_logic_vector(FIXED_SIZE-1 downto 0) := (others => '0');
+    signal bram_data2_i_s : std_logic_vector(FIXED_SIZE-1 downto 0) := (others => '0');
     signal bram_en1_o_s : std_logic;
     signal bram_we1_o_s : std_logic;
     signal bram_en2_o_s : std_logic;
@@ -263,7 +262,7 @@ end process;
 -- Instanciranje BRAM-a za ulazne podatke
     bram_in: entity work.bram
         generic map (
-            WIDTH => FIXED_SIZE,  -- širina podataka
+            WIDTH => FIXED_SIZE,  -- ?irina podataka
             BRAM_SIZE => IMG_WIDTH*IMG_HEIGHT,  -- dubina memorije
             ADDR_WIDTH => 14
         )
@@ -287,7 +286,7 @@ end process;
     -- Instanciranje BRAM-a za izlazne podatke
      bram_out: entity work.bram_out
         generic map (
-            WIDTH => 10*48 + 4*11,  -- širina podataka
+            WIDTH => 10*48 + 4*11,  -- ?irina podataka
             BRAM_SIZE => IMG_WIDTH*IMG_HEIGHT,  -- dubina memorije
             ADDR_WIDTH => 6
         )
