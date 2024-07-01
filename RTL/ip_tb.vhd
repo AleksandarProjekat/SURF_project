@@ -167,16 +167,16 @@ end process;
 
 write_to_output_file : process(clk_s)
     variable data_output_line : line;
-    variable data_output_string : string(1 to 24) := (others => '0'); 
+    variable data_output_string : string(1 to 10*FIXED_SIZE + 4*WIDTH) := (others => '0'); 
 begin
     if falling_edge(clk_s) then
         if c1_data_o_s = '1' then
             data_output_string := (others => '0');
-            for i in 0 to 23 loop
+            for i in 0 to 10*FIXED_SIZE + 4*WIDTH loop
                 if data1_o_next_s(i) = '1' then
-                    data_output_string(24 - i) := '1';  
+                    data_output_string(10*FIXED_SIZE + 4*WIDTH - i) := '1';  
                 else
-                    data_output_string(24 - i) := '0';  
+                    data_output_string(10*FIXED_SIZE + 4*WIDTH - i) := '0';  
                 end if;
             end loop;          
             write(data_output_line, data_output_string);
@@ -187,7 +187,7 @@ end process;
 
 checker : process(clk_s)
     variable tv_izlazi : line;  
-    variable tmp: std_logic_vector(3*WIDTH-1 downto 0); 
+    variable tmp: std_logic_vector(10*FIXED_SIZE + 4*WIDTH - 1 downto 0);
 begin              
     if falling_edge (clk_s) then
         if c1_data_o_s = '1' then
