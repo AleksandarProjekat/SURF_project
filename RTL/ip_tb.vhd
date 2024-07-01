@@ -264,7 +264,7 @@ end process;
         generic map (
             WIDTH => FIXED_SIZE,  -- ?irina podataka
             BRAM_SIZE => IMG_WIDTH*IMG_HEIGHT,  -- dubina memorije
-            ADDR_WIDTH => 14
+            ADDR_WIDTH => 15
         )
         port map (
             clka => clk_s,
