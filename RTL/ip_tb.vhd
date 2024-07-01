@@ -147,7 +147,7 @@ begin
     
     -- Read the output
     report "Reading the results from output memory!";
-    for k in 0 to (IMG_WIDTH*IMG_HEIGHT) loop
+    for k in 0 to 4*INDEX_SIZE*INDEX_SIZE loop
         wait until falling_edge(clk_s);
         c1_data_o_s <= '1';
         --tb_c_we_i <= '0';
