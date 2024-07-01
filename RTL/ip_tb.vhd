@@ -134,7 +134,7 @@ begin
     i_sine_s <= "000000000000000000000000000000111001110101110010"; -- 0.90375518798828125 u binarnom formatu
     scale_s <= "000000000000000000000000000011001110101000000100"; -- 3.2285336566057454 u binarnom formatu
     rom_en_a_s <= '1';   
-    
+
         -- Start the IP core processing
         report "Starting processing!";
         start_i_s <= '1';

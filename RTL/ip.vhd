@@ -106,8 +106,8 @@ architecture Behavioral of ip is
 
     --signal state_reg, state_next : state_type;
     
-constant INDEX_SIZE_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_unsigned(INDEX_SIZE, FIXED_SIZE));
-constant HALF_INDEX_SIZE_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_unsigned(INDEX_SIZE / 2, FIXED_SIZE));
+constant INDEX_SIZE_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_unsigned(8*131072, FIXED_SIZE));
+constant HALF_INDEX_SIZE_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_unsigned(4*131072, FIXED_SIZE));
 constant HALF_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_unsigned(131072, FIXED_SIZE));     ---- 0.5 
 
 
@@ -503,7 +503,7 @@ begin
                 end if;
 
             when PositionValidation =>
-                addSampleStep_next <= unsigned(resize(signed(scale), WIDTH));
+                addSampleStep_next <= to_unsigned(to_integer(unsigned(scale(FIXED_SIZE - 1 downto 18))), WIDTH);
                 
                 r_next <= resize(signed(iy) + (signed(resize(i_reg, 2*WIDTH)) - signed(resize(iradius, 2*WIDTH))) * signed(step), 2*WIDTH);
                 c_next <= resize(signed(ix) + (signed(resize(j_reg, 2*WIDTH)) - signed(resize(iradius, 2*WIDTH))) * signed(step), 2*WIDTH);
