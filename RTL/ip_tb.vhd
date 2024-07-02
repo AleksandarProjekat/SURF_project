@@ -23,6 +23,7 @@ file pixels1D : text open read_mode is
     -- Constants
     constant WIDTH : integer := 11;
     constant PIXEL_SIZE : integer := 15;
+    constant INDEX_ADDRESS_SIZE : integer := 6;
     constant FIXED_SIZE : integer := 48;
     constant INDEX_SIZE : integer := 4;
     constant IMG_WIDTH : integer := 129;
@@ -134,12 +135,12 @@ begin
         for j in 1 to 3 loop
             wait until falling_edge(clk_s);
         end loop;
-        bram_en1_o_s <= '0';
-        bram_we1_o_s <= '0';
+        tb_a_en_i <= '0';
+        tb_a_we_i <= '0';
     end loop;
-        bram_en1_o_s <= '0';
-        bram_we1_o_s <= '0';
-        
+    tb_a_en_i <= '0';
+    tb_a_we_i <= '0';
+    
         -- Initialize the core
                 report "Initializing the core!";
     iradius_s <= to_unsigned(17, WIDTH); -- 17 je decimalna vrednost za iradius
@@ -221,6 +222,7 @@ end process;
            generic map (
             WIDTH => WIDTH,
             PIXEL_SIZE => PIXEL_SIZE,
+            INDEX_ADDRESS_SIZE => INDEX_ADDRESS_SIZE,
             FIXED_SIZE => FIXED_SIZE,
             INDEX_SIZE => INDEX_SIZE,
             IMG_WIDTH => IMG_WIDTH,
@@ -301,7 +303,7 @@ end process;
         generic map (
             WIDTH => 10*48 + 4*11,  -- ?irina podataka
             BRAM_SIZE => IMG_WIDTH*IMG_HEIGHT,  -- dubina memorije
-            ADDR_WIDTH => 6
+            ADDR_WIDTH => INDEX_ADDRESS_SIZE
         )
         port map (
                clka => clk_s,
