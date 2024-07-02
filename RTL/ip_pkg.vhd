@@ -1,19 +1,28 @@
 package ip_pkg is
-    type state_type is (
-        idle, StartLoop, InnerLoop, 
-        ComputeRPos1, ComputeRPos2, ComputeRPos3, ComputeRPos4, ComputeRPos5,
-        ComputeCPos1, ComputeCPos2, ComputeCPos3, ComputeCPos4, ComputeCPos5,
-        SetRXandCX, BoundaryCheck, PositionValidation, ComputePosition, ProcessSample,
-        ComputeDerivatives, FetchDXX1_1, FetchDXX1_2, ComputeDXX1,
-        FetchDXX2_1, FetchDXX2_2, ComputeDXX2, FetchDYY1_1, FetchDYY1_2, ComputeDYY1,
-        FetchDYY2_1, FetchDYY2_2, ComputeDYY2, CalculateDerivatives, ApplyOrientationTransform,
-        SetOrientations, UpdateIndex, ComputeFractionalComponents, ValidateIndices, ComputeWeightsR,ComputeWeightsC, UpdateIndexArray, CheckNextColumn, CheckNextRow,
-        NextSample, IncrementI, Finish
-    );
+type state_type is (
+    idle, StartLoop, InnerLoop, 
+    ComputeRPos1, ComputeRPos2, ComputeRPos3, ComputeRPos4, ComputeRPos5,
+    ComputeCPos1, ComputeCPos2, ComputeCPos3, ComputeCPos4, ComputeCPos5,
+    SetRXandCX, BoundaryCheck, PositionValidation, ComputePosition, ProcessSample,
+    ComputeDerivatives, 
+    FetchDXX1_1, FetchDXX1_2, FetchDXX1_3, FetchDXX1_4, ComputeDXX1,
+    FetchDXX2_1, FetchDXX2_2, FetchDXX2_3, FetchDXX2_4, ComputeDXX2, 
+    FetchDYY1_1, FetchDYY1_2, FetchDYY1_3, FetchDYY1_4, ComputeDYY1,
+    FetchDYY2_1, FetchDYY2_2, FetchDYY2_3, FetchDYY2_4, ComputeDYY2, 
+    CalculateDerivatives, ApplyOrientationTransform,
+    SetOrientations, UpdateIndex, ComputeFractionalComponents, ValidateIndices, 
+    ComputeWeightsR, ComputeWeightsC, UpdateIndexArray, CheckNextColumn, CheckNextRow,
+    NextSample, IncrementI, Finish
+);
+
 
     function state_to_string(state: state_type) return string;
 
 end package ip_pkg;
+
+
+
+
 
 package body ip_pkg is
 

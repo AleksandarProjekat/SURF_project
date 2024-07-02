@@ -42,22 +42,19 @@ file pixels1D : text open read_mode is
     signal i_cose_s : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
     signal i_sine_s : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
     signal scale_s : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
+    
     signal bram_addr1_o_s : std_logic_vector(PIXEL_SIZE-1 downto 0);
-    signal bram_addr2_o_s : std_logic_vector(PIXEL_SIZE-1 downto 0);
-    signal bram_data1_i_s : std_logic_vector(FIXED_SIZE-1 downto 0) := (others => '0');
-    signal bram_data2_i_s : std_logic_vector(FIXED_SIZE-1 downto 0) := (others => '0');
+    signal bram_data_i_s : std_logic_vector(FIXED_SIZE-1 downto 0) := (others => '0');
     signal bram_en1_o_s : std_logic;
-    signal bram_we1_o_s : std_logic;
-    signal bram_en2_o_s : std_logic;
-    signal bram_we2_o_s : std_logic;
+    
     signal addr_do1_o_s : std_logic_vector (5 downto 0);
-    signal data1_o_next_s : std_logic_vector (10*FIXED_SIZE + 4*WIDTH- 1 downto 0);
+    signal data1_o_s : std_logic_vector (10*FIXED_SIZE + 4*WIDTH- 1 downto 0);
     signal c1_data_o_s : std_logic;
-    signal addr_do2_o_s : std_logic_vector (5 downto 0);
-    signal data2_o_next_s : std_logic_vector (10*FIXED_SIZE + 4*WIDTH - 1 downto 0);
-    signal c2_data_o_s : std_logic;
+    signal bram_we1_o_s : std_logic;
+    
     signal rom_data_s : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
     signal rom_addr_s : std_logic_vector(5 downto 0);
+    
     signal start_i_s : std_logic := '0';
     signal ready_o_s : std_logic;
     signal rom_data_a_s : std_logic_vector(FIXED_SIZE - 1 downto 0);
@@ -65,6 +62,36 @@ file pixels1D : text open read_mode is
 
     -- Clock period definition
     constant clk_period : time := 10 ns;
+
+ ------------------Ports for BRAM Initialization-----------------
+ 
+    --ulazni bram port
+    signal tb_a_en_i : std_logic;
+    signal tb_a_addr_i : std_logic_vector(PIXEL_SIZE-1 downto 0);
+    signal tb_a_data_i : std_logic_vector(FIXED_SIZE-1 downto 0);
+    signal tb_a_we_i : std_logic;
+    
+
+    --izlazni bram
+    signal tb_c_en_i : std_logic;
+    signal tb_c_addr_i : std_logic_vector(5 downto 0);
+    signal tb_c_data_o : std_logic_vector(10*FIXED_SIZE + 4*WIDTH - 1 downto 0);
+    signal tb_c_we_i : std_logic;
+    
+
+    ------------------------- Ports to IP ---------------------
+    
+    signal ip_a_en : std_logic;
+    signal ip_a_we : std_logic;
+    signal ip_a_addr : std_logic_vector(PIXEL_SIZE-1 downto 0);
+    signal ip_a_data: std_logic_vector(FIXED_SIZE-1 downto 0);
+    
+  
+    signal ip_c_en : std_logic;
+    signal ip_c_we : std_logic;
+    signal ip_c_addr : std_logic_vector(5 downto 0);
+    signal ip_c_data: std_logic_vector(10*FIXED_SIZE + 4*WIDTH - 1 downto 0);
+    
 
 
 
@@ -99,27 +126,19 @@ begin
         wait until falling_edge(clk_s);
         readline(pixels1D, tv_slika);
         bram_en1_o_s <= '1';
-        bram_addr1_o_s <= std_logic_vector(to_unsigned(i, PIXEL_SIZE)); 
-        bram_data1_i_s <= to_std_logic_vector(string(tv_slika));
+        tb_a_addr_i <= std_logic_vector(to_unsigned(i, PIXEL_SIZE)); 
+        tb_a_data_i <= to_std_logic_vector(string(tv_slika));
         bram_we1_o_s <= '1';
-        
-        bram_en2_o_s <= '1';
-        bram_addr2_o_s <= std_logic_vector(to_unsigned(i, PIXEL_SIZE)); 
-        bram_data2_i_s <= to_std_logic_vector(string(tv_slika));
-        bram_we2_o_s <= '1';
+     
 
         for j in 1 to 3 loop
             wait until falling_edge(clk_s);
         end loop;
         bram_en1_o_s <= '0';
         bram_we1_o_s <= '0';
-        bram_en2_o_s <= '0';
-        bram_we2_o_s <= '0';
     end loop;
         bram_en1_o_s <= '0';
         bram_we1_o_s <= '0';
-        bram_en2_o_s <= '0';
-        bram_we2_o_s <= '0';
         
         -- Initialize the core
                 report "Initializing the core!";
@@ -149,16 +168,13 @@ begin
     report "Reading the results from output memory!";
     for k in 0 to 4*INDEX_SIZE*INDEX_SIZE loop
         wait until falling_edge(clk_s);
-        c1_data_o_s <= '1';
-        --tb_c_we_i <= '0';
-        addr_do1_o_s <= std_logic_vector(to_unsigned(k, 6)); 
-        c2_data_o_s <= '1';
-        --tb_c_we_i <= '0';
-        addr_do2_o_s <= std_logic_vector(to_unsigned(k, 6)); 
+        tb_c_en_i <= '1';
+        tb_c_we_i <= '0';
+        tb_c_addr_i <= std_logic_vector(to_unsigned(k, 6));
+
     end loop;
 
-    c1_data_o_s <= '0';
-    c2_data_o_s <= '0';
+    tb_c_en_i <= '0';
     report "Finished!";
     report "RESULTS MATCH!";
     wait;
@@ -170,10 +186,10 @@ write_to_output_file : process(clk_s)
     variable data_output_string : string(1 to 10*FIXED_SIZE + 4*WIDTH) := (others => '0'); 
 begin
     if falling_edge(clk_s) then
-        if c1_data_o_s = '1' then
+        if tb_c_en_i = '1' then
             data_output_string := (others => '0');
             for i in 0 to 10*FIXED_SIZE + 4*WIDTH loop
-                if data1_o_next_s(i) = '1' then
+                if tb_c_data_o(i) = '1' then
                     data_output_string(10*FIXED_SIZE + 4*WIDTH - i) := '1';  
                 else
                     data_output_string(10*FIXED_SIZE + 4*WIDTH - i) := '0';  
@@ -190,10 +206,10 @@ checker : process(clk_s)
     variable tmp: std_logic_vector(10*FIXED_SIZE + 4*WIDTH - 1 downto 0);
 begin              
     if falling_edge (clk_s) then
-        if c1_data_o_s = '1' then
+        if tb_c_en_i  = '1' then
             readline(index1Dbin, tv_izlazi);
             tmp := to_std_logic_vector(string(tv_izlazi));
-            if (tmp /= data1_o_next_s) then
+            if (tmp /= tb_c_data_o) then
                 report "RESULT MISMATCH" severity failure;
             end if;
         end if;
@@ -223,20 +239,16 @@ end process;
             i_cose => i_cose_s,
             i_sine => i_sine_s,
             scale => scale_s,
-            bram_addr1_o => bram_addr1_o_s,
-            bram_addr2_o => bram_addr2_o_s,
-            bram_data1_i => bram_data1_i_s,
-            bram_data2_i => bram_data2_i_s,
-            bram_en1_o => bram_en1_o_s,
-            bram_we1_o => bram_we1_o_s,
-            bram_en2_o => bram_en2_o_s,
-            bram_we2_o => bram_we2_o_s,
-            addr_do1_o => addr_do1_o_s,
-            data1_o_next => data1_o_next_s,
-            c1_data_o => c1_data_o_s,
-            addr_do2_o => addr_do2_o_s,
-            data2_o_next => data2_o_next_s,
-            c2_data_o => c2_data_o_s,
+            
+           bram_addr1_o => ip_a_addr,
+           bram_data_i =>ip_a_data,
+           bram_en1_o => ip_a_en,
+        
+           addr_do1_o => ip_c_addr,
+           data1_o => ip_c_data,    
+           c1_data_o => ip_c_en,
+           bram_we1_o => ip_c_we,
+            
             rom_data => rom_data_s,
             rom_addr => rom_addr_s,
             start_i => start_i_s,
@@ -267,20 +279,21 @@ end process;
             ADDR_WIDTH => 15
         )
         port map (
-            clka => clk_s,
-            clkb => clk_s,
-            ena => bram_en1_o_s,
-            enb => bram_en2_o_s,
-            reseta => reset_s,
-            resetb => reset_s,
-            wea => '0',
-            web => '0',
-            addra => bram_addr1_o_s,
-            addrb => bram_addr2_o_s,
-            dia => bram_data1_i_s,
-            dib => bram_data2_i_s,
-            doa => open,
-            dob => open
+               clka => clk_s,
+               clkb => clk_s,
+	           reseta=> reset_s,
+	           ena=>tb_a_en_i,
+	           wea=> tb_a_we_i,
+	           addra=> tb_a_addr_i,
+	           dia=> tb_a_data_i,
+	           doa=> open,
+	
+	           resetb=>reset_s,
+	           enb=>ip_a_en,
+	           web=>ip_a_we,
+	           addrb=>ip_a_addr,
+	           dib=>(others=>'0'),
+	           dob=> ip_a_data
         );
 
     -- Instanciranje BRAM-a za izlazne podatke
@@ -291,20 +304,21 @@ end process;
             ADDR_WIDTH => 6
         )
         port map (
-            clka => clk_s,
-            clkb => clk_s,
-            ena => c1_data_o_s,
-            enb => c2_data_o_s,
-            reseta => reset_s,
-            resetb => reset_s,
-            wea => bram_we1_o_s,
-            web => bram_we1_o_s,
-            addra => addr_do1_o_s,
-            addrb => addr_do2_o_s,
-            dia => (others => '0'),
-            dib => (others => '0'),
-            doa => data1_o_next_s,
-            dob => data2_o_next_s
+               clka => clk_s,
+               clkb => clk_s,
+	           reseta=> reset_s,
+	           ena=> ip_c_en, 
+	           wea=> ip_c_we , 
+	           addra=> ip_c_addr , 
+	           dia=> ip_c_data , 
+	           doa=> open,
+	
+	           resetb=>reset_s,
+	           enb=> tb_c_en_i,
+	           web=> tb_c_we_i,
+	           addrb=> tb_c_addr_i,
+	           dib=> (others=>'0'),
+	           dob=> tb_c_data_o
         );
 
 end Behavioral;
