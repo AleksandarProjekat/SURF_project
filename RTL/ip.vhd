@@ -384,6 +384,10 @@ begin
 
             when InnerLoop =>
                 state_next <= ComputeRPos1;
+                dxx1_sum_next <= (others => '0');
+                dxx2_sum_next <= (others => '0');
+                dyy1_sum_next <= (others => '0');
+                dyy2_sum_next <= (others => '0');
 
                           when ComputeRPos1 =>
                         -- rpos = (step * (i_cose * (i - iradius) + i_sine * (j - iradius)) - fracr) / spacing;
