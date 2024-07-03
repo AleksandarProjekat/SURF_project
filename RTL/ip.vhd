@@ -702,8 +702,8 @@ begin
                 state_next <= ApplyOrientationTransform;
 
             when ApplyOrientationTransform =>
-                dx_next <= std_logic_vector(resize(signed(i_cose) * signed(dxx) + signed(i_sine) * signed(dyy), 6*FIXED_SIZE)); 
-                dy_next <= std_logic_vector(resize(signed(i_sine) * signed(dxx) - signed(i_cose) * signed(dyy), 6*FIXED_SIZE)); 
+                dx_next <= std_logic_vector(resize(signed(i_cose) * signed(dxx) + signed(i_sine) * signed(dyy), 6*FIXED_SIZE)); ----OVDE TREBA SIRINA 3*FIXED_SIZE
+                dy_next <= std_logic_vector(resize(signed(i_sine) * signed(dxx) - signed(i_cose) * signed(dyy), 6*FIXED_SIZE)); ----OVDE TREBA SIRINA 3*FIXED_SIZE
                 state_next <= SetOrientations;
 
             when SetOrientations =>
