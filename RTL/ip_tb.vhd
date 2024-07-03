@@ -126,10 +126,10 @@ begin
     for i in 0 to (IMG_WIDTH*IMG_HEIGHT)-1 loop 
         wait until falling_edge(clk_s);
         readline(pixels1D, tv_slika);
-        bram_en1_o_s <= '1';
+        tb_a_en_i  <= '1';
         tb_a_addr_i <= std_logic_vector(to_unsigned(i, PIXEL_SIZE)); 
         tb_a_data_i <= to_std_logic_vector(string(tv_slika));
-        bram_we1_o_s <= '1';
+        tb_a_we_i   <= '1';
      
 
         for j in 1 to 3 loop

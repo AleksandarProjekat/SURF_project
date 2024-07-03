@@ -4,7 +4,7 @@ use ieee.numeric_std.all;
 
 entity bram is
     generic (WIDTH : integer := 48;            -- Bit width for various unsigned signals
-            BRAM_SIZE : integer := 80000;
+            BRAM_SIZE : integer := 16641;
             ADDR_WIDTH  : integer := 15       -- 129 x 129 pixels
  );    
     port (
