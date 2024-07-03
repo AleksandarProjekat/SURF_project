@@ -341,7 +341,7 @@ begin
         temp3_cpos_next <= temp3_cpos_reg;
         temp4_cpos_next <= temp4_cpos_reg;
         
-        bram_data_i_next <= bram_data_i_reg;  -- Ažurirajte vrednost internog signala
+        bram_data_i_next <= bram_data_i_reg;  -- A?urirajte vrednost internog signala
 
 
              

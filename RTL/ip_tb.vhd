@@ -189,7 +189,7 @@ begin
     if falling_edge(clk_s) then
         if tb_c_en_i = '1' then
             data_output_string := (others => '0');
-            for i in 0 to 10*FIXED_SIZE + 4*WIDTH loop
+            for i in 0 to 10*FIXED_SIZE + 4*WIDTH - 1 loop
                 if tb_c_data_o(i) = '1' then
                     data_output_string(10*FIXED_SIZE + 4*WIDTH - i) := '1';  
                 else
