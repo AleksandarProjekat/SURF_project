@@ -90,7 +90,7 @@ architecture Behavioral of ip is
             ComputeRPos1, ComputeRPos2, ComputeRPos3, ComputeRPos4, ComputeRPos5,
             ComputeCPos1, ComputeCPos2, ComputeCPos3, ComputeCPos4, ComputeCPos5,
             SetRXandCX, BoundaryCheck, PositionValidation, ComputePosition, ProcessSample,
-            ComputeDerivatives, 
+            ComputeDerivatives, WaitForData1,WaitForData2,WaitForData3,WaitForData4,
             FetchDXX1_1, FetchDXX1_2, FetchDXX1_3, FetchDXX1_4, ComputeDXX1,
             FetchDXX2_1, FetchDXX2_2, FetchDXX2_3, FetchDXX2_4, ComputeDXX2, 
             FetchDYY1_1, FetchDYY1_2, FetchDYY1_3, FetchDYY1_4, ComputeDYY1,
@@ -145,6 +145,7 @@ constant HALF_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector
     -- Definisanje internog signala za adrese i podatke za ULAZNI bram
     signal bram_addr1_o_next : std_logic_vector(PIXEL_SIZE-1 downto 0);
     --signal bram_data_i_reg, bram_data_i_next : std_logic_vector(FIXED_SIZE-1 downto 0);
+    signal first_data : std_logic := '1';
 
     
     -- Definisanje internog signala za adrese IZLAZNI bram
@@ -212,7 +213,8 @@ begin
             dyy1 <= (others => '0');
             dyy2 <= (others => '0');
             
-            
+            first_data <= '1';
+
             dxx1_sum_reg <= (others => '0');
             dxx2_sum_reg <= (others => '0');
             dyy1_sum_reg <= (others => '0');
@@ -388,7 +390,7 @@ begin
                 dxx2_sum_next <= (others => '0');
                 dyy1_sum_next <= (others => '0');
                 dyy2_sum_next <= (others => '0');
-
+                
                           when ComputeRPos1 =>
                         -- rpos = (step * (i_cose * (i - iradius) + i_sine * (j - iradius)) - fracr) / spacing;
                         temp1_rpos_next <= std_logic_vector(
@@ -550,31 +552,42 @@ begin
                 -- Set BRAM addresses for the first pixel for dxx1
                 bram_en1_o <= '1';  -- Enable BRAM port
                 bram_addr1_o_next <= std_logic_vector(to_unsigned((to_integer(r) + to_integer(addSampleStep) + 1) * IMG_WIDTH + (to_integer(c) + to_integer(addSampleStep) + 1), PIXEL_SIZE));
-                state_next <= FetchDXX1_1;
-
+                state_next <= WaitForData1;
+                
+ when WaitForData1 =>
+  state_next <= FetchDXX1_1;
+  
             when FetchDXX1_1 =>
                 -- Capture the data from BRAM for the first pixel of dxx1
                 dxx1_sum_next <= std_logic_vector(resize(signed(bram_data_i), FIXED_SIZE));
                 -- Set BRAM addresses for the second pixel for dxx1
                 bram_addr1_o_next <= std_logic_vector(to_unsigned((to_integer(r) - to_integer(addSampleStep)) * IMG_WIDTH + to_integer(c), PIXEL_SIZE));
-                state_next <= FetchDXX1_2;
+                state_next <= WaitForData2;
             
+             when WaitForData2 =>
+  state_next <= FetchDXX1_2;
+  
             when FetchDXX1_2 =>
                 -- Capture the data from BRAM for the second pixel of dxx1
                 dxx1_sum_next <= std_logic_vector(resize(signed(dxx1_sum_reg), FIXED_SIZE) + resize(signed(bram_data_i), FIXED_SIZE));
                 -- Set BRAM addresses for the third pixel for dxx1
                 bram_addr1_o_next <= std_logic_vector(to_unsigned((to_integer(r) - to_integer(addSampleStep)) * IMG_WIDTH + (to_integer(c) + to_integer(addSampleStep) + 1), PIXEL_SIZE));
-                state_next <= FetchDXX1_3;
-            
+                state_next <= WaitForData3;
+                
+ when WaitForData3 =>
+  state_next <= FetchDXX1_3;
+  
             when FetchDXX1_3 =>
                 -- Capture the data from BRAM for the third pixel of dxx1
                 dxx1_sum_next <= std_logic_vector(resize(signed(dxx1_sum_reg), FIXED_SIZE) - resize(signed(bram_data_i), FIXED_SIZE));
                 -- Set BRAM addresses for the fourth pixel for dxx1
                 bram_addr1_o_next <= std_logic_vector(to_unsigned((to_integer(r) + to_integer(addSampleStep) + 1) * IMG_WIDTH + to_integer(c), PIXEL_SIZE));
-                state_next <= FetchDXX1_4;
-            
-            when FetchDXX1_4 =>
-                -- Capture the data from BRAM for the fourth pixel of dxx1
+                state_next <= WaitForData4;
+                
+  when WaitForData4 =>           
+   state_next <= FetchDXX1_4; 
+             when FetchDXX1_4 =>
+                  -- Capture the data from BRAM for the fourth pixel of dxx1
                 dxx1_sum_next <= std_logic_vector(resize(signed(dxx1_sum_reg), FIXED_SIZE) - resize(signed(bram_data_i), FIXED_SIZE));
                 state_next <= ComputeDXX1;
             

@@ -4,7 +4,7 @@ type state_type is (
     ComputeRPos1, ComputeRPos2, ComputeRPos3, ComputeRPos4, ComputeRPos5,
     ComputeCPos1, ComputeCPos2, ComputeCPos3, ComputeCPos4, ComputeCPos5,
     SetRXandCX, BoundaryCheck, PositionValidation, ComputePosition, ProcessSample,
-    ComputeDerivatives, 
+    ComputeDerivatives, WaitForData1,WaitForData2,WaitForData3,WaitForData4,
     FetchDXX1_1, FetchDXX1_2, FetchDXX1_3, FetchDXX1_4, ComputeDXX1,
     FetchDXX2_1, FetchDXX2_2, FetchDXX2_3, FetchDXX2_4, ComputeDXX2, 
     FetchDYY1_1, FetchDYY1_2, FetchDYY1_3, FetchDYY1_4, ComputeDYY1,
@@ -48,6 +48,9 @@ package body ip_pkg is
             when ComputePosition        => return "ComputePosition";
             when ProcessSample          => return "ProcessSample";
             when ComputeDerivatives     => return "ComputeDerivatives";
+            when WaitForData1            => return "WaitForData1";
+	            when WaitForData2            => return "WaitForData2";
+		
             when FetchDXX1_1            => return "FetchDXX1_1";
             when FetchDXX1_2            => return "FetchDXX1_2";
             when ComputeDXX1            => return "ComputeDXX1";
