@@ -1,18 +1,22 @@
 package ip_pkg is
 type state_type is (
     idle, StartLoop, InnerLoop, 
-    ComputeRPos1, ComputeRPos2, ComputeRPos3, ComputeRPos4, ComputeRPos5,
-    ComputeCPos1, ComputeCPos2, ComputeCPos3, ComputeCPos4, ComputeCPos5,
-    SetRXandCX, BoundaryCheck, PositionValidation, ComputePosition, ProcessSample,
-    ComputeDerivatives, WaitForData1,WaitForData2,WaitForData3,WaitForData4,
-    FetchDXX1_1, FetchDXX1_2, FetchDXX1_3, FetchDXX1_4, ComputeDXX1,
-    FetchDXX2_1, FetchDXX2_2, FetchDXX2_3, FetchDXX2_4, ComputeDXX2, 
-    FetchDYY1_1, FetchDYY1_2, FetchDYY1_3, FetchDYY1_4, ComputeDYY1,
-    FetchDYY2_1, FetchDYY2_2, FetchDYY2_3, FetchDYY2_4, ComputeDYY2, 
-    CalculateDerivatives, ApplyOrientationTransform,
-    SetOrientations, UpdateIndex, ComputeFractionalComponents, ValidateIndices, 
-    ComputeWeightsR, ComputeWeightsC, UpdateIndexArray, CheckNextColumn, CheckNextRow,
-    NextSample, IncrementI, Finish
+            ComputeRPos1, ComputeRPos2, ComputeRPos3, ComputeRPos4, ComputeRPos5,
+            ComputeCPos1, ComputeCPos2, ComputeCPos3, ComputeCPos4, ComputeCPos5,
+            SetRXandCX, BoundaryCheck, PositionValidation, ComputePosition, ProcessSample,
+            ComputeDerivatives,
+            WaitForData1,WaitForData2,WaitForData3,WaitForData4,
+            WaitForData5,WaitForData6,WaitForData7,WaitForData8,
+            WaitForData9,WaitForData10,WaitForData11,WaitForData12,
+            WaitForData13,WaitForData14,WaitForData15,WaitForData16,
+            FetchDXX1_1, FetchDXX1_2, FetchDXX1_3, FetchDXX1_4, ComputeDXX1,
+            FetchDXX2_1, FetchDXX2_2, FetchDXX2_3, FetchDXX2_4, ComputeDXX2, 
+            FetchDYY1_1, FetchDYY1_2, FetchDYY1_3, FetchDYY1_4, ComputeDYY1,
+            FetchDYY2_1, FetchDYY2_2, FetchDYY2_3, FetchDYY2_4, ComputeDYY2, 
+            CalculateDerivatives, ApplyOrientationTransform,
+            SetOrientations, UpdateIndex, ComputeFractionalComponents, ValidateIndices, 
+            ComputeWeightsR, ComputeWeightsC, UpdateIndexArray, CheckNextColumn, CheckNextRow,
+            NextSample, IncrementI, Finish
 );
 
 
@@ -48,8 +52,22 @@ package body ip_pkg is
             when ComputePosition        => return "ComputePosition";
             when ProcessSample          => return "ProcessSample";
             when ComputeDerivatives     => return "ComputeDerivatives";
-            when WaitForData1            => return "WaitForData1";
-	            when WaitForData2            => return "WaitForData2";
+            when WaitForData1           => return "WaitForData1";
+	        when WaitForData2           => return "WaitForData2";
+	        when WaitForData3           => return "WaitForData3";
+	        when WaitForData4           => return "WaitForData4";
+	        when WaitForData5           => return "WaitForData5";
+	        when WaitForData6           => return "WaitForData6";
+	        when WaitForData7           => return "WaitForData7";
+	        when WaitForData8           => return "WaitForData8";
+	        when WaitForData9           => return "WaitForData9";
+	        when WaitForData10          => return "WaitForData10";
+	        when WaitForData11          => return "WaitForData11";
+	        when WaitForData12          => return "WaitForData12";
+	        when WaitForData13          => return "WaitForData13";
+	        when WaitForData14          => return "WaitForData14";
+	        when WaitForData15          => return "WaitForData15";
+	        when WaitForData16          => return "WaitForData16";
 		
             when FetchDXX1_1            => return "FetchDXX1_1";
             when FetchDXX1_2            => return "FetchDXX1_2";
