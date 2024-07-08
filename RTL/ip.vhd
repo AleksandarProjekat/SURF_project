@@ -158,6 +158,8 @@ constant HALF_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector
     signal bram_data_out_next : std_logic_vector(10*FIXED_SIZE + 4*WIDTH - 1 downto 0);  -- Pomocni signal za bram_data_out
     signal bram_en_int : std_logic := '0';
     signal bram_we_int : std_logic := '0';
+    
+constant ONE_FP : signed(rfrac'length - 1 downto 0) := to_signed(2**18, rfrac'length); -- 2^18 predstavlja 1 u fiksnoj ta?ki
 
 
 begin
@@ -293,6 +295,11 @@ begin
                     rom_addr_int <= rom_addr_next;               
                      end if;
                      
+                      if bram_phase = 0 then
+                    data1_o_reg <= bram_data_out;
+                elsif bram_phase = 1 then
+                    data2_o_reg <= bram_data_out;
+                end if;
             end if;
         end if;
     end process;
@@ -791,14 +798,14 @@ begin
            when ValidateIndices =>
                 if signed(rfrac) < 0 then
                     rfrac_next <= std_logic_vector(to_signed(0, 2*FIXED_SIZE + 2*WIDTH));
-                elsif signed(rfrac) >= to_signed(1, 2*FIXED_SIZE + 2*WIDTH) then
-                    rfrac_next <= std_logic_vector(to_signed(1, 2*FIXED_SIZE + 2*WIDTH));
+                elsif signed(rfrac) >= ONE_FP then
+                    rfrac_next <= std_logic_vector(ONE_FP);
                 end if;
             
                 if signed(cfrac) < 0 then
                     cfrac_next <= std_logic_vector(to_signed(0, 2*FIXED_SIZE + 2*WIDTH));
-                elsif signed(cfrac) >= to_signed(1, 2*FIXED_SIZE + 2*WIDTH) then
-                    cfrac_next <= std_logic_vector(to_signed(1, 2*FIXED_SIZE + 2*WIDTH));
+                elsif signed(cfrac) >= ONE_FP then
+                    cfrac_next <= std_logic_vector(ONE_FP);
                 end if;
             
                 state_next <= ComputeWeightsR;
