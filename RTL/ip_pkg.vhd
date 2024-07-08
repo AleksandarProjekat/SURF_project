@@ -1,6 +1,6 @@
 package ip_pkg is
-type state_type is (
-    idle, StartLoop, InnerLoop, 
+        type state_type is (
+            idle, StartLoop, InnerLoop, 
             ComputeRPos1, ComputeRPos2, ComputeRPos3, ComputeRPos4, ComputeRPos5,
             ComputeCPos1, ComputeCPos2, ComputeCPos3, ComputeCPos4, ComputeCPos5,
             SetRXandCX, BoundaryCheck, PositionValidation, ComputePosition, ProcessSample,
@@ -15,9 +15,9 @@ type state_type is (
             FetchDYY2_1, FetchDYY2_2, FetchDYY2_3, FetchDYY2_4, ComputeDYY2, 
             CalculateDerivatives, ApplyOrientationTransform,
             SetOrientations, UpdateIndex, ComputeFractionalComponents, ValidateIndices, 
-            ComputeWeightsR, ComputeWeightsC, UpdateIndexArray, CheckNextColumn, CheckNextRow,
+            ComputeWeightsR, ComputeWeightsC, UpdateIndexArray0, UpdateIndexArray1, CheckNextColumn0, CheckNextColumn1, CheckNextRow0, CheckNextRow1,
             NextSample, IncrementI, Finish
-);
+        );
 
 
     function state_to_string(state: state_type) return string;
@@ -89,9 +89,12 @@ package body ip_pkg is
             when ValidateIndices        => return "ValidateIndices";
             when ComputeWeightsR        => return "ComputeWeightsR";
             when ComputeWeightsC        => return "ComputeWeightsC";
-            when UpdateIndexArray       => return "UpdateIndexArray";
-            when CheckNextColumn        => return "CheckNextColumn";
-            when CheckNextRow           => return "CheckNextRow";
+            when UpdateIndexArray0       => return "UpdateIndexArray0";
+			when UpdateIndexArray1       => return "UpdateIndexArray1";
+            when CheckNextColumn0        => return "CheckNextColumn0";
+			when CheckNextColumn1        => return "CheckNextColumn1";
+            when CheckNextRow0           => return "CheckNextRow0";
+			when CheckNextRow1           => return "CheckNextRow1";
             when NextSample             => return "NextSample";
             when IncrementI             => return "IncrementI";
             when Finish                 => return "Finish";

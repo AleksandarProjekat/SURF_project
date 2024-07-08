@@ -101,7 +101,7 @@ architecture Behavioral of ip is
             FetchDYY2_1, FetchDYY2_2, FetchDYY2_3, FetchDYY2_4, ComputeDYY2, 
             CalculateDerivatives, ApplyOrientationTransform,
             SetOrientations, UpdateIndex, ComputeFractionalComponents, ValidateIndices, 
-            ComputeWeightsR, ComputeWeightsC, UpdateIndexArray, CheckNextColumn, CheckNextRow,
+            ComputeWeightsR, ComputeWeightsC, UpdateIndexArray0, UpdateIndexArray1, CheckNextColumn0, CheckNextColumn1, CheckNextRow0, CheckNextRow1,
             NextSample, IncrementI, Finish
         );
 
@@ -305,7 +305,7 @@ begin
     end process;
 
     -- Kombinacioni proces za odredjivanje sledecih stanja i vrednosti signala
-    process (bram_phase, state_reg, start_i, i_reg, j_reg, temp1_rpos_reg, temp2_rpos_reg, temp3_rpos_reg, temp4_rpos_reg, temp1_cpos_reg, temp2_cpos_reg, temp3_cpos_reg, temp4_cpos_reg, bram_data_i, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, ri, ci, r, c, rx, cx, rfrac, cfrac, dx, dy, dxx, dyy, weight, rweight1, rweight2, cweight1, cweight2, ori1, ori2, dxx1, dxx2, dyy1, dyy2, rpos, cpos, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_reg,rom_addr_int, data1_o_reg, data2_o_reg, bram_addr1_o_next)
+    process (bram_phase, state_reg, start_i, i_reg, j_reg, temp1_rpos_reg, temp2_rpos_reg, temp3_rpos_reg, temp4_rpos_reg, temp1_cpos_reg, temp2_cpos_reg, temp3_cpos_reg, temp4_cpos_reg, bram_data_i, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, ri, ci, r, c, rx, cx, rfrac, cfrac, dx, dy, dxx, dyy, weight, rweight1, rweight2, cweight1, cweight2, ori1, ori2, dxx1, dxx2, dyy1, dyy2, rpos, cpos, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_reg,rom_addr_int, data1_o_reg, data2_o_reg, bram_data_out, bram_addr1_o_next)
     begin
         -- Default assignments
         state_next <= state_reg;
@@ -373,6 +373,8 @@ begin
         case state_reg is
             when idle =>
                 ready_o <= '1';
+                bram_we_int <= '0';
+                bram_en_int <= '0';
                 if start_i = '1' then
                     i_next <= TO_UNSIGNED (0, WIDTH);
                     state_next <= StartLoop;
@@ -569,7 +571,7 @@ begin
   
             when FetchDXX1_1 =>
                 -- Capture the data from BRAM for the first pixel of dxx1
-                dxx1_sum_next <= std_logic_vector(resize(signed(bram_data_i), FIXED_SIZE + 2));  -- Proširenje signala na FIXED_SIZE + 2
+                dxx1_sum_next <= std_logic_vector(resize(signed(bram_data_i), FIXED_SIZE + 2));  -- Pro?irenje signala na FIXED_SIZE + 2
                 -- Set BRAM addresses for the second pixel for dxx1
                 bram_addr1_o_next <= std_logic_vector(to_unsigned((to_integer(r) - to_integer(addSampleStep)) * IMG_WIDTH + to_integer(c), PIXEL_SIZE));
                 state_next <= WaitForData2;
@@ -613,7 +615,7 @@ begin
   
             when FetchDXX2_1 =>
                 -- Capture the data from BRAM for the first pixel of dxx2
-                dxx2_sum_next <= std_logic_vector(resize(signed(bram_data_i), FIXED_SIZE + 2));  -- Proširenje signala na FIXED_SIZE + 2
+                dxx2_sum_next <= std_logic_vector(resize(signed(bram_data_i), FIXED_SIZE + 2));  -- Pro?irenje signala na FIXED_SIZE + 2
                 -- Set BRAM addresses for the second pixel for dxx2
                 bram_addr1_o_next <= std_logic_vector(to_unsigned((to_integer(r) - to_integer(addSampleStep)) * IMG_WIDTH + (to_integer(c) - to_integer(addSampleStep)), PIXEL_SIZE));
                 state_next <= WaitForData6;
@@ -820,75 +822,89 @@ begin
 
                 cweight1_next <= std_logic_vector(resize(unsigned(rweight1) * (unsigned(to_signed(1, 2*FIXED_SIZE + 2*WIDTH)) - unsigned(cfrac)), 7*FIXED_SIZE + 4*WIDTH + 5));
                 cweight2_next <= std_logic_vector(resize(unsigned(rweight2) * (unsigned(to_signed(1, 2*FIXED_SIZE + 2*WIDTH)) - unsigned(cfrac)), 7*FIXED_SIZE + 4*WIDTH + 5));
-                state_next <= UpdateIndexArray;
-                
                 bram_phase_next <= 0;
 
-             when UpdateIndexArray =>
-                           
-                    if ri >= 0 and ri < INDEX_SIZE and ci >= 0 and ci < INDEX_SIZE then
-                        if bram_phase = 0 then
-                            bram_addr_int <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori1)), INDEX_ADDRESS_SIZE));
-                            bram_data_out_next <= std_logic_vector(resize(unsigned(data1_o_reg), 10*FIXED_SIZE + 4*WIDTH) + resize(unsigned(cweight1), 10*FIXED_SIZE + 4*WIDTH));
-                            bram_en_int <= '1';
-                            bram_we_int <= '1';
-                            bram_phase_next <= 1;
-                            
-                            state_next <= UpdateIndexArray;
-                        elsif bram_phase = 1 then
-                            bram_addr_int <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori2)), INDEX_ADDRESS_SIZE));
-                            bram_data_out_next <= std_logic_vector(resize(unsigned(data2_o_reg), 10*FIXED_SIZE + 4*WIDTH) + resize(unsigned(cweight2), 10*FIXED_SIZE + 4*WIDTH));
-                            bram_en_int <= '1';
-                            bram_we_int <= '1';
-                            bram_phase_next <= 0;
-                            state_next <= CheckNextColumn;
-                        end if;
-                    end if;
+                state_next <= UpdateIndexArray0;
                 
-                when CheckNextColumn =>
-                    if ci + 1 < INDEX_SIZE then
-                        if bram_phase = 0 then
-                            bram_addr_int <= std_logic_vector(to_unsigned(to_integer(unsigned(ri)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci+1)) * 4 + to_integer(unsigned(ori1)), INDEX_ADDRESS_SIZE));
-                            bram_data_out_next <= std_logic_vector(resize(unsigned(data1_o_reg), 10*FIXED_SIZE + 4*WIDTH) + resize(unsigned(rweight1) * resize(to_unsigned(to_integer(signed(cfrac)), 2*FIXED_SIZE + 2*WIDTH), 2*FIXED_SIZE + 2*WIDTH), 10*FIXED_SIZE + 4*WIDTH));
-                            bram_en_int <= '1';
-                            bram_we_int <= '1';
-                            bram_phase_next <= 1;                            
-                            state_next <= CheckNextColumn;
 
-                        elsif bram_phase = 1 then
-                            bram_addr_int <= std_logic_vector(to_unsigned(to_integer(unsigned(ri)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci+1)) * 4 + to_integer(unsigned(ori2)), INDEX_ADDRESS_SIZE));
-                            bram_data_out_next <= std_logic_vector(resize(unsigned(data2_o_reg), 10*FIXED_SIZE + 4*WIDTH) + resize(unsigned(rweight2) * resize(to_unsigned(to_integer(signed(cfrac)), 2*FIXED_SIZE + 2*WIDTH), 2*FIXED_SIZE + 2*WIDTH), 10*FIXED_SIZE + 4*WIDTH));
-                            bram_en_int <= '1';
-                            bram_we_int <= '1';
-                            bram_phase_next <= 0;
-                            state_next <= CheckNextRow;
-                        end if;
-                    else
-                        state_next <= CheckNextRow;
+            when UpdateIndexArray0 =>
+                if ri >= 0 and ri < INDEX_SIZE and ci >= 0 and ci < INDEX_SIZE then
+                    if bram_phase = 0 then
+                        bram_addr_int <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori1)), INDEX_ADDRESS_SIZE));
+                        bram_data_out_next <= std_logic_vector(resize(unsigned(data1_o_reg), 10*FIXED_SIZE + 4*WIDTH) + resize(unsigned(cweight1), 10*FIXED_SIZE + 4*WIDTH));
+                        bram_en_int <= '1';
+                        bram_we_int <= '1';
+                        bram_phase_next <= 1;
+                        state_next <= UpdateIndexArray1;
                     end if;
-                
-                when CheckNextRow =>
-                    if ri + 1 < INDEX_SIZE then
-                        if bram_phase = 0 then
-                            bram_addr_int <= std_logic_vector(to_unsigned(to_integer(unsigned(ri + 1)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori1)), INDEX_ADDRESS_SIZE));
-                            bram_data_out_next <= std_logic_vector(resize(unsigned(data1_o_reg), 10 * FIXED_SIZE + 4 * WIDTH) + resize(unsigned(dx) * unsigned(rfrac) * (unsigned(to_signed(1, 2 * WIDTH + 2 * FIXED_SIZE)) - unsigned(cfrac)), 10*FIXED_SIZE + 4 * WIDTH));
-                            bram_en_int <= '1';
-                            bram_we_int <= '1';
-                            bram_phase_next <= 1;
-                            state_next <= CheckNextRow;
+                end if;
+                data1_o <= bram_data_out;
 
-                        elsif bram_phase = 1 then
-                            bram_addr_int <= std_logic_vector(to_unsigned(to_integer(unsigned(ri + 1)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori2)), INDEX_ADDRESS_SIZE));
-                            bram_data_out_next <= std_logic_vector(resize(unsigned(data2_o_reg), 10 * FIXED_SIZE + 4 * WIDTH) + resize(unsigned(dy) * unsigned(rfrac) * (unsigned(to_signed(1, 2 * WIDTH + 2 * FIXED_SIZE)) - unsigned(cfrac)), 10*FIXED_SIZE + 4 * WIDTH));
-                            bram_en_int <= '1';
-                            bram_we_int <= '1';
-                            bram_phase_next <= 0;
-                            state_next <= NextSample;
-                        end if;
-                    else
-                        state_next <= NextSample;
+            when UpdateIndexArray1 =>
+
+                if bram_phase = 1 then
+                    bram_addr_int <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori2)), INDEX_ADDRESS_SIZE));
+                    bram_data_out_next <= std_logic_vector(resize(unsigned(data2_o_reg), 10*FIXED_SIZE + 4*WIDTH) + resize(unsigned(cweight2), 10*FIXED_SIZE + 4*WIDTH));
+                    bram_en_int <= '1';
+                    bram_we_int <= '1';
+                    bram_phase_next <= 0;
+                    state_next <= CheckNextColumn0;
+                end if;
+                data1_o <= bram_data_out;
+
+            when CheckNextColumn0 =>
+
+                if ci + 1 < INDEX_SIZE then
+                    if bram_phase = 0 then
+                        bram_addr_int <= std_logic_vector(to_unsigned(to_integer(unsigned(ri)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci+1)) * 4 + to_integer(unsigned(ori1)), INDEX_ADDRESS_SIZE));
+                        bram_data_out_next <= std_logic_vector(resize(unsigned(data1_o_reg), 10*FIXED_SIZE + 4*WIDTH) + resize(unsigned(rweight1) * resize(to_unsigned(to_integer(signed(cfrac)), 2*FIXED_SIZE + 2*WIDTH), 2*FIXED_SIZE + 2*WIDTH), 10*FIXED_SIZE + 4*WIDTH));
+                        bram_en_int <= '1';
+                        bram_we_int <= '1';
+                        bram_phase_next <= 1;                            
+                        state_next <= CheckNextColumn1;
                     end if;
-                
+                else
+                    state_next <= CheckNextRow0;
+                end if;
+                data1_o <= bram_data_out;
+
+            when CheckNextColumn1 =>
+                if bram_phase = 1 then
+                    bram_addr_int <= std_logic_vector(to_unsigned(to_integer(unsigned(ri)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci+1)) * 4 + to_integer(unsigned(ori2)), INDEX_ADDRESS_SIZE));
+                    bram_data_out_next <= std_logic_vector(resize(unsigned(data2_o_reg), 10*FIXED_SIZE + 4*WIDTH) + resize(unsigned(rweight2) * resize(to_unsigned(to_integer(signed(cfrac)), 2*FIXED_SIZE + 2*WIDTH), 2*FIXED_SIZE + 2*WIDTH), 10*FIXED_SIZE + 4*WIDTH));
+                    bram_en_int <= '1';
+                    bram_we_int <= '1';
+                    bram_phase_next <= 0;
+                    state_next <= CheckNextRow0;
+                end if;
+                data1_o <= bram_data_out;
+
+            when CheckNextRow0 =>
+                if ri + 1 < INDEX_SIZE then
+                    if bram_phase = 0 then
+                        bram_addr_int <= std_logic_vector(to_unsigned(to_integer(unsigned(ri + 1)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori1)), INDEX_ADDRESS_SIZE));
+                        bram_data_out_next <= std_logic_vector(resize(unsigned(data1_o_reg), 10 * FIXED_SIZE + 4 * WIDTH) + resize(unsigned(dx) * unsigned(rfrac) * (unsigned(to_signed(1, 2 * WIDTH + 2 * FIXED_SIZE)) - unsigned(cfrac)), 10*FIXED_SIZE + 4 * WIDTH));
+                        bram_en_int <= '1';
+                        bram_we_int <= '1';
+                        bram_phase_next <= 1;
+                        state_next <= CheckNextRow1;
+                    end if;
+                else
+                    state_next <= NextSample;
+                end if;
+                data1_o <= bram_data_out;
+
+            when CheckNextRow1 =>
+                if bram_phase = 1 then
+                    bram_addr_int <= std_logic_vector(to_unsigned(to_integer(unsigned(ri + 1)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori2)), INDEX_ADDRESS_SIZE));
+                    bram_data_out_next <= std_logic_vector(resize(unsigned(data2_o_reg), 10 * FIXED_SIZE + 4 * WIDTH) + resize(unsigned(dy) * unsigned(rfrac) * (unsigned(to_signed(1, 2 * WIDTH + 2 * FIXED_SIZE)) - unsigned(cfrac)), 10*FIXED_SIZE + 4 * WIDTH));
+                    bram_en_int <= '1';
+                    bram_we_int <= '1';
+                    bram_phase_next <= 0;
+                    state_next <= NextSample;
+                end if;
+                                data1_o <= bram_data_out;
+
             
                 when NextSample =>
                     j_next <= j_reg + 1;
@@ -918,9 +934,8 @@ begin
 
     -- Azuriranje izlaznih portova 
     addr_do1_o <= bram_addr_int;
-    --c1_data_o <= bram_en_int;
-    --bram_we1_o <= bram_we_int;
-    data1_o <= bram_data_out;
+    c1_data_o <= bram_en_int;
+    bram_we1_o <= bram_we_int;
     rom_addr <= rom_addr_int;  -- Azuriranje rom_addr signala
     
 end Behavioral;
