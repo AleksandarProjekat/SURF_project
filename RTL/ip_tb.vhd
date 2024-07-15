@@ -301,7 +301,7 @@ end process;
     -- Instanciranje BRAM-a za izlazne podatke
      bram_out: entity work.bram_out
         generic map (
-            WIDTH => 10*48 + 4*11,  -- sirina podataka
+            WIDTH => 10*48 + 4*11,  -- ?irina podataka
             BRAM_SIZE => IMG_WIDTH*IMG_HEIGHT,  -- dubina memorije
             ADDR_WIDTH => INDEX_ADDRESS_SIZE
         )
