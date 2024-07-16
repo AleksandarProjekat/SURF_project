@@ -86,7 +86,7 @@ architecture Behavioral of ip is
         ComputeRPos1, ComputeRPos2, ComputeRPos3, ComputeRPos4, ComputeRPos5,
         ComputeCPos1, ComputeCPos2, ComputeCPos3, ComputeCPos4, ComputeCPos5,
         SetRXandCX, BoundaryCheck, PositionValidation, ComputePosition, ProcessSample,
-        ComputeDerivatives, WaitForData,
+        ComputeDerivatives, WaitForData, WaitForData1,
         FetchDXX1, FetchDXX2, ComputeDXX,
         FetchDYY1, FetchDYY2, ComputeDYY,
         CalculateDerivatives, ApplyOrientationTransform,
@@ -559,22 +559,26 @@ begin
                 state_next <= WaitForData;
                 
             when WaitForData =>
+                state_next <= WaitForData1;
+
+                
+            when WaitForData1 =>
                 case bram_phase is
                     when 0 =>
                         dxx1_sum_next <= std_logic_vector(resize(signed(bram_data_i), FIXED_SIZE + 2));
                         bram_addr1_o_next <= std_logic_vector(to_unsigned((to_integer(r) - to_integer(addSampleStep)) * IMG_WIDTH + to_integer(c), PIXEL_SIZE));
                         bram_phase_next <= 1;
-                        state_next <= WaitForData;
+                        state_next <= WaitForData1;
                     when 1 =>
                         dxx1_sum_next <= std_logic_vector(signed(dxx1_sum_reg) + resize(signed(bram_data_i), FIXED_SIZE + 2));
                         bram_addr1_o_next <= std_logic_vector(to_unsigned((to_integer(r) - to_integer(addSampleStep)) * IMG_WIDTH + (to_integer(c) + to_integer(addSampleStep) + 1), PIXEL_SIZE));
                         bram_phase_next <= 2;
-                        state_next <= WaitForData;
+                        state_next <= WaitForData1;
                     when 2 =>
                         dxx1_sum_next <= std_logic_vector(signed(dxx1_sum_reg) - resize(signed(bram_data_i), FIXED_SIZE + 2));
                         bram_addr1_o_next <= std_logic_vector(to_unsigned((to_integer(r) + to_integer(addSampleStep) + 1) * IMG_WIDTH + to_integer(c), PIXEL_SIZE));
                         bram_phase_next <= 3;
-                        state_next <= WaitForData;
+                        state_next <= WaitForData1;
                     when 3 =>
                         dxx1_sum_next <= std_logic_vector(signed(dxx1_sum_reg) - resize(signed(bram_data_i), FIXED_SIZE + 2));
                         state_next <= FetchDXX1;

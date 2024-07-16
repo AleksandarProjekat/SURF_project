@@ -277,50 +277,46 @@ end process;
     bram_in: entity work.bram
         generic map (
             WIDTH => FIXED_SIZE,  -- ?irina podataka
-            BRAM_SIZE => IMG_WIDTH*IMG_HEIGHT,  -- dubina memorije
-            ADDR_WIDTH => 15
+            SIZE => IMG_WIDTH*IMG_HEIGHT,  -- dubina memorije
+            SIZE_WIDTH => 15
         )
         port map (
-               clka => clk_s,
-               clkb => clk_s,
-	           reseta=> reset_s,
-	           ena=>tb_a_en_i,
-	           wea=> tb_a_we_i,
-	           addra=> tb_a_addr_i,
-	           dia=> tb_a_data_i,
-	           doa=> open,
+               clk_a => clk_s,
+               clk_b => clk_s,
+	           en_a=>tb_a_en_i,
+	           we_a=> tb_a_we_i,
+	           addr_a=> tb_a_addr_i,
+	           data_a_i=> tb_a_data_i,
+	           data_a_o=> open,
 	
-	           resetb=>reset_s,
-	           enb=>ip_a_en,
-	           web=>ip_a_we,
-	           addrb=>ip_a_addr,
-	           dib=>(others=>'0'),
-	           dob=> ip_a_data
+	           en_b=>ip_a_en,
+	           we_b=>ip_a_we,
+	           addr_b=>ip_a_addr,
+	           data_b_i =>(others=>'0'),
+	           data_b_o => ip_a_data
         );
 
     -- Instanciranje BRAM-a za izlazne podatke
      bram_out: entity work.bram_out
         generic map (
-            WIDTH => 10*48 + 4*11,  -- ?irina podataka
-            BRAM_SIZE => IMG_WIDTH*IMG_HEIGHT,  -- dubina memorije
-            ADDR_WIDTH => INDEX_ADDRESS_SIZE
+            WIDTH => 10*48 + 4*11,  -- sirina podataka
+            SIZE => 80000,  -- dubina memorije
+            SIZE_WIDTH => INDEX_ADDRESS_SIZE
         )
         port map (
-               clka => clk_s,
-               clkb => clk_s,
-	           reseta=> reset_s,
-	           ena=> ip_c_en, 
-	           wea=> ip_c_we , 
-	           addra=> ip_c_addr , 
-	           dia=> ip_c_data , 
-	           doa=> open,
+               clk_a => clk_s,
+               clk_b => clk_s,
+	           en_a=> ip_c_en, 
+	           we_a=> ip_c_we , 
+	           addr_a=> ip_c_addr , 
+	           data_a_i=> ip_c_data , 
+	           data_a_o=> open,
 	
-	           resetb=>reset_s,
-	           enb=> tb_c_en_i,
-	           web=> tb_c_we_i,
-	           addrb=> tb_c_addr_i,
-	           dib=> (others=>'0'),
-	           dob=> tb_c_data_o
+	           en_b=> tb_c_en_i,
+	           we_b=> tb_c_we_i,
+	           addr_b=> tb_c_addr_i,
+	           data_b_i=> (others=>'0'),
+	           data_b_o=> tb_c_data_o
         );
 
 end Behavioral;

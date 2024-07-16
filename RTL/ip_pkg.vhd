@@ -4,7 +4,7 @@ idle, StartLoop, InnerLoop,
             ComputeRPos1, ComputeRPos2, ComputeRPos3, ComputeRPos4, ComputeRPos5,
             ComputeCPos1, ComputeCPos2, ComputeCPos3, ComputeCPos4, ComputeCPos5,
             SetRXandCX, BoundaryCheck, PositionValidation, ComputePosition, ProcessSample,
-        ComputeDerivatives, WaitForData,
+        ComputeDerivatives, WaitForData,WaitForData1,
         FetchDXX1, FetchDXX2, ComputeDXX,
         FetchDYY1, FetchDYY2, ComputeDYY,
     CalculateDerivatives, ApplyOrientationTransform,
@@ -38,6 +38,7 @@ package body ip_pkg is
             when ProcessSample          => return "ProcessSample";
             when ComputeDerivatives     => return "ComputeDerivatives";
             when WaitForData            => return "WaitForData";
+			when WaitForData1            => return "WaitForData1";
             when FetchDXX1              => return "FetchDXX1";
             when FetchDXX2              => return "FetchDXX2";
             when ComputeDXX             => return "ComputeDXX";
