@@ -92,7 +92,6 @@ file pixels1D : text open read_mode is
     signal ip_c_we : std_logic;
     signal ip_c_addr : std_logic_vector(5 downto 0);
     signal ip_c_data: std_logic_vector(10*FIXED_SIZE + 4*WIDTH - 1 downto 0);
-    
 
 
 
@@ -215,8 +214,8 @@ begin
             end if;
         end if;
     end if;
-end process;
-        
+  end process;
+      
      -- Instanciranje IP-a
     ip: entity work.ip(Behavioral)
            generic map (
@@ -299,7 +298,7 @@ end process;
     -- Instanciranje BRAM-a za izlazne podatke
      bram_out: entity work.bram_out
         generic map (
-            WIDTH => 10*48 + 4*11,  -- sirina podataka
+            WIDTH =>10*48 + 4*11,  -- sirina podataka
             SIZE => 80000,  -- dubina memorije
             SIZE_WIDTH => INDEX_ADDRESS_SIZE
         )

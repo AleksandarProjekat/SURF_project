@@ -1,60 +1,50 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use ieee.numeric_std.all;
+use IEEE.NUMERIC_STD.ALL;
 
 entity bram_out is
-    generic (WIDTH : integer := 8*48 + 4*11 + 2*16;        
-            BRAM_SIZE : integer := 80000;
-            ADDR_WIDTH  : integer := 6      
- );    
-    port (
-        clka : in std_logic;
-        clkb : in std_logic;
-        reseta : in std_logic;
-        resetb : in std_logic;
-        ena : in std_logic;
-        enb : in std_logic;
-        wea : in std_logic;
-        web : in std_logic;
-        addra : in std_logic_vector(ADDR_WIDTH -1 downto 0); 
-        addrb : in std_logic_vector(ADDR_WIDTH -1 downto 0); 
-        dia : in std_logic_vector(WIDTH-1 downto 0);        
-        dib : in std_logic_vector(WIDTH-1 downto 0);        
-        doa : out std_logic_vector(WIDTH-1 downto 0);       
-        dob : out std_logic_vector(WIDTH-1 downto 0)        
-    );
+    generic (WIDTH: positive := 10*48 + 4*11;
+             SIZE: positive := 80000;
+			 SIZE_WIDTH: positive := 6);
+    port (clk_a : in std_logic;
+          clk_b : in std_logic;
+          en_a: in std_logic;
+          en_b: in std_logic;
+          we_a: in std_logic;
+          we_b: in std_logic;
+          addr_a: in std_logic_vector(SIZE_WIDTH-1 downto 0);
+          addr_b: in std_logic_vector(SIZE_WIDTH-1 downto 0);
+          data_a_i: in std_logic_vector(WIDTH-1 downto 0);
+          data_b_i: in std_logic_vector(WIDTH-1 downto 0);
+          data_a_o: out std_logic_vector(WIDTH-1 downto 0);
+          data_b_o: out std_logic_vector(WIDTH-1 downto 0));
 end bram_out;
 
 architecture Behavioral of bram_out is
-
-type ram_type is array (BRAM_SIZE-1 downto 0) of std_logic_vector(WIDTH-1 downto 0);
-shared variable RAM: ram_type;
-begin
-    process(clka)
-        begin
-            if(rising_edge (clka)) then
-                if(ena = '1') then
-                    doa <= RAM(to_integer(unsigned(addra)));
-                end if;   
-                
-                if(wea = '1') then
-                    RAM(to_integer(unsigned(addra))) := dia;    
-                end if;
-            end if;          
-    end process;
+    type ram_type is array(SIZE-1 downto 0) of std_logic_vector(WIDTH-1 downto 0);
+    signal RAM: ram_type;
     
-    process(clkb)
-        begin
-            if(rising_edge (clkb)) then
-                if(enb = '1') then
-                    dob <= RAM(to_integer(unsigned(addrb)));
-                end if;   
-                
-                if(web = '1') then
-                    RAM(to_integer(unsigned(addrb))) := dib;    
+    attribute ram_style: string;
+    attribute ram_style of RAM: signal is "block";
+begin
+    process(clk_a, clk_b)
+    begin
+        if (rising_edge(clk_a)) then
+            if (en_a = '1') then
+                data_a_o <= RAM(to_integer(unsigned(addr_a)));
+                if (we_a /= '0') then
+                    RAM(to_integer(unsigned(addr_a))) <= data_a_i;
                 end if;
-            end if;          
+            end if;
+        end if;
+        
+        if (rising_edge(clk_b)) then
+            if (en_b = '1') then
+                data_b_o <= RAM(to_integer(unsigned(addr_b)));
+                if (we_b /= '0') then
+                    RAM(to_integer(unsigned(addr_b))) <= data_b_i;
+                end if;
+            end if;
+        end if;
     end process;
-
-
 end Behavioral;
