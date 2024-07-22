@@ -32,7 +32,7 @@ begin
         if (rising_edge(clk_a)) then
             if (en_a = '1') then
                 data_a_o <= RAM(to_integer(unsigned(addr_a)));
-                if (we_a /= '0') then
+                if (we_a = '1') then
                     RAM(to_integer(unsigned(addr_a))) <= data_a_i;
                 end if;
             end if;
@@ -41,7 +41,7 @@ begin
         if (rising_edge(clk_b)) then
             if (en_b = '1') then
                 data_b_o <= RAM(to_integer(unsigned(addr_b)));
-                if (we_b /= '0') then
+                if (we_b = '1') then
                     RAM(to_integer(unsigned(addr_b))) <= data_b_i;
                 end if;
             end if;
