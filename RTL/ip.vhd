@@ -67,19 +67,100 @@ end ip;
 architecture Behavioral of ip is
     signal state_reg, state_next : state_type;
 
-    component rom
+         component dsp1 is
+      generic (
+               WIDTH : integer := 11; 
+               FIXED_SIZE : integer := 48
+              -- ADD_SUB : string:= "add" 
+              );
+      port (
+            clk : in  std_logic;   
+            rst : in std_logic;
+            u1_i : in std_logic_vector(WIDTH - 1 downto 0); 
+            u2_i : in std_logic_vector(WIDTH - 1 downto 0); 
+            u3_i : in std_logic_vector(FIXED_SIZE - 1 downto 0); 
+            res_o : out std_logic_vector(FIXED_SIZE -1 downto 0)
+           );
+        end component;
+        
+         component dsp2 is
+             generic (
+              FIXED_SIZE : integer:= 48;
+              ADD_SUB : string:= "add"
+              );
+        port (clk : in std_logic;
+              rst : in std_logic;
+              u1_i : in std_logic_vector(FIXED_SIZE - 1 downto 0);
+              u2_i : in std_logic_vector(FIXED_SIZE - 1 downto 0); 
+              res_o : out std_logic_vector(FIXED_SIZE - 1 downto 0));
+        end component;
+        
+         component dsp3 is
+      generic (
+               WIDTH : integer := 11;  
+               FIXED_SIZE : integer := 48  
+              );
+      port (
+            clk : in  std_logic;    
+            rst : in std_logic;
+            u1_i : in std_logic_vector(WIDTH - 1 downto 0); 
+            u2_i : in signed (FIXED_SIZE -1 downto 0);
+            u3_i : in std_logic_vector(FIXED_SIZE - 1 downto 0); 
+            res_o : out signed(FIXED_SIZE -1 downto 0) 
+           );
+        end component;
+        
+         component dsp4 is
+        generic ( 
+              FIXED_SIZE : integer := 48);          
+        port (clk: in std_logic;
+              rst: in std_logic;
+              u1_i: in signed(FIXED_SIZE - 1 downto 0);
+              spacing : in std_logic_vector(FIXED_SIZE - 1 downto 0);
+              res_o: out std_logic_vector(FIXED_SIZE - 1 downto 0));
+        end component;
+        
+         component dsp5 is
+      generic ( 
+               FIXED_SIZE : integer := 48
+              );
+      port (
+            clk : in  std_logic; 
+            rst : in std_logic;
+            u1_i : in std_logic_vector(FIXED_SIZE - 1 downto 0); 
+            u2_i : in std_logic_vector(FIXED_SIZE - 1 downto 0); 
+            u3_i : in std_logic_vector(FIXED_SIZE - 1 downto 0); 
+            res_o : out std_logic_vector(FIXED_SIZE -1 downto 0) 
+           );
+        end component;
+        
+             component dsp6 is
         generic (
-            WIDTH: positive := 48;  -- Izmenjena sirina da odgovara formatu
-            SIZE: positive := 40;   -- Broj lookup vrednosti
-            SIZE_WIDTH: positive := 6  -- Log2(40) za adresiranje
-        );
-        port (
-            clk_a : in std_logic;
-            en_a : in std_logic;
-            addr_a : in std_logic_vector(SIZE_WIDTH - 1 downto 0);
-            data_a_o : out std_logic_vector(WIDTH - 1 downto 0)
-        );
-    end component;
+              FIXED_SIZE : integer:= 48;
+              WIDTH : integer:= 11
+              );
+        port (clk: in std_logic;
+              rst: in std_logic;
+              u1_i: in std_logic_vector(FIXED_SIZE - 1 downto 0); 
+              u2_i: in std_logic_vector(WIDTH - 1 downto 0);
+              res_o: out std_logic_vector(FIXED_SIZE - 1 downto 0));
+        end component;
+        
+        
+        component rom
+            generic (
+                WIDTH: positive := 48;  
+                SIZE: positive := 40;   
+                SIZE_WIDTH: positive := 6  
+            );
+            port (
+                clk_a : in std_logic;
+                en_a : in std_logic;
+                addr_a : in std_logic_vector(SIZE_WIDTH - 1 downto 0);
+                data_a_o : out std_logic_vector(WIDTH - 1 downto 0)
+            );
+        end component;
+
 
  type state_type is (
             idle, StartLoop, InnerLoop, 
@@ -107,12 +188,17 @@ architecture Behavioral of ip is
 
     signal i_reg, i_next : unsigned(WIDTH - 1 downto 0);
     signal j_reg, j_next : unsigned(WIDTH - 1 downto 0);
-    signal temp1_rpos_reg, temp1_rpos_next, temp2_rpos_reg, temp2_rpos_next : std_logic_vector(2*WIDTH + FIXED_SIZE - 1 downto 0);
-    signal temp3_rpos_reg, temp3_rpos_next, temp4_rpos_reg, temp4_rpos_next : std_logic_vector(2*WIDTH + FIXED_SIZE + 1 - 1 downto 0);
-    signal temp1_cpos_reg, temp1_cpos_next, temp2_cpos_reg, temp2_cpos_next : std_logic_vector(2*WIDTH + FIXED_SIZE - 1 downto 0);
-    signal temp3_cpos_reg, temp3_cpos_next, temp4_cpos_reg, temp4_cpos_next : std_logic_vector(2*WIDTH + FIXED_SIZE + 1 - 1 downto 0);
-    signal rpos, cpos : std_logic_vector(WIDTH + FIXED_SIZE + 2 - 1 downto 0);
-    signal rpos_next, cpos_next : std_logic_vector(WIDTH + FIXED_SIZE + 2 - 1 downto 0);
+    signal neg_i_sine : std_logic_vector(FIXED_SIZE - 1 downto 0); 
+
+    signal temp1_rpos_reg, temp1_rpos_next, temp2_rpos_reg, temp2_rpos_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
+    signal temp3_rpos_reg, temp3_rpos_next, temp4_rpos_reg, temp4_rpos_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
+    signal temp5_rpos_reg, temp5_rpos_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
+    signal temp1_cpos_reg, temp1_cpos_next, temp2_cpos_reg, temp2_cpos_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
+    signal temp3_cpos_reg, temp3_cpos_next, temp4_cpos_reg, temp4_cpos_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
+    signal temp5_cpos_reg, temp5_cpos_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
+    signal rpos_reg, cpos_reg : std_logic_vector(FIXED_SIZE - 1 downto 0);
+    signal rpos_next, cpos_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
+    
     signal rx, cx, rx_next, cx_next : std_logic_vector( 2*WIDTH + 2*FIXED_SIZE - 1 downto 0);
     signal addSampleStep, addSampleStep_next : unsigned(WIDTH - 1 downto 0);
     signal r, c, r_next, c_next : signed(2 * WIDTH + 1 - 1 downto 0);
@@ -158,6 +244,84 @@ architecture Behavioral of ip is
 
 
 begin
+
+    neg_i_sine <= std_logic_vector(-signed(i_sine));
+
+-- rpos = (step * ((i_cose * (i - iradius)) + i_sine * (j - iradius))) - fracr) * spacing;
+                --temp1= i_cose*(i-iradius)
+                --temp2= i_sine*(j-iradius)
+                --temp3 = temp1+temp2
+                --temp4 = step*temp3
+                --temp5 = temp4-fracr
+                --rpos = temp5*spacing
+    temp1_rpos_inc_dsp: dsp1
+     generic map ( WIDTH => WIDTH,
+           FIXED_SIZE => FIXED_SIZE)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => std_logic_vector(i_reg),
+             u2_i => std_logic_vector(iradius),
+             u3_i => i_cose,
+            res_o => temp1_rpos_reg);
+            
+    temp2_rpos_inc_dsp: dsp1
+     generic map ( WIDTH => WIDTH,
+           FIXED_SIZE => FIXED_SIZE)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => std_logic_vector(j_reg),
+             u2_i => std_logic_vector(iradius),
+             u3_i => i_sine,
+            res_o => temp2_rpos_reg);
+            
+     temp3_rpos_inc_dsp: dsp2
+     generic map (
+           FIXED_SIZE => FIXED_SIZE,
+             ADD_SUB => "add")
+    port map(clk => clk,
+             rst => reset,
+             u1_i => temp1_rpos_reg,
+             u2_i => temp2_rpos_reg,
+            res_o => temp3_rpos_reg);
+            
+ --cpos = (step * ((- i_sine * (i - iradius)) + i_cose * (j - iradius))) - fracc) * spacing;
+          --temp1=  - i_sine*(i-iradius)
+          --temp2= i_cose*(j-iradius)
+          --temp3 = temp1+temp2
+          --temp4 = step*temp3
+          --temp5 = temp4-fracc
+          --cpos = temp5*spacing
+          
+     temp1_cpos_inc_dsp: dsp1
+     generic map ( WIDTH => WIDTH,
+           FIXED_SIZE => FIXED_SIZE)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => std_logic_vector(i_reg),
+             u2_i => std_logic_vector(iradius),
+             u3_i => neg_i_sine,
+            res_o => temp1_cpos_reg);
+            
+     temp2_cpos_inc_dsp: dsp1
+     generic map ( WIDTH => WIDTH,
+           FIXED_SIZE => FIXED_SIZE)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => std_logic_vector(j_reg),
+             u2_i => std_logic_vector(iradius),
+             u3_i => i_cose,
+            res_o => temp1_cpos_reg);
+            
+     temp3_cpos_inc_dsp: dsp2
+     generic map (
+           FIXED_SIZE => FIXED_SIZE,
+             ADD_SUB => "add")
+    port map(clk => clk,
+             rst => reset,
+             u1_i => temp1_cpos_reg,
+             u2_i => temp2_cpos_reg,
+            res_o => temp3_cpos_reg);
+            
     -- Instanciranje ROM-a
     ROM_inst : rom
         generic map (
@@ -189,8 +353,8 @@ begin
                 addSampleStep <= (others => '0');
                 r <= (others => '0');
                 c <= (others => '0');
-                rpos <= (others => '0');
-                cpos <= (others => '0');
+                rpos_reg <= (others => '0');
+                cpos_reg <= (others => '0');
                 rx <= (others => '0');
                 cx <= (others => '0');
                 rfrac <= (others => '0');
@@ -221,10 +385,13 @@ begin
                 temp2_rpos_reg <= (others => '0');
                 temp3_rpos_reg <= (others => '0');
                 temp4_rpos_reg <= (others => '0');
+                temp5_rpos_reg <= (others => '0');
+
                 temp1_cpos_reg <= (others => '0');
                 temp2_cpos_reg <= (others => '0');
                 temp3_cpos_reg <= (others => '0');
                 temp4_cpos_reg <= (others => '0');
+                temp5_cpos_reg <= (others => '0');
                 
                 rom_addr_int <= (others => '0');
                 rom_data_reg <= (others => '0'); -- Resetovanje signala za zadrzavanje podataka    
@@ -245,8 +412,8 @@ begin
                 addSampleStep <= addSampleStep_next;
                 r <= r_next;
                 c <= c_next;
-                rpos <= rpos_next;
-                cpos <= cpos_next;
+                rpos_reg <= rpos_next;
+                cpos_reg <= cpos_next;
                 rx <= rx_next;
                 cx <= cx_next;
                 rfrac <= rfrac_next;
@@ -282,10 +449,14 @@ begin
                 temp2_rpos_reg <= temp2_rpos_next;
                 temp3_rpos_reg <= temp3_rpos_next;
                 temp4_rpos_reg <= temp4_rpos_next;
+                temp5_rpos_reg <= temp5_rpos_next;
+               
                 temp1_cpos_reg <= temp1_cpos_next;
                 temp2_cpos_reg <= temp2_cpos_next;
                 temp3_cpos_reg <= temp3_cpos_next;
                 temp4_cpos_reg <= temp4_cpos_next;
+                temp5_cpos_reg <= temp5_cpos_next;
+
                 
                 
                 if rom_enable = '1' then
@@ -303,7 +474,7 @@ begin
     end process;
 
     -- Kombinacioni proces za odredjivanje sledecih stanja i vrednosti signala
-    process (bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, temp1_rpos_reg, temp2_rpos_reg, temp3_rpos_reg, temp4_rpos_reg, temp1_cpos_reg, temp2_cpos_reg, temp3_cpos_reg, temp4_cpos_reg, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, ri, ci, r, c, rx, cx, rfrac, cfrac, dx, dy, dxx, dyy, weight, rweight1, rweight2, cweight1, cweight2, ori1, ori2, dxx1, dxx2, dyy1, dyy2, rpos, cpos, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_reg, rom_addr_int, data1_o_reg, data2_o_reg, bram_data_out, bram_addr1_o_next)
+    process (bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, temp1_rpos_reg, temp2_rpos_reg, temp3_rpos_reg, temp4_rpos_reg, temp5_rpos_reg, temp1_cpos_reg, temp2_cpos_reg, temp3_cpos_reg, temp4_cpos_reg, temp5_cpos_reg, rpos_reg, cpos_reg, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, ri, ci, r, c, rx, cx, rfrac, cfrac, dx, dy, dxx, dyy, weight, rweight1, rweight2, cweight1, cweight2, ori1, ori2, dxx1, dxx2, dyy1, dyy2, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_reg, rom_addr_int, data1_o_reg, data2_o_reg, bram_data_out, bram_addr1_o_next)
     begin
         -- Default assignments
         state_next <= state_reg;
@@ -333,17 +504,21 @@ begin
         dxx2_next <= dxx2;
         dyy1_next <= dyy1;
         dyy2_next <= dyy2;
-        rpos_next <= rpos;
-        cpos_next <= cpos;
+        rpos_next <= rpos_reg;
+        cpos_next <= cpos_reg;
         
         temp1_rpos_next <= temp1_rpos_reg;
         temp2_rpos_next <= temp2_rpos_reg;
         temp3_rpos_next <= temp3_rpos_reg;
         temp4_rpos_next <= temp4_rpos_reg;
+        temp5_rpos_next <= temp5_rpos_reg;
+
         temp1_cpos_next <= temp1_cpos_reg;
         temp2_cpos_next <= temp2_cpos_reg;
         temp3_cpos_next <= temp3_cpos_reg;
         temp4_cpos_next <= temp4_cpos_reg;
+        temp5_cpos_next <= temp5_cpos_reg;
+
 
         dxx1_sum_next <= dxx1_sum_reg;
         dxx2_sum_next <= dxx2_sum_reg;
@@ -364,7 +539,6 @@ begin
         c1_data_o <= '0';
         ready_o <= '0';
 
-        -- Zajedni?ki izrazi za adrese
 
         -- Logika FSM-a
         case state_reg is
@@ -380,7 +554,7 @@ begin
                 end if;
 
             when StartLoop =>
-                j_next <= TO_UNSIGNED (0, WIDTH);
+                    j_next <= TO_UNSIGNED (0, WIDTH);
                 state_next <= InnerLoop;
 
             when InnerLoop =>
@@ -391,109 +565,51 @@ begin
                 dyy2_sum_next <= (others => '0');
                 
             when ComputeRPos1 =>
-                -- rpos = (step * (i_cose * (i - iradius) + i_sine * (j - iradius)) - fracr) / spacing;
-                temp1_rpos_next <= std_logic_vector(
-                    resize(
-                        to_signed(
-                            to_integer(unsigned(step)) *
-                            (to_integer(unsigned(i_cose)) *
-                            (to_integer(signed(i_reg)) - to_integer(signed(iradius))))
-                        , 2*WIDTH + FIXED_SIZE
-                    ), 2*WIDTH + FIXED_SIZE
-                ));
+                
+                temp1_rpos_next <= temp1_rpos_reg;
                 state_next <= ComputeRPos2;
             
             when ComputeRPos2 =>
-                temp2_rpos_next <= temp1_rpos_reg;
+                temp2_rpos_next <= temp2_rpos_reg;
                 state_next <= ComputeRPos3;
             
             when ComputeRPos3 =>
-                temp3_rpos_next <= std_logic_vector(
-                    resize(
-                        to_signed(
-                            to_integer(signed(temp2_rpos_reg)) +
-                            (to_integer(unsigned(i_sine)) *
-                            (to_integer(signed(j_reg)) - to_integer(signed(iradius))))
-                        , 2*WIDTH + FIXED_SIZE + 1
-                    ), 2*WIDTH + FIXED_SIZE + 1
-                ));
+                temp3_rpos_next <= temp3_rpos_reg;
                 state_next <= ComputeRPos4;
             
             when ComputeRPos4 =>
-                temp4_rpos_next <= std_logic_vector(
-                    resize(
-                        to_signed(
-                            to_integer(signed(temp3_rpos_reg)) -
-                            to_integer(signed(fracr))
-                        , 2*WIDTH + FIXED_SIZE + 1
-                    ), 2*WIDTH + FIXED_SIZE + 1
-                ));
+                temp4_rpos_next <= temp4_rpos_reg;
                 state_next <= ComputeRPos5;
             
             when ComputeRPos5 =>
-                rpos_next <= std_logic_vector(
-                    resize(
-                        to_signed(
-                            to_integer(signed(temp4_rpos_reg)) /
-                            to_integer(signed(spacing))
-                        , WIDTH+FIXED_SIZE+2 
-                    ), WIDTH+FIXED_SIZE+2 
-                ));
+                rpos_next <= rpos_reg;
                 state_next <= ComputeCPos1;
             
             when ComputeCPos1 =>
-                temp1_cpos_next <= std_logic_vector(
-                    resize(
-                        to_signed(
-                            to_integer(unsigned(step)) *
-                            (-to_integer(unsigned(i_sine)) *
-                            (to_integer(signed(i_reg)) - to_integer(signed(iradius))))
-                        , 2*WIDTH + FIXED_SIZE 
-                    ), 2*WIDTH + FIXED_SIZE 
-                ));
+             
+                temp1_cpos_next <= temp1_cpos_reg;
                 state_next <= ComputeCPos2;
             
             when ComputeCPos2 =>
-                temp2_cpos_next <= temp1_cpos_reg;
+                temp2_cpos_next <= temp2_cpos_reg;
                 state_next <= ComputeCPos3;
             
             when ComputeCPos3 =>
-                temp3_cpos_next <= std_logic_vector(
-                    resize(
-                        to_signed(
-                            to_integer(unsigned(temp2_cpos_reg)) +
-                            (to_integer(unsigned(i_cose)) *
-                            (to_integer(signed(j_reg)) - to_integer(signed(iradius))))
-                        , 2*WIDTH + FIXED_SIZE + 1
-                    ), 2*WIDTH + FIXED_SIZE + 1
-                ));
+                temp3_cpos_next <= temp3_cpos_reg;
                 state_next <= ComputeCPos4;
             
             when ComputeCPos4 =>
-                temp4_cpos_next <= std_logic_vector(
-                    resize(
-                        to_signed(
-                            to_integer(signed(temp3_cpos_reg)) -
-                            to_integer(signed(fracc))
-                        , 2*WIDTH + FIXED_SIZE + 1
-                    ), 2*WIDTH + FIXED_SIZE + 1
-                ));
+                temp4_cpos_next <= temp4_cpos_reg;
                 state_next <= ComputeCPos5;
             
             when ComputeCPos5 =>
-                cpos_next <= std_logic_vector(
-                    resize(
-                        to_signed(
-                            to_integer(signed(temp4_cpos_reg)) / to_integer(signed(spacing))
-                        , WIDTH+FIXED_SIZE+2
-                    ), WIDTH+FIXED_SIZE+2
-                ));
+                cpos_next <= cpos_reg;
                 state_next <= SetRXandCX;
 
             when SetRXandCX =>
                 rx_next <= std_logic_vector(
                     to_signed(
-                        to_integer(unsigned(rpos)) +
+                        to_integer(unsigned(rpos_reg)) +
                         to_integer(unsigned(HALF_INDEX_SIZE_FP)) -
                         to_integer(unsigned(HALF_FP)),
                          2*WIDTH + 2*FIXED_SIZE
@@ -501,7 +617,7 @@ begin
                 );
                 cx_next <= std_logic_vector(
                     to_signed(
-                        to_integer(unsigned(cpos)) +
+                        to_integer(unsigned(cpos_reg)) +
                         to_integer(unsigned(HALF_INDEX_SIZE_FP)) -
                         to_integer(unsigned(HALF_FP)),
                          2*WIDTH + 2*FIXED_SIZE
@@ -533,7 +649,7 @@ begin
                             )
                         );
                 
-                state_next <= ComputePosition; -- Dodato novo stanje ovde
+                state_next <= ComputePosition; 
 
             when ComputePosition =>
                 if (r < 1 + signed(addSampleStep) or r >= IMG_HEIGHT - 1 - signed(addSampleStep) or
@@ -546,8 +662,8 @@ begin
             when ProcessSample =>
                 -- Ensure the address is always non-negative
                 rom_addr_next <= std_logic_vector(to_unsigned(
-                    abs((to_integer(unsigned(rpos)) * to_integer(unsigned(rpos)) + 
-                         to_integer(unsigned(cpos)) * to_integer(unsigned(cpos))) + 100000) mod 40, 
+                    abs((to_integer(unsigned(rpos_reg)) * to_integer(unsigned(rpos_reg)) + 
+                         to_integer(unsigned(cpos_reg)) * to_integer(unsigned(cpos_reg))) + 100000) mod 40, 
                     rom_addr_next'length));
                 weight_next <= std_logic_vector(resize(signed(rom_data_reg), FIXED_SIZE));
                 state_next <= ComputeDerivatives;
