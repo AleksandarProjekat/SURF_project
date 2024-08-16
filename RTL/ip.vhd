@@ -104,10 +104,9 @@ architecture Behavioral of ip is
             clk : in  std_logic;    
             rst : in std_logic;
             u1_i : in std_logic_vector(WIDTH - 1 downto 0); 
-            u2_i : in signed (FIXED_SIZE -1 downto 0);
+            u2_i : in std_logic_vector (FIXED_SIZE -1 downto 0); 
             u3_i : in std_logic_vector(FIXED_SIZE - 1 downto 0); 
-            res_o : out signed(FIXED_SIZE -1 downto 0) 
-           );
+            res_o : out std_logic_vector(FIXED_SIZE -1 downto 0));
         end component;
         
          component dsp4 is
@@ -115,7 +114,7 @@ architecture Behavioral of ip is
               FIXED_SIZE : integer := 48);          
         port (clk: in std_logic;
               rst: in std_logic;
-              u1_i: in signed(FIXED_SIZE - 1 downto 0);
+              u1_i: in std_logic_vector(FIXED_SIZE - 1 downto 0);
               spacing : in std_logic_vector(FIXED_SIZE - 1 downto 0);
               res_o: out std_logic_vector(FIXED_SIZE - 1 downto 0));
         end component;
@@ -182,8 +181,8 @@ architecture Behavioral of ip is
         NextSample, IncrementI, Finish
     );
 
-    constant INDEX_SIZE_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_unsigned(8*131072, FIXED_SIZE));
-    constant HALF_INDEX_SIZE_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_unsigned(4*131072, FIXED_SIZE));
+    constant INDEX_SIZE_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_unsigned(8*131072, FIXED_SIZE));  -- 4.0
+    constant HALF_INDEX_SIZE_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_unsigned(4*131072, FIXED_SIZE));  -- 2.0
     constant HALF_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_unsigned(131072, FIXED_SIZE));  -- 0.5
 
     signal i_reg, i_next : unsigned(WIDTH - 1 downto 0);
@@ -192,10 +191,10 @@ architecture Behavioral of ip is
 
     signal temp1_rpos_reg, temp1_rpos_next, temp2_rpos_reg, temp2_rpos_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
     signal temp3_rpos_reg, temp3_rpos_next, temp4_rpos_reg, temp4_rpos_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
-    signal temp5_rpos_reg, temp5_rpos_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
+   
     signal temp1_cpos_reg, temp1_cpos_next, temp2_cpos_reg, temp2_cpos_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
     signal temp3_cpos_reg, temp3_cpos_next, temp4_cpos_reg, temp4_cpos_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
-    signal temp5_cpos_reg, temp5_cpos_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
+    
     signal rpos_reg, cpos_reg : std_logic_vector(FIXED_SIZE - 1 downto 0);
     signal rpos_next, cpos_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
     
@@ -251,9 +250,9 @@ begin
                 --temp1= i_cose*(i-iradius)
                 --temp2= i_sine*(j-iradius)
                 --temp3 = temp1+temp2
-                --temp4 = step*temp3
-                --temp5 = temp4-fracr
-                --rpos = temp5*spacing
+                --temp4 = (step*temp3)-fracr 
+                --rpos = temp4*spacing
+                
     temp1_rpos_inc_dsp: dsp1
      generic map ( WIDTH => WIDTH,
            FIXED_SIZE => FIXED_SIZE)
@@ -284,13 +283,32 @@ begin
              u2_i => temp2_rpos_reg,
             res_o => temp3_rpos_reg);
             
+      temp4_rpos_inc_dsp: dsp3
+     generic map ( WIDTH => WIDTH,
+           FIXED_SIZE => FIXED_SIZE)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => std_logic_vector(step),
+             u2_i => temp3_rpos_reg,
+             u3_i => fracr,
+            res_o => temp4_rpos_reg);
+            
+      rpos_inc_dsp: dsp4
+     generic map (
+           FIXED_SIZE => FIXED_SIZE)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => temp4_rpos_reg,
+             spacing => spacing,
+            res_o => rpos_reg);     
+            
+            
  --cpos = (step * ((- i_sine * (i - iradius)) + i_cose * (j - iradius))) - fracc) * spacing;
           --temp1=  - i_sine*(i-iradius)
           --temp2= i_cose*(j-iradius)
           --temp3 = temp1+temp2
-          --temp4 = step*temp3
-          --temp5 = temp4-fracc
-          --cpos = temp5*spacing
+          --temp4 = (step*temp3)-fracc
+          --cpos = temp4*spacing
           
      temp1_cpos_inc_dsp: dsp1
      generic map ( WIDTH => WIDTH,
@@ -322,6 +340,46 @@ begin
              u2_i => temp2_cpos_reg,
             res_o => temp3_cpos_reg);
             
+      temp4_cpos_inc_dsp: dsp3
+     generic map ( WIDTH => WIDTH,
+           FIXED_SIZE => FIXED_SIZE)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => std_logic_vector(step),
+             u2_i => temp3_rpos_reg,
+             u3_i => fracc,
+            res_o => temp4_rpos_reg);      
+            
+       cpos_inc_dsp: dsp4
+     generic map (
+           FIXED_SIZE => FIXED_SIZE)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => temp4_cpos_reg,
+             spacing => spacing,
+            res_o => cpos_reg);      
+           
+      rx_inc_dsp: dsp5
+     generic map (
+           FIXED_SIZE => FIXED_SIZE)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => rpos_reg,
+             u2_i => HALF_INDEX_SIZE_FP, --2.0
+             u3_i => HALF_FP,   --0.5
+            res_o => rx);
+               
+      cx_inc_dsp: dsp5
+     generic map (
+           FIXED_SIZE => FIXED_SIZE)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => cpos_reg,
+             u2_i => HALF_INDEX_SIZE_FP, --2.0
+             u3_i => HALF_FP,   --0.5
+            res_o => cx);   
+      
+                
     -- Instanciranje ROM-a
     ROM_inst : rom
         generic map (
@@ -385,13 +443,11 @@ begin
                 temp2_rpos_reg <= (others => '0');
                 temp3_rpos_reg <= (others => '0');
                 temp4_rpos_reg <= (others => '0');
-                temp5_rpos_reg <= (others => '0');
 
                 temp1_cpos_reg <= (others => '0');
                 temp2_cpos_reg <= (others => '0');
                 temp3_cpos_reg <= (others => '0');
                 temp4_cpos_reg <= (others => '0');
-                temp5_cpos_reg <= (others => '0');
                 
                 rom_addr_int <= (others => '0');
                 rom_data_reg <= (others => '0'); -- Resetovanje signala za zadrzavanje podataka    
@@ -449,13 +505,11 @@ begin
                 temp2_rpos_reg <= temp2_rpos_next;
                 temp3_rpos_reg <= temp3_rpos_next;
                 temp4_rpos_reg <= temp4_rpos_next;
-                temp5_rpos_reg <= temp5_rpos_next;
                
                 temp1_cpos_reg <= temp1_cpos_next;
                 temp2_cpos_reg <= temp2_cpos_next;
                 temp3_cpos_reg <= temp3_cpos_next;
                 temp4_cpos_reg <= temp4_cpos_next;
-                temp5_cpos_reg <= temp5_cpos_next;
 
                 
                 
@@ -474,7 +528,7 @@ begin
     end process;
 
     -- Kombinacioni proces za odredjivanje sledecih stanja i vrednosti signala
-    process (bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, temp1_rpos_reg, temp2_rpos_reg, temp3_rpos_reg, temp4_rpos_reg, temp5_rpos_reg, temp1_cpos_reg, temp2_cpos_reg, temp3_cpos_reg, temp4_cpos_reg, temp5_cpos_reg, rpos_reg, cpos_reg, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, ri, ci, r, c, rx, cx, rfrac, cfrac, dx, dy, dxx, dyy, weight, rweight1, rweight2, cweight1, cweight2, ori1, ori2, dxx1, dxx2, dyy1, dyy2, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_reg, rom_addr_int, data1_o_reg, data2_o_reg, bram_data_out, bram_addr1_o_next)
+    process (bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, temp1_rpos_reg, temp2_rpos_reg, temp3_rpos_reg, temp4_rpos_reg, temp1_cpos_reg, temp2_cpos_reg, temp3_cpos_reg, temp4_cpos_reg, rpos_reg, cpos_reg, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, ri, ci, r, c, rx, cx, rfrac, cfrac, dx, dy, dxx, dyy, weight, rweight1, rweight2, cweight1, cweight2, ori1, ori2, dxx1, dxx2, dyy1, dyy2, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_reg, rom_addr_int, data1_o_reg, data2_o_reg, bram_data_out, bram_addr1_o_next)
     begin
         -- Default assignments
         state_next <= state_reg;
@@ -511,13 +565,11 @@ begin
         temp2_rpos_next <= temp2_rpos_reg;
         temp3_rpos_next <= temp3_rpos_reg;
         temp4_rpos_next <= temp4_rpos_reg;
-        temp5_rpos_next <= temp5_rpos_reg;
 
         temp1_cpos_next <= temp1_cpos_reg;
         temp2_cpos_next <= temp2_cpos_reg;
         temp3_cpos_next <= temp3_cpos_reg;
         temp4_cpos_next <= temp4_cpos_reg;
-        temp5_cpos_next <= temp5_cpos_reg;
 
 
         dxx1_sum_next <= dxx1_sum_reg;
@@ -607,22 +659,8 @@ begin
                 state_next <= SetRXandCX;
 
             when SetRXandCX =>
-                rx_next <= std_logic_vector(
-                    to_signed(
-                        to_integer(unsigned(rpos_reg)) +
-                        to_integer(unsigned(HALF_INDEX_SIZE_FP)) -
-                        to_integer(unsigned(HALF_FP)),
-                         2*WIDTH + 2*FIXED_SIZE
-                    )
-                );
-                cx_next <= std_logic_vector(
-                    to_signed(
-                        to_integer(unsigned(cpos_reg)) +
-                        to_integer(unsigned(HALF_INDEX_SIZE_FP)) -
-                        to_integer(unsigned(HALF_FP)),
-                         2*WIDTH + 2*FIXED_SIZE
-                    )
-                );
+                rx_next <= rx;
+                cx_next <= cx;
                 state_next <= BoundaryCheck;
 
             when BoundaryCheck =>
@@ -636,18 +674,8 @@ begin
             when PositionValidation =>
                 addSampleStep_next <= to_unsigned(to_integer(unsigned(scale(FIXED_SIZE - 1 downto 18))), WIDTH);
                 
-                r_next <= signed(
-                            to_signed(
-                                to_integer(signed(iy)) + (to_integer(signed(i_reg)) - to_integer(signed(iradius))) * to_integer(signed(step)),
-                                2 * WIDTH + 1
-                            )
-                        );
-                c_next <= signed(
-                             to_signed(
-                                to_integer(signed(ix)) + (to_integer(signed(j_reg)) - to_integer(signed(iradius))) * to_integer(signed(step)),
-                                2 * WIDTH + 1
-                            )
-                        );
+                r_next <= r;
+                c_next <= c;
                 
                 state_next <= ComputePosition; 
 
