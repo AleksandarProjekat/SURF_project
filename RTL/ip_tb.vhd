@@ -33,7 +33,7 @@ file pixels1D : text open read_mode is
     -- Signali za testiranje
     signal clk_s : std_logic := '0';
     signal reset_s : std_logic := '0';
-    signal iradius_s : unsigned(WIDTH - 1 downto 0) := (others => '0');
+    signal iradius_s : std_logic_vector(WIDTH - 1 downto 0) := (others => '0');
     signal fracr_s : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
     signal fracc_s : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
     signal spacing_s : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
@@ -49,7 +49,7 @@ file pixels1D : text open read_mode is
     signal bram_en1_o_s : std_logic;
     
     signal addr_do1_o_s : std_logic_vector (5 downto 0);
-    signal data1_o_s : std_logic_vector (10*FIXED_SIZE + 4*WIDTH- 1 downto 0);
+    signal data1_o_s : std_logic_vector (FIXED_SIZE- 1 downto 0);
     signal c1_data_o_s : std_logic;
     signal bram_we1_o_s : std_logic;
     
@@ -76,7 +76,7 @@ file pixels1D : text open read_mode is
     --izlazni bram
     signal tb_c_en_i : std_logic;
     signal tb_c_addr_i : std_logic_vector(5 downto 0);
-    signal tb_c_data_o : std_logic_vector(10*FIXED_SIZE + 4*WIDTH - 1 downto 0);
+    signal tb_c_data_o : std_logic_vector(FIXED_SIZE - 1 downto 0);
     signal tb_c_we_i : std_logic;
     
 
@@ -91,7 +91,7 @@ file pixels1D : text open read_mode is
     signal ip_c_en : std_logic;
     signal ip_c_we : std_logic;
     signal ip_c_addr : std_logic_vector(5 downto 0);
-    signal ip_c_data: std_logic_vector(10*FIXED_SIZE + 4*WIDTH - 1 downto 0);
+    signal ip_c_data: std_logic_vector(FIXED_SIZE - 1 downto 0);
 
 
 
@@ -142,7 +142,7 @@ begin
     
         -- Initialize the core
                 report "Initializing the core!";
-    iradius_s <= to_unsigned(17, WIDTH); -- 17 je decimalna vrednost za iradius
+    iradius_s <= "00000001011"; -- 17 je decimalna vrednost za iradius
     fracr_s <= "000000000000000000000000000000001010000011000010"; --  0.15699263069083616 u binarnom format
     fracc_s <= "000000000000000000000000000000011100110110110110"; --  0.45089018167010253 u binarnom formatu
     spacing_s <= "000000000000000000000000001001101011111000001110"; -- 9.685600969817237 u binarnom formatu
@@ -188,11 +188,11 @@ begin
     if falling_edge(clk_s) then
         if tb_c_en_i = '1' then
             data_output_string := (others => '0');
-            for i in 0 to 10*FIXED_SIZE + 4*WIDTH - 1 loop
+            for i in 0 to FIXED_SIZE - 1 loop
                 if tb_c_data_o(i) = '1' then
-                    data_output_string(10*FIXED_SIZE + 4*WIDTH - i) := '1';  
+                    data_output_string(FIXED_SIZE - i) := '1';  
                 else
-                    data_output_string(10*FIXED_SIZE + 4*WIDTH - i) := '0';  
+                    data_output_string(FIXED_SIZE - i) := '0';  
                 end if;
             end loop;          
             write(data_output_line, data_output_string);
@@ -203,7 +203,7 @@ end process;
 
 checker : process(clk_s)
     variable tv_izlazi : line;  
-    variable tmp: std_logic_vector(10*FIXED_SIZE + 4*WIDTH - 1 downto 0);
+    variable tmp: std_logic_vector(FIXED_SIZE- 1 downto 0);
 begin              
     if falling_edge (clk_s) then
         if tb_c_en_i  = '1' then
@@ -298,7 +298,7 @@ begin
     -- Instanciranje BRAM-a za izlazne podatke
      bram_out: entity work.bram_out
         generic map (
-            WIDTH =>10*48 + 4*11,  -- sirina podataka
+            WIDTH =>48,  -- sirina podataka
             SIZE => 80000,  -- dubina memorije
             SIZE_WIDTH => INDEX_ADDRESS_SIZE
         )
