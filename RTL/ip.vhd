@@ -186,10 +186,20 @@ architecture Behavioral of ip is
     constant ONE_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_unsigned(2*131072, FIXED_SIZE));  -- 1.0
     constant HALF_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_unsigned(131072, FIXED_SIZE));  -- 0.5
 
-      signal dsp1_res_o : std_logic_vector(FIXED_SIZE - 1 downto 0);
-    signal res_o_stage1, res_o_stage2, res_o_stage3, res_o_stage4 : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
+signal temp1_rpos_delayed, temp1_rpos_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+signal temp2_rpos_delayed, temp2_rpos_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+signal temp3_rpos_delayed, temp3_rpos_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+signal temp4_rpos_delayed, temp4_rpos_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+signal rpos_delayed, rpos_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
 
-signal temp2_rpos_delayed,temp2_rpos_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+signal temp1_cpos_delayed, temp1_cpos_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+signal temp2_cpos_delayed, temp2_cpos_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+signal temp3_cpos_delayed, temp3_cpos_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+signal temp4_cpos_delayed, temp4_cpos_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+signal cpos_delayed, cpos_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+
+signal rx_delayed, rx_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+signal cx_delayed, cx_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
 
     signal i_reg, i_next : unsigned(WIDTH - 1 downto 0);
     signal j_reg, j_next : unsigned(WIDTH - 1 downto 0);
@@ -267,7 +277,19 @@ begin
              u1_i => std_logic_vector(i_reg),
              u2_i => std_logic_vector(iradius),
              u3_i => i_cose,
-            res_o => dsp1_res_o);
+            res_o => temp1_rpos_delayed);
+            
+    delay_temp1_rpos: entity work.delay
+    generic map (
+        DELAY_CYCLES => 4,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => temp1_rpos_delayed,  -- Signal sa DSP-a
+        dout => temp1_rpos_delayed1  -- Signal nakon kašnjenja
+    ); 
             
       temp2_rpos_inc_dsp: dsp1
      generic map ( WIDTH => WIDTH,
@@ -290,8 +312,7 @@ delay_temp2_rpos: entity work.delay
         din => temp2_rpos_delayed,  -- Signal sa DSP-a
         dout => temp2_rpos_delayed1  -- Signal nakon kašnjenja
     ); 
-
-            
+      
      temp3_rpos_inc_dsp: dsp2
      generic map (
            FIXED_SIZE => FIXED_SIZE,
@@ -300,8 +321,19 @@ delay_temp2_rpos: entity work.delay
              rst => reset,
              u1_i => temp1_rpos_reg,
              u2_i => temp2_rpos_reg,
-            res_o => temp3_rpos_reg);
+            res_o => temp3_rpos_delayed);
             
+       delay_temp3_rpos: entity work.delay
+    generic map (
+        DELAY_CYCLES => 3,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => temp3_rpos_delayed,  -- Signal sa DSP-a
+        dout => temp3_rpos_delayed1  -- Signal nakon kašnjenja
+    );      
       temp4_rpos_inc_dsp: dsp3
      generic map ( WIDTH => WIDTH,
            FIXED_SIZE => FIXED_SIZE)
@@ -310,7 +342,19 @@ delay_temp2_rpos: entity work.delay
              u1_i => std_logic_vector(step),
              u2_i => temp3_rpos_reg,
              u3_i => fracr,
-            res_o => temp4_rpos_reg);
+            res_o => temp4_rpos_delayed);
+            
+     delay_temp4_rpos: entity work.delay
+    generic map (
+        DELAY_CYCLES => 4,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => temp4_rpos_delayed,  -- Signal sa DSP-a
+        dout => temp4_rpos_delayed1  -- Signal nakon kašnjenja
+    );      
             
       rpos_inc_dsp: dsp4
      generic map (
@@ -319,8 +363,20 @@ delay_temp2_rpos: entity work.delay
              rst => reset,
              u1_i => temp4_rpos_reg,
              spacing => spacing,
-            res_o => rpos_reg);     
-            
+            res_o => rpos_delayed);  
+               
+     delay_rpos: entity work.delay
+    generic map (
+        DELAY_CYCLES => 4,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => rpos_delayed,  -- Signal sa DSP-a
+        dout => rpos_delayed1 -- Signal nakon kašnjenja
+        );  
+        
             
  --cpos = (step * ((- i_sine * (i - iradius)) + i_cose * (j - iradius))) - fracc) * spacing;
           --temp1=  - i_sine*(i-iradius)
@@ -337,8 +393,19 @@ delay_temp2_rpos: entity work.delay
              u1_i => std_logic_vector(i_reg),
              u2_i => std_logic_vector(iradius),
              u3_i => neg_i_sine,
-            res_o => temp1_cpos_reg);
+            res_o => temp1_cpos_delayed);
             
+     delay_temp1_cpos: entity work.delay
+    generic map (
+        DELAY_CYCLES => 4,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => temp1_cpos_delayed,  -- Signal sa DSP-a
+        dout => temp1_cpos_delayed1  -- Signal nakon kašnjenja
+    );       
      temp2_cpos_inc_dsp: dsp1
      generic map ( WIDTH => WIDTH,
            FIXED_SIZE => FIXED_SIZE)
@@ -347,7 +414,19 @@ delay_temp2_rpos: entity work.delay
              u1_i => std_logic_vector(j_reg),
              u2_i => std_logic_vector(iradius),
              u3_i => i_cose,
-            res_o => temp2_cpos_reg);
+            res_o => temp2_cpos_delayed);
+            
+      delay_temp2_cpos: entity work.delay
+    generic map (
+        DELAY_CYCLES => 4,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => temp2_cpos_delayed,  -- Signal sa DSP-a
+        dout => temp2_cpos_delayed1  -- Signal nakon kašnjenja
+    );     
             
      temp3_cpos_inc_dsp: dsp2
      generic map (
@@ -357,7 +436,19 @@ delay_temp2_rpos: entity work.delay
              rst => reset,
              u1_i => temp1_cpos_reg,
              u2_i => temp2_cpos_reg,
-            res_o => temp3_cpos_reg);
+            res_o => temp3_cpos_delayed);
+            
+     delay_temp3_cpos: entity work.delay
+    generic map (
+        DELAY_CYCLES => 3,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => temp3_cpos_delayed,  -- Signal sa DSP-a
+        dout => temp3_cpos_delayed1  -- Signal nakon kašnjenja
+    );     
             
       temp4_cpos_inc_dsp: dsp3
      generic map ( WIDTH => WIDTH,
@@ -365,10 +456,22 @@ delay_temp2_rpos: entity work.delay
     port map(clk => clk,
              rst => reset,
              u1_i => std_logic_vector(step),
-             u2_i => temp3_rpos_reg,
+             u2_i => temp3_cpos_reg,
              u3_i => fracc,
-            res_o => temp4_rpos_reg);      
-            
+            res_o => temp4_cpos_delayed);      
+        
+        delay_temp4_cpos: entity work.delay
+    generic map (
+        DELAY_CYCLES => 4,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => temp4_cpos_delayed,  -- Signal sa DSP-a
+        dout => temp4_cpos_delayed1  -- Signal nakon kašnjenja
+    );      
+        
        cpos_inc_dsp: dsp4
      generic map (
            FIXED_SIZE => FIXED_SIZE)
@@ -376,7 +479,19 @@ delay_temp2_rpos: entity work.delay
              rst => reset,
              u1_i => temp4_cpos_reg,
              spacing => spacing,
-            res_o => cpos_reg);      
+            res_o => cpos_delayed); 
+              
+       delay_cpos: entity work.delay
+    generic map (
+        DELAY_CYCLES => 4,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => cpos_delayed,  -- Signal sa DSP-a
+        dout => cpos_delayed1 -- Signal nakon kašnjenja
+        );     
            
       rx_inc_dsp: dsp5
      generic map (
@@ -386,8 +501,19 @@ delay_temp2_rpos: entity work.delay
              u1_i => rpos_reg,
              u2_i => HALF_INDEX_SIZE_FP, --2.0
              u3_i => HALF_FP,   --0.5
-            res_o => rx);
-               
+            res_o => rx_delayed);
+            
+            delay_rx: entity work.delay
+    generic map (
+        DELAY_CYCLES => 3,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => rx_delayed,  -- Signal sa DSP-a
+        dout => rx_delayed1 -- Signal nakon kašnjenja
+        );             
       cx_inc_dsp: dsp5
      generic map (
            FIXED_SIZE => FIXED_SIZE)
@@ -396,8 +522,19 @@ delay_temp2_rpos: entity work.delay
              u1_i => cpos_reg,
              u2_i => HALF_INDEX_SIZE_FP, --2.0
              u3_i => HALF_FP,   --0.5
-            res_o => cx);   
-      
+            res_o => cx_delayed);   
+            
+      delay_cx: entity work.delay
+    generic map (
+        DELAY_CYCLES => 3,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => cx_delayed,  -- Signal sa DSP-a
+        dout => cx_delayed1 -- Signal nakon kašnjenja
+        );    
                 
     -- Instanciranje ROM-a
     ROM_inst : rom
@@ -416,24 +553,6 @@ delay_temp2_rpos: entity work.delay
     -- Povezivanje signala za ROM
     rom_enable <= '1' when state_reg = ProcessSample else '0';
 
-
-    -- Proces za ka?njenje signala `res_o` za 4 takta
-    process (clk)
-    begin
-        if rising_edge(clk) then
-            if reset = '1' then
-                res_o_stage1 <= (others => '0');
-                res_o_stage2 <= (others => '0');
-                res_o_stage3 <= (others => '0');
-                res_o_stage4 <= (others => '0');
-            else
-                res_o_stage1 <= dsp1_res_o; -- Preuzimanje vrednosti sa izlaza `dsp1`
-                res_o_stage2 <= res_o_stage1;
-                res_o_stage3 <= res_o_stage2;
-                res_o_stage4 <= res_o_stage3;
-            end if;
-        end if;
-    end process;
     
     -- Sekvencijalni proces za registre
     process (clk)
@@ -575,13 +694,26 @@ delay_temp2_rpos: entity work.delay
         state_next <= state_reg;
         i_next <= i_reg;
         j_next <= j_reg;
+        
+        temp1_rpos_next <= temp1_rpos_delayed1;
+        temp2_rpos_next <= temp2_rpos_delayed1;
+        temp3_rpos_next <= temp3_rpos_delayed1;
+        temp4_rpos_next <= temp4_rpos_delayed1;
+
+        temp1_cpos_next <= temp1_cpos_delayed1;
+        temp2_cpos_next <= temp2_cpos_delayed1;
+        temp3_cpos_next <= temp3_cpos_delayed1;
+        temp4_cpos_next <= temp4_cpos_delayed1;
+        
+        rx_next <= rx_delayed1;
+        cx_next <= cx_delayed1;
+        
         ri_next <= ri;
         ci_next <= ci;
         addSampleStep_next <= addSampleStep;
         r_next <= r;
         c_next <= c;
-        rx_next <= rx;
-        cx_next <= cx;
+       
         rfrac_next <= rfrac;
         cfrac_next <= cfrac;
         dx_next <= dx;
@@ -599,18 +731,10 @@ delay_temp2_rpos: entity work.delay
         dxx2_next <= dxx2;
         dyy1_next <= dyy1;
         dyy2_next <= dyy2;
-        rpos_next <= rpos_reg;
-        cpos_next <= cpos_reg;
+        rpos_next <= rpos_delayed1;
+        cpos_next <= cpos_delayed1;
         
-        temp1_rpos_next <= res_o_stage4;
-        temp2_rpos_next <= temp2_rpos_delayed1;
-        temp3_rpos_next <= temp3_rpos_reg;
-        temp4_rpos_next <= temp4_rpos_reg;
-
-        temp1_cpos_next <= temp1_cpos_reg;
-        temp2_cpos_next <= temp2_cpos_reg;
-        temp3_cpos_next <= temp3_cpos_reg;
-        temp4_cpos_next <= temp4_cpos_reg;
+       
 
 
         dxx1_sum_next <= dxx1_sum_reg;
