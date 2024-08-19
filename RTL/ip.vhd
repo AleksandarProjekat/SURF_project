@@ -189,6 +189,7 @@ architecture Behavioral of ip is
       signal dsp1_res_o : std_logic_vector(FIXED_SIZE - 1 downto 0);
     signal res_o_stage1, res_o_stage2, res_o_stage3, res_o_stage4 : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
 
+signal temp2_rpos_delayed,temp2_rpos_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
 
     signal i_reg, i_next : unsigned(WIDTH - 1 downto 0);
     signal j_reg, j_next : unsigned(WIDTH - 1 downto 0);
@@ -267,8 +268,8 @@ begin
              u2_i => std_logic_vector(iradius),
              u3_i => i_cose,
             res_o => dsp1_res_o);
-         
-    temp2_rpos_inc_dsp: dsp1
+            
+      temp2_rpos_inc_dsp: dsp1
      generic map ( WIDTH => WIDTH,
            FIXED_SIZE => FIXED_SIZE)
     port map(clk => clk,
@@ -276,7 +277,20 @@ begin
              u1_i => std_logic_vector(j_reg),
              u2_i => std_logic_vector(iradius),
              u3_i => i_sine,
-            res_o => temp2_rpos_reg);
+            res_o => temp2_rpos_delayed);  
+        -- Instanciranje modula za kašnjenje
+delay_temp2_rpos: entity work.delay
+    generic map (
+        DELAY_CYCLES => 4,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => temp2_rpos_delayed,  -- Signal sa DSP-a
+        dout => temp2_rpos_delayed1  -- Signal nakon kašnjenja
+    ); 
+
             
      temp3_rpos_inc_dsp: dsp2
      generic map (
@@ -403,7 +417,7 @@ begin
     rom_enable <= '1' when state_reg = ProcessSample else '0';
 
 
-    -- Proces za kašnjenje signala `res_o` za 4 takta
+    -- Proces za ka?njenje signala `res_o` za 4 takta
     process (clk)
     begin
         if rising_edge(clk) then
@@ -589,7 +603,7 @@ begin
         cpos_next <= cpos_reg;
         
         temp1_rpos_next <= res_o_stage4;
-        temp2_rpos_next <= temp2_rpos_reg;
+        temp2_rpos_next <= temp2_rpos_delayed1;
         temp3_rpos_next <= temp3_rpos_reg;
         temp4_rpos_next <= temp4_rpos_reg;
 
