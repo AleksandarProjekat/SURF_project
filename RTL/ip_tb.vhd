@@ -33,7 +33,7 @@ file pixels1D : text open read_mode is
     -- Signali za testiranje
     signal clk_s : std_logic := '0';
     signal reset_s : std_logic := '0';
-    signal iradius_s : std_logic_vector(WIDTH - 1 downto 0) := (others => '0');
+    signal iradius_s : unsigned(WIDTH - 1 downto 0) := (others => '0');
     signal fracr_s : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
     signal fracc_s : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
     signal spacing_s : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
@@ -142,7 +142,7 @@ begin
     
         -- Initialize the core
                 report "Initializing the core!";
-    iradius_s <= "00000001011"; -- 17 je decimalna vrednost za iradius
+    iradius_s <= to_unsigned(17, WIDTH); -- 17 je decimalna vrednost za iradius
     fracr_s <= "000000000000000000000000000000001010000011000010"; --  0.15699263069083616 u binarnom format
     fracc_s <= "000000000000000000000000000000011100110110110110"; --  0.45089018167010253 u binarnom formatu
     spacing_s <= "000000000000000000000000001001101011111000001110"; -- 9.685600969817237 u binarnom formatu

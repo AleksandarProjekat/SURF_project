@@ -186,6 +186,10 @@ architecture Behavioral of ip is
     constant ONE_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_unsigned(2*131072, FIXED_SIZE));  -- 1.0
     constant HALF_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_unsigned(131072, FIXED_SIZE));  -- 0.5
 
+      signal dsp1_res_o : std_logic_vector(FIXED_SIZE - 1 downto 0);
+    signal res_o_stage1, res_o_stage2, res_o_stage3, res_o_stage4 : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
+
+
     signal i_reg, i_next : unsigned(WIDTH - 1 downto 0);
     signal j_reg, j_next : unsigned(WIDTH - 1 downto 0);
     signal neg_i_sine : std_logic_vector(FIXED_SIZE - 1 downto 0); 
@@ -262,7 +266,7 @@ begin
              u1_i => std_logic_vector(i_reg),
              u2_i => std_logic_vector(iradius),
              u3_i => i_cose,
-            res_o => temp1_rpos_reg);
+            res_o => dsp1_res_o);
          
     temp2_rpos_inc_dsp: dsp1
      generic map ( WIDTH => WIDTH,
@@ -398,6 +402,25 @@ begin
     -- Povezivanje signala za ROM
     rom_enable <= '1' when state_reg = ProcessSample else '0';
 
+
+    -- Proces za kašnjenje signala `res_o` za 4 takta
+    process (clk)
+    begin
+        if rising_edge(clk) then
+            if reset = '1' then
+                res_o_stage1 <= (others => '0');
+                res_o_stage2 <= (others => '0');
+                res_o_stage3 <= (others => '0');
+                res_o_stage4 <= (others => '0');
+            else
+                res_o_stage1 <= dsp1_res_o; -- Preuzimanje vrednosti sa izlaza `dsp1`
+                res_o_stage2 <= res_o_stage1;
+                res_o_stage3 <= res_o_stage2;
+                res_o_stage4 <= res_o_stage3;
+            end if;
+        end if;
+    end process;
+    
     -- Sekvencijalni proces za registre
     process (clk)
     begin
@@ -439,6 +462,7 @@ begin
                 dyy1_sum_reg <= (others => '0');
                 dyy2_sum_reg <= (others => '0');
                 
+                 
                 
                 temp1_rpos_reg <= (others => '0');
                 temp2_rpos_reg <= (others => '0');
@@ -490,6 +514,8 @@ begin
                 dxx2 <= dxx2_next;
                 dyy1 <= dyy1_next;
                 dyy2 <= dyy2_next;
+                
+
                 
                 dxx1_sum_reg <= dxx1_sum_next;
                 dxx2_sum_reg <= dxx2_sum_next;
@@ -562,7 +588,7 @@ begin
         rpos_next <= rpos_reg;
         cpos_next <= cpos_reg;
         
-        temp1_rpos_next <= temp1_rpos_reg;
+        temp1_rpos_next <= res_o_stage4;
         temp2_rpos_next <= temp2_rpos_reg;
         temp3_rpos_next <= temp3_rpos_reg;
         temp4_rpos_next <= temp4_rpos_reg;
