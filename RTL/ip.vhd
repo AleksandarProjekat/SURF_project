@@ -288,7 +288,7 @@ begin
         clk => clk,
         rst => reset,
         din => temp1_rpos_delayed,  -- Signal sa DSP-a
-        dout => temp1_rpos_delayed1  -- Signal nakon kašnjenja
+        dout => temp1_rpos_delayed1  -- Signal nakon ka?njenja
     ); 
             
       temp2_rpos_inc_dsp: dsp1
@@ -300,7 +300,7 @@ begin
              u2_i => std_logic_vector(iradius),
              u3_i => i_sine,
             res_o => temp2_rpos_delayed);  
-        -- Instanciranje modula za kašnjenje
+        -- Instanciranje modula za ka?njenje
 delay_temp2_rpos: entity work.delay
     generic map (
         DELAY_CYCLES => 4,
@@ -310,7 +310,7 @@ delay_temp2_rpos: entity work.delay
         clk => clk,
         rst => reset,
         din => temp2_rpos_delayed,  -- Signal sa DSP-a
-        dout => temp2_rpos_delayed1  -- Signal nakon kašnjenja
+        dout => temp2_rpos_delayed1  -- Signal nakon ka?njenja
     ); 
       
      temp3_rpos_inc_dsp: dsp2
@@ -332,7 +332,7 @@ delay_temp2_rpos: entity work.delay
         clk => clk,
         rst => reset,
         din => temp3_rpos_delayed,  -- Signal sa DSP-a
-        dout => temp3_rpos_delayed1  -- Signal nakon kašnjenja
+        dout => temp3_rpos_delayed1  -- Signal nakon ka?njenja
     );      
       temp4_rpos_inc_dsp: dsp3
      generic map ( WIDTH => WIDTH,
@@ -353,7 +353,7 @@ delay_temp2_rpos: entity work.delay
         clk => clk,
         rst => reset,
         din => temp4_rpos_delayed,  -- Signal sa DSP-a
-        dout => temp4_rpos_delayed1  -- Signal nakon kašnjenja
+        dout => temp4_rpos_delayed1  -- Signal nakon ka?njenja
     );      
             
       rpos_inc_dsp: dsp4
@@ -374,7 +374,7 @@ delay_temp2_rpos: entity work.delay
         clk => clk,
         rst => reset,
         din => rpos_delayed,  -- Signal sa DSP-a
-        dout => rpos_delayed1 -- Signal nakon kašnjenja
+        dout => rpos_delayed1 -- Signal nakon ka?njenja
         );  
         
             
@@ -404,7 +404,7 @@ delay_temp2_rpos: entity work.delay
         clk => clk,
         rst => reset,
         din => temp1_cpos_delayed,  -- Signal sa DSP-a
-        dout => temp1_cpos_delayed1  -- Signal nakon kašnjenja
+        dout => temp1_cpos_delayed1  -- Signal nakon ka?njenja
     );       
      temp2_cpos_inc_dsp: dsp1
      generic map ( WIDTH => WIDTH,
@@ -425,7 +425,7 @@ delay_temp2_rpos: entity work.delay
         clk => clk,
         rst => reset,
         din => temp2_cpos_delayed,  -- Signal sa DSP-a
-        dout => temp2_cpos_delayed1  -- Signal nakon kašnjenja
+        dout => temp2_cpos_delayed1  -- Signal nakon ka?njenja
     );     
             
      temp3_cpos_inc_dsp: dsp2
@@ -447,7 +447,7 @@ delay_temp2_rpos: entity work.delay
         clk => clk,
         rst => reset,
         din => temp3_cpos_delayed,  -- Signal sa DSP-a
-        dout => temp3_cpos_delayed1  -- Signal nakon kašnjenja
+        dout => temp3_cpos_delayed1  -- Signal nakon ka?njenja
     );     
             
       temp4_cpos_inc_dsp: dsp3
@@ -469,7 +469,7 @@ delay_temp2_rpos: entity work.delay
         clk => clk,
         rst => reset,
         din => temp4_cpos_delayed,  -- Signal sa DSP-a
-        dout => temp4_cpos_delayed1  -- Signal nakon kašnjenja
+        dout => temp4_cpos_delayed1  -- Signal nakon ka?njenja
     );      
         
        cpos_inc_dsp: dsp4
@@ -490,7 +490,7 @@ delay_temp2_rpos: entity work.delay
         clk => clk,
         rst => reset,
         din => cpos_delayed,  -- Signal sa DSP-a
-        dout => cpos_delayed1 -- Signal nakon kašnjenja
+        dout => cpos_delayed1 -- Signal nakon ka?njenja
         );     
            
       rx_inc_dsp: dsp5
@@ -512,7 +512,7 @@ delay_temp2_rpos: entity work.delay
         clk => clk,
         rst => reset,
         din => rx_delayed,  -- Signal sa DSP-a
-        dout => rx_delayed1 -- Signal nakon kašnjenja
+        dout => rx_delayed1 -- Signal nakon ka?njenja
         );             
       cx_inc_dsp: dsp5
      generic map (
@@ -533,7 +533,7 @@ delay_temp2_rpos: entity work.delay
         clk => clk,
         rst => reset,
         din => cx_delayed,  -- Signal sa DSP-a
-        dout => cx_delayed1 -- Signal nakon kašnjenja
+        dout => cx_delayed1 -- Signal nakon ka?njenja
         );    
                 
     -- Instanciranje ROM-a
@@ -553,72 +553,87 @@ delay_temp2_rpos: entity work.delay
     -- Povezivanje signala za ROM
     rom_enable <= '1' when state_reg = ProcessSample else '0';
 
-    
-    -- Sekvencijalni proces za registre
-    process (clk)
-    begin
-        if (rising_edge(clk)) then
-            if (reset = '1') then
-                state_reg <= idle;
-                -- Resetovanje svih signala na pocetne vrednosti
-                i_reg <= (others => '0');
-                j_reg <= (others => '0');
-                ri <= (others => '0');
-                ci <= (others => '0');
-                addSampleStep <= (others => '0');
-                r <= (others => '0');
-                c <= (others => '0');
-                rpos_reg <= (others => '0');
-                cpos_reg <= (others => '0');
-                rx <= (others => '0');
-                cx <= (others => '0');
-                rfrac <= (others => '0');
-                cfrac <= (others => '0');
-                dx <= (others => '0');
-                dy <= (others => '0');
-                dxx <= (others => '0');
-                dyy <= (others => '0');
-                weight <= (others => '0');
-                rweight1 <= (others => '0');
-                rweight2 <= (others => '0');
-                cweight1 <= (others => '0');
-                cweight2 <= (others => '0');
-                ori1 <= (others => '0');
-                ori2 <= (others => '0');
-                dxx1 <= (others => '0');
-                dxx2 <= (others => '0');
-                dyy1 <= (others => '0');
-                dyy2 <= (others => '0');
-                
-                dxx1_sum_reg <= (others => '0');
-                dxx2_sum_reg <= (others => '0');
-                dyy1_sum_reg <= (others => '0');
-                dyy2_sum_reg <= (others => '0');
-                
-                 
-                
-                temp1_rpos_reg <= (others => '0');
-                temp2_rpos_reg <= (others => '0');
-                temp3_rpos_reg <= (others => '0');
-                temp4_rpos_reg <= (others => '0');
+-- Sekvencijalni proces za registre
+process (clk)
+begin
+    if (rising_edge(clk)) then
+        if (reset = '1') then
+            -- Reset logika
+            state_reg <= idle;
+            -- Reset svih registara i signala
+            i_reg <= (others => '0');
+            j_reg <= (others => '0');
+            ri <= (others => '0');
+            ci <= (others => '0');
+            addSampleStep <= (others => '0');
+            r <= (others => '0');
+            c <= (others => '0');
+            rpos_reg <= (others => '0');
+            cpos_reg <= (others => '0');
+            rx <= (others => '0');
+            cx <= (others => '0');
+            rfrac <= (others => '0');
+            cfrac <= (others => '0');
+            dx <= (others => '0');
+            dy <= (others => '0');
+            dxx <= (others => '0');
+            dyy <= (others => '0');
+            weight <= (others => '0');
+            rweight1 <= (others => '0');
+            rweight2 <= (others => '0');
+            cweight1 <= (others => '0');
+            cweight2 <= (others => '0');
+            ori1 <= (others => '0');
+            ori2 <= (others => '0');
+            dxx1 <= (others => '0');
+            dxx2 <= (others => '0');
+            dyy1 <= (others => '0');
+            dyy2 <= (others => '0');
+            
+            dxx1_sum_reg <= (others => '0');
+            dxx2_sum_reg <= (others => '0');
+            dyy1_sum_reg <= (others => '0');
+            dyy2_sum_reg <= (others => '0');
+            
+            temp1_rpos_reg <= (others => '0');
+            temp2_rpos_reg <= (others => '0');
+            temp3_rpos_reg <= (others => '0');
+            temp4_rpos_reg <= (others => '0');
 
-                temp1_cpos_reg <= (others => '0');
-                temp2_cpos_reg <= (others => '0');
-                temp3_cpos_reg <= (others => '0');
-                temp4_cpos_reg <= (others => '0');
-                
-                rom_addr_int <= (others => '0');
-                rom_data_reg <= (others => '0'); -- Resetovanje signala za zadrzavanje podataka    
-                
-                bram2_phase <= 0;         
-        
-                bram_addr1_o <= (others => '0');  
-                bram_data_out <= (others => '0');
-                data1_o_reg <= (others => '0');
-                data2_o_reg <= (others => '0');
+            temp1_cpos_reg <= (others => '0');
+            temp2_cpos_reg <= (others => '0');
+            temp3_cpos_reg <= (others => '0');
+            temp4_cpos_reg <= (others => '0');
+            
+            rom_addr_int <= (others => '0');
+            rom_data_reg <= (others => '0');
+            
+            bram2_phase <= 0;
+            bram_addr1_o <= (others => '0');
+            bram_data_out <= (others => '0');
+            data1_o_reg <= (others => '0');
+            data2_o_reg <= (others => '0');
+
+        else
+            -- Uslovno ostajanje u trenutnom stanju ako vrednosti nisu jednake delayed signalima ili su inicijalno 0
+            if (state_reg = ComputeRPos1 and (temp1_rpos_reg /= temp1_rpos_delayed1 or temp1_rpos_reg = (temp1_rpos_reg'range => '0'))) then
+                temp1_rpos_reg <= temp1_rpos_delayed1;
+                state_reg <= ComputeRPos1;
+            elsif (state_reg = ComputeRPos2 and (temp2_rpos_reg /= temp2_rpos_delayed1 or temp2_rpos_reg = (temp2_rpos_reg'range => '0'))) then
+                temp2_rpos_reg <= temp2_rpos_delayed1;
+                state_reg <= ComputeRPos2;           
+
+            elsif (state_reg = ComputeRPos3 and (temp3_rpos_reg /= temp3_rpos_delayed1 or temp3_rpos_reg = (temp3_rpos_reg'range => '0'))) then
+                temp3_rpos_reg <= temp3_rpos_delayed1;
+                state_reg <= ComputeRPos3;
+            elsif (state_reg = ComputeRPos4 and (temp4_rpos_reg /= temp4_rpos_delayed1 or temp4_rpos_reg = (temp4_rpos_reg'range => '0'))) then
+                temp4_rpos_reg <= temp4_rpos_delayed1;
+                state_reg <= ComputeRPos4;
             else
+                -- Pre?i u slede?e stanje i ažuriraj sve registre
                 state_reg <= state_next;
-                -- Azuriranje registara sa internim signalima
+
+                -- Ažuriranje registara sa internim signalima
                 i_reg <= i_next;
                 j_reg <= j_next;
                 ri <= ri_next;
@@ -647,37 +662,32 @@ delay_temp2_rpos: entity work.delay
                 dxx2 <= dxx2_next;
                 dyy1 <= dyy1_next;
                 dyy2 <= dyy2_next;
-                
 
-                
                 dxx1_sum_reg <= dxx1_sum_next;
                 dxx2_sum_reg <= dxx2_sum_next;
                 dyy1_sum_reg <= dyy1_sum_next;
                 dyy2_sum_reg <= dyy2_sum_next;
                 
-                bram2_phase <= bram2_phase_next;  
+                bram2_phase <= bram2_phase_next;
 
                 bram_data_out <= bram_data_out_next;
-                
-                bram_addr1_o <= bram_addr1_o_next;  -- Azuriranje internog signala za adrese
+                bram_addr1_o <= bram_addr1_o_next;
 
                 temp1_rpos_reg <= temp1_rpos_next;
                 temp2_rpos_reg <= temp2_rpos_next;
                 temp3_rpos_reg <= temp3_rpos_next;
                 temp4_rpos_reg <= temp4_rpos_next;
-               
+
                 temp1_cpos_reg <= temp1_cpos_next;
                 temp2_cpos_reg <= temp2_cpos_next;
                 temp3_cpos_reg <= temp3_cpos_next;
                 temp4_cpos_reg <= temp4_cpos_next;
 
-                
-                
                 if rom_enable = '1' then
                     rom_data_reg <= rom_data;
-                    rom_addr_int <= rom_addr_next;               
+                    rom_addr_int <= rom_addr_next;
                 end if;
-                
+
                 if bram2_phase = 0 then
                     data1_o_reg <= bram_data_out;
                 elsif bram2_phase = 1 then
@@ -685,7 +695,9 @@ delay_temp2_rpos: entity work.delay
                 end if;
             end if;
         end if;
-    end process;
+    end if;
+end process;
+
 
     -- Kombinacioni proces za odredjivanje sledecih stanja i vrednosti signala
     process (bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, temp1_rpos_reg, temp2_rpos_reg, temp3_rpos_reg, temp4_rpos_reg, temp1_cpos_reg, temp2_cpos_reg, temp3_cpos_reg, temp4_cpos_reg, rpos_reg, cpos_reg, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, ri, ci, r, c, rx, cx, rfrac, cfrac, dx, dy, dxx, dyy, weight, rweight1, rweight2, cweight1, cweight2, ori1, ori2, dxx1, dxx2, dyy1, dyy2, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_reg, rom_addr_int, data1_o_reg, data2_o_reg, bram_data_out, bram_addr1_o_next)
@@ -736,7 +748,6 @@ delay_temp2_rpos: entity work.delay
         
        
 
-
         dxx1_sum_next <= dxx1_sum_reg;
         dxx2_sum_next <= dxx2_sum_reg;
         dyy1_sum_next <= dyy1_sum_reg;
@@ -763,6 +774,7 @@ delay_temp2_rpos: entity work.delay
                 ready_o <= '1';
                 bram_we_int <= '0';
                 bram_en_int <= '0';
+                
                 if start_i = '1' then
                     i_next <= TO_UNSIGNED (0, WIDTH);
                     state_next <= StartLoop;
@@ -781,18 +793,22 @@ delay_temp2_rpos: entity work.delay
                 dyy1_sum_next <= (others => '0');
                 dyy2_sum_next <= (others => '0');
                 
-            when ComputeRPos1 =>
-                
+           when ComputeRPos1 =>
+            
                 temp1_rpos_next <= temp1_rpos_reg;
                 state_next <= ComputeRPos2;
-            
-            when ComputeRPos2 =>
+           
+        
+        when ComputeRPos2 =>
                 temp2_rpos_next <= temp2_rpos_reg;
                 state_next <= ComputeRPos3;
-            
-            when ComputeRPos3 =>
+           
+             
+        when ComputeRPos3 =>
+          
                 temp3_rpos_next <= temp3_rpos_reg;
                 state_next <= ComputeRPos4;
+           
             
             when ComputeRPos4 =>
                 temp4_rpos_next <= temp4_rpos_reg;
