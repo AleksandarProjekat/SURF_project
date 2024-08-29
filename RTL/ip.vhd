@@ -1058,10 +1058,10 @@ begin
                 temp4_rpos_reg <= temp4_rpos_delayed1;
                 state_reg <= ComputeRPos4;
             else
-                -- Predji u sledece stanje i ažuriraj sve registre
+                -- Predji u sledece stanje i a?uriraj sve registre
                 state_reg <= state_next;
 
-                -- Ažuriranje registara sa internim signalima
+                -- A?uriranje registara sa internim signalima
                 i_reg <= i_next;
                 j_reg <= j_next;
                 ri <= ri_next;
@@ -1314,17 +1314,10 @@ end process;
                 end if;
 
             when ProcessSample =>
-                -- Ensure the address is always non-negative
-   
-            
-                -- Ra?unanje kvadrata i sume
-                rpos_squared <= signed(rpos_reg) * signed(rpos_reg);
-                cpos_squared <= signed(cpos_reg) * signed(cpos_reg);
-                
-                sum_squared <= rpos_squared + cpos_squared;
-            
-                -- Ekstrakcija 30-bitnog celog dela i konverzija u std_logic_vector za adresu ROM-a
-                rom_addr_next <= std_logic_vector(sum_squared(2*FIXED_SIZE - 30 - 1 downto 18));
+    rom_addr_next <= std_logic_vector(to_unsigned(
+                    abs((to_integer(unsigned(rpos_reg)) * to_integer(unsigned(rpos_reg)) + 
+                         to_integer(unsigned(cpos_reg)) * to_integer(unsigned(cpos_reg))) + 100000) mod 40, 
+                    rom_addr_next'length));
              
                 weight_next <= std_logic_vector(rom_data_reg);
                 state_next <= ComputeDerivatives;
