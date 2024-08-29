@@ -235,8 +235,6 @@ signal cx_delayed, cx_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
 signal r_delayed, r_delayed1 : std_logic_vector(WIDTH - 1 downto 0);
 signal c_delayed, c_delayed1 : std_logic_vector(WIDTH - 1 downto 0);
 
- signal rpos_squared, cpos_squared : signed(2*FIXED_SIZE - 1 downto 0);
- signal sum_squared : signed(2*FIXED_SIZE - 1 downto 0);
 
 signal dxx_delayed, dxx_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
 signal dyy_delayed, dyy_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
