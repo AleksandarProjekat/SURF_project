@@ -1041,21 +1041,6 @@ begin
             data2_o_reg <= (others => '0');
 
         else
-            -- Uslovno ostajanje u trenutnom stanju ako vrednosti nisu jednake delayed signalima ili su inicijalno 0
-            if (state_reg = ComputeRPos1 and (temp1_rpos_reg /= temp1_rpos_delayed1 or temp1_rpos_reg = (temp1_rpos_reg'range => '0'))) then
-                temp1_rpos_reg <= temp1_rpos_delayed1;
-                state_reg <= ComputeRPos1;
-            elsif (state_reg = ComputeRPos2 and (temp2_rpos_reg /= temp2_rpos_delayed1 or temp2_rpos_reg = (temp2_rpos_reg'range => '0'))) then
-                temp2_rpos_reg <= temp2_rpos_delayed1;
-                state_reg <= ComputeRPos2;           
-
-            elsif (state_reg = ComputeRPos3 and (temp3_rpos_reg /= temp3_rpos_delayed1 or temp3_rpos_reg = (temp3_rpos_reg'range => '0'))) then
-                temp3_rpos_reg <= temp3_rpos_delayed1;
-                state_reg <= ComputeRPos3;
-            elsif (state_reg = ComputeRPos4 and (temp4_rpos_reg /= temp4_rpos_delayed1 or temp4_rpos_reg = (temp4_rpos_reg'range => '0'))) then
-                temp4_rpos_reg <= temp4_rpos_delayed1;
-                state_reg <= ComputeRPos4;
-            else
                 -- Predji u sledece stanje i a?uriraj sve registre
                 state_reg <= state_next;
 
@@ -1125,7 +1110,6 @@ begin
                 end if;
             end if;
         end if;
-    end if;
 end process;
 
 
