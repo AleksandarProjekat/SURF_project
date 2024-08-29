@@ -84,15 +84,17 @@ architecture Behavioral of ip is
         end component;
         
          component dsp2 is
-             generic (
-              FIXED_SIZE : integer:= 48;
-              ADD_SUB : string:= "add"
-              );
-        port (clk : in std_logic;
-              rst : in std_logic;
-              u1_i : in std_logic_vector(FIXED_SIZE - 1 downto 0);
-              u2_i : in std_logic_vector(FIXED_SIZE - 1 downto 0); 
-              res_o : out std_logic_vector(FIXED_SIZE - 1 downto 0));
+               generic (
+          FIXED_SIZE : integer := 48
+          );
+    port (
+          clk : in std_logic;
+          rst : in std_logic;
+          u1_i : in std_logic_vector(FIXED_SIZE - 1 downto 0);
+          u2_i : in std_logic_vector(FIXED_SIZE - 1 downto 0); 
+          ADD_SUB : in std_logic; 
+          res_o : out std_logic_vector(FIXED_SIZE - 1 downto 0)
+          );
         end component;
         
          component dsp3 is
@@ -142,9 +144,38 @@ architecture Behavioral of ip is
               rst: in std_logic;
               u1_i: in std_logic_vector(FIXED_SIZE - 1 downto 0); 
               u2_i: in std_logic_vector(WIDTH - 1 downto 0);
+              ADD_SUB : in std_logic;
               res_o: out std_logic_vector(FIXED_SIZE - 1 downto 0));
         end component;
         
+            component dsp7 is
+          generic (
+              WIDTH : integer := 11
+                  );
+          port (
+                clk : in  std_logic;   
+                rst : in std_logic;
+                u1_i : in std_logic_vector(WIDTH - 1 downto 0); 
+                u2_i : in std_logic_vector(WIDTH - 1 downto 0); 
+                u3_i : in std_logic_vector(WIDTH - 1 downto 0); 
+                u4_i : in std_logic_vector(WIDTH - 1 downto 0);
+                res_o : out std_logic_vector(WIDTH -1 downto 0)
+               );
+        end component;
+        
+             component dsp8 is
+         generic (
+                   FIXED_SIZE : integer := 48
+                  );
+          port (
+                clk : in  std_logic;     
+                rst : in std_logic;
+                u1_i : in std_logic_vector(FIXED_SIZE - 1 downto 0); 
+                u2_i : in std_logic_vector(FIXED_SIZE - 1 downto 0); 
+                u3_i : in std_logic_vector(FIXED_SIZE - 1 downto 0); 
+                res_o : out std_logic_vector(FIXED_SIZE -1 downto 0) 
+               );
+        end component;        
         
         component rom
             generic (
@@ -175,9 +206,9 @@ architecture Behavioral of ip is
             FetchDXX2_1, FetchDXX2_2, FetchDXX2_3, FetchDXX2_4, ComputeDXX2, 
             FetchDYY1_1, FetchDYY1_2, FetchDYY1_3, FetchDYY1_4, ComputeDYY1,
             FetchDYY2_1, FetchDYY2_2, FetchDYY2_3, FetchDYY2_4, ComputeDYY2, 
-        CalculateDerivatives, ApplyOrientationTransform,
+        CalculateDerivatives, ApplyOrientationTransform_1, ApplyOrientationTransform_2, ApplyOrientationTransform,
         SetOrientations, UpdateIndex, ComputeFractionalComponents, ValidateIndices, 
-        ComputeWeightsR, ComputeWeightsC, UpdateIndexArray0, UpdateIndexArray1, CheckNextColumn0, CheckNextColumn1, CheckNextRow0, CheckNextRow1,
+        ComputeWeightsR, ComputeWeightsC, UpdateIndexArray0, UpdateIndexArray1, 
         NextSample, IncrementI, Finish
     );
 
@@ -201,6 +232,33 @@ signal cpos_delayed, cpos_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
 signal rx_delayed, rx_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
 signal cx_delayed, cx_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
 
+signal r_delayed, r_delayed1 : std_logic_vector(WIDTH - 1 downto 0);
+signal c_delayed, c_delayed1 : std_logic_vector(WIDTH - 1 downto 0);
+
+ signal rpos_squared, cpos_squared : signed(2*FIXED_SIZE - 1 downto 0);
+ signal sum_squared : signed(2*FIXED_SIZE - 1 downto 0);
+
+signal dxx_delayed, dxx_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+signal dyy_delayed, dyy_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+
+signal dx1_delayed, dx1_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+signal dx2_delayed, dx2_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+
+signal dy1_delayed, dy1_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+signal dy2_delayed, dy2_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+
+signal dx_delayed, dx_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+signal dy_delayed, dy_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+
+signal rfrac_delayed, rfrac_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+signal cfrac_delayed, cfrac_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+
+signal rweight1_delayed, rweight1_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+signal rweight2_delayed, rweight2_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+
+signal cweight1_delayed, cweight1_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+signal cweight2_delayed, cweight2_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+
     signal i_reg, i_next : unsigned(WIDTH - 1 downto 0);
     signal j_reg, j_next : unsigned(WIDTH - 1 downto 0);
     signal neg_i_sine : std_logic_vector(FIXED_SIZE - 1 downto 0); 
@@ -218,18 +276,30 @@ signal cx_delayed, cx_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
     signal addSampleStep, addSampleStep_next : unsigned(WIDTH - 1 downto 0);
     
     signal r, c, r_next, c_next : signed(WIDTH - 1 downto 0);
+    
     signal weight, weight_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
+    
     signal dxx1_sum_next, dxx2_sum_next, dyy1_sum_next, dyy2_sum_next : std_logic_vector(FIXED_SIZE - 1 downto 0); -- Accumulators for sum of BRAM data
     signal dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg : std_logic_vector(FIXED_SIZE - 1 downto 0);
     signal dxx1, dxx2, dyy1, dyy2 : std_logic_vector(FIXED_SIZE - 1 downto 0);
     signal dxx1_next, dxx2_next, dyy1_next, dyy2_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
-    signal dxx, dyy, dxx_next, dyy_next :  std_logic_vector(FIXED_SIZE -1 downto 0);
-    signal dx, dy, dx_next, dy_next :  std_logic_vector(FIXED_SIZE- 1 downto 0);
+
+    signal dxx_reg, dyy_reg, dxx_next, dyy_next :  std_logic_vector(FIXED_SIZE -1 downto 0);
+    
+    signal dx1_reg, dx2_reg, dx1_next, dx2_next :  std_logic_vector(FIXED_SIZE- 1 downto 0);
+    signal dx_reg, dx_next :  std_logic_vector(FIXED_SIZE- 1 downto 0);
+    
+    signal dy1_reg, dy2_reg, dy1_next, dy2_next :  std_logic_vector(FIXED_SIZE- 1 downto 0);
+    signal dy_reg, dy_next :  std_logic_vector(FIXED_SIZE- 1 downto 0);
+    
     signal ori1, ori2 : unsigned(WIDTH - 1 downto 0);
     signal ori1_next, ori2_next : unsigned(WIDTH - 1 downto 0);
+    
     signal ri, ci, ri_next, ci_next : unsigned(WIDTH - 1 downto 0);
+    
     signal rfrac, cfrac :  std_logic_vector(FIXED_SIZE - 1 downto 0);
     signal rfrac_next, cfrac_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
+    
     signal rweight1, rweight2, rweight1_next, rweight2_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
     signal cweight1, cweight2, cweight1_next, cweight2_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
 
@@ -288,7 +358,7 @@ begin
         clk => clk,
         rst => reset,
         din => temp1_rpos_delayed,  -- Signal sa DSP-a
-        dout => temp1_rpos_delayed1  -- Signal nakon ka?njenja
+        dout => temp1_rpos_delayed1  -- Signal nakon kasnjenja
     ); 
             
       temp2_rpos_inc_dsp: dsp1
@@ -300,7 +370,7 @@ begin
              u2_i => std_logic_vector(iradius),
              u3_i => i_sine,
             res_o => temp2_rpos_delayed);  
-        -- Instanciranje modula za ka?njenje
+            
 delay_temp2_rpos: entity work.delay
     generic map (
         DELAY_CYCLES => 4,
@@ -310,17 +380,18 @@ delay_temp2_rpos: entity work.delay
         clk => clk,
         rst => reset,
         din => temp2_rpos_delayed,  -- Signal sa DSP-a
-        dout => temp2_rpos_delayed1  -- Signal nakon ka?njenja
+        dout => temp2_rpos_delayed1  -- Signal nakon kasnjenja
     ); 
       
      temp3_rpos_inc_dsp: dsp2
      generic map (
-           FIXED_SIZE => FIXED_SIZE,
-             ADD_SUB => "add")
+           FIXED_SIZE => FIXED_SIZE
+            )
     port map(clk => clk,
              rst => reset,
              u1_i => temp1_rpos_reg,
              u2_i => temp2_rpos_reg,
+            ADD_SUB => '0',  
             res_o => temp3_rpos_delayed);
             
        delay_temp3_rpos: entity work.delay
@@ -332,7 +403,7 @@ delay_temp2_rpos: entity work.delay
         clk => clk,
         rst => reset,
         din => temp3_rpos_delayed,  -- Signal sa DSP-a
-        dout => temp3_rpos_delayed1  -- Signal nakon ka?njenja
+        dout => temp3_rpos_delayed1  -- Signal nakon kasnjenja
     );      
       temp4_rpos_inc_dsp: dsp3
      generic map ( WIDTH => WIDTH,
@@ -353,7 +424,7 @@ delay_temp2_rpos: entity work.delay
         clk => clk,
         rst => reset,
         din => temp4_rpos_delayed,  -- Signal sa DSP-a
-        dout => temp4_rpos_delayed1  -- Signal nakon ka?njenja
+        dout => temp4_rpos_delayed1  -- Signal nakon kasnjenja
     );      
             
       rpos_inc_dsp: dsp4
@@ -374,7 +445,7 @@ delay_temp2_rpos: entity work.delay
         clk => clk,
         rst => reset,
         din => rpos_delayed,  -- Signal sa DSP-a
-        dout => rpos_delayed1 -- Signal nakon ka?njenja
+        dout => rpos_delayed1 -- Signal nakon kasnjenja
         );  
         
             
@@ -404,7 +475,7 @@ delay_temp2_rpos: entity work.delay
         clk => clk,
         rst => reset,
         din => temp1_cpos_delayed,  -- Signal sa DSP-a
-        dout => temp1_cpos_delayed1  -- Signal nakon ka?njenja
+        dout => temp1_cpos_delayed1  -- Signal nakon kasnjenja
     );       
      temp2_cpos_inc_dsp: dsp1
      generic map ( WIDTH => WIDTH,
@@ -425,17 +496,18 @@ delay_temp2_rpos: entity work.delay
         clk => clk,
         rst => reset,
         din => temp2_cpos_delayed,  -- Signal sa DSP-a
-        dout => temp2_cpos_delayed1  -- Signal nakon ka?njenja
+        dout => temp2_cpos_delayed1  -- Signal nakon kasnjenja
     );     
             
      temp3_cpos_inc_dsp: dsp2
      generic map (
-           FIXED_SIZE => FIXED_SIZE,
-             ADD_SUB => "add")
+           FIXED_SIZE => FIXED_SIZE
+            )
     port map(clk => clk,
              rst => reset,
              u1_i => temp1_cpos_reg,
              u2_i => temp2_cpos_reg,
+             ADD_SUB => '0',
             res_o => temp3_cpos_delayed);
             
      delay_temp3_cpos: entity work.delay
@@ -447,7 +519,7 @@ delay_temp2_rpos: entity work.delay
         clk => clk,
         rst => reset,
         din => temp3_cpos_delayed,  -- Signal sa DSP-a
-        dout => temp3_cpos_delayed1  -- Signal nakon ka?njenja
+        dout => temp3_cpos_delayed1  -- Signal nakon kasnjenja
     );     
             
       temp4_cpos_inc_dsp: dsp3
@@ -469,7 +541,7 @@ delay_temp2_rpos: entity work.delay
         clk => clk,
         rst => reset,
         din => temp4_cpos_delayed,  -- Signal sa DSP-a
-        dout => temp4_cpos_delayed1  -- Signal nakon ka?njenja
+        dout => temp4_cpos_delayed1  -- Signal nakon kasnjenja
     );      
         
        cpos_inc_dsp: dsp4
@@ -490,7 +562,7 @@ delay_temp2_rpos: entity work.delay
         clk => clk,
         rst => reset,
         din => cpos_delayed,  -- Signal sa DSP-a
-        dout => cpos_delayed1 -- Signal nakon ka?njenja
+        dout => cpos_delayed1 -- Signal nakon kasnjenja
         );     
            
       rx_inc_dsp: dsp5
@@ -503,7 +575,7 @@ delay_temp2_rpos: entity work.delay
              u3_i => HALF_FP,   --0.5
             res_o => rx_delayed);
             
-            delay_rx: entity work.delay
+     delay_rx: entity work.delay
     generic map (
         DELAY_CYCLES => 3,
         SIGNAL_WIDTH => FIXED_SIZE
@@ -512,7 +584,7 @@ delay_temp2_rpos: entity work.delay
         clk => clk,
         rst => reset,
         din => rx_delayed,  -- Signal sa DSP-a
-        dout => rx_delayed1 -- Signal nakon ka?njenja
+        dout => rx_delayed1 -- Signal nakon kasnjenja
         );             
       cx_inc_dsp: dsp5
      generic map (
@@ -533,9 +605,361 @@ delay_temp2_rpos: entity work.delay
         clk => clk,
         rst => reset,
         din => cx_delayed,  -- Signal sa DSP-a
-        dout => cx_delayed1 -- Signal nakon ka?njenja
+        dout => cx_delayed1 -- Signal nakon kasnjenja
         );    
+     
+      r_inc_dsp: dsp7
+     generic map (
+           WIDTH => WIDTH)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => std_logic_vector(i_reg),
+             u2_i => std_logic_vector(iradius), 
+             u3_i => std_logic_vector(step),   
+             u4_i => std_logic_vector(iy),
+            res_o => r_delayed);   
+            
+      delay_r: entity work.delay
+    generic map (
+        DELAY_CYCLES => 4,
+        SIGNAL_WIDTH => WIDTH
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => r_delayed,  -- Signal sa DSP-a
+        dout => r_delayed1 -- Signal nakon kasnjenja
+        );  
+          
+      c_inc_dsp: dsp7
+     generic map (
+           WIDTH => WIDTH)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => std_logic_vector(j_reg),
+             u2_i => std_logic_vector(iradius), 
+             u3_i => std_logic_vector(step),   
+             u4_i => std_logic_vector(ix),
+            res_o => c_delayed);   
+            
+      delay_c: entity work.delay
+    generic map (
+        DELAY_CYCLES => 4,
+        SIGNAL_WIDTH => WIDTH
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => c_delayed,  -- Signal sa DSP-a
+        dout => c_delayed1 -- Signal nakon kasnjenja
+        ); 
+          
+        dxx_inc_dsp: dsp8
+     generic map (
+           FIXED_SIZE => FIXED_SIZE)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => dxx1,
+             u2_i => dxx2, 
+             u3_i => weight,
+            res_o => dxx_delayed);   
+            
+      delay_dxx: entity work.delay
+    generic map (
+        DELAY_CYCLES => 4,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => dxx_delayed,  -- Signal sa DSP-a
+        dout => dxx_delayed1 -- Signal nakon kasnjenja
+        );   
+        
+ dyy_inc_dsp: dsp8
+     generic map (
+           FIXED_SIZE => FIXED_SIZE)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => dyy1,
+             u2_i => dyy2, 
+             u3_i => weight,
+            res_o => dyy_delayed);   
+            
+      delay_dyy: entity work.delay
+    generic map (
+        DELAY_CYCLES => 4,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => dyy_delayed,  -- Signal sa DSP-a
+        dout => dyy_delayed1 -- Signal nakon kasnjenja
+        );  
                 
+    dx1_inc_dsp: dsp4
+     generic map (
+           FIXED_SIZE => FIXED_SIZE)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => i_cose,
+             spacing => dxx_reg,
+            res_o => dx1_delayed);  
+               
+     delay_dx1: entity work.delay
+    generic map (
+        DELAY_CYCLES => 4,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => dx1_delayed,  -- Signal sa DSP-a
+        dout => dx1_delayed1 -- Signal nakon kasnjenja
+        );    
+        
+       dx2_inc_dsp: dsp4
+     generic map (
+           FIXED_SIZE => FIXED_SIZE)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => i_sine,
+             spacing => dyy_reg,
+            res_o => dx2_delayed);  
+               
+     delay_dx2: entity work.delay
+    generic map (
+        DELAY_CYCLES => 4,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => dx2_delayed,  -- Signal sa DSP-a
+        dout => dx2_delayed1 -- Signal nakon kasnjenja
+        );           
+        
+         dx_inc_dsp: dsp2
+     generic map (
+           FIXED_SIZE => FIXED_SIZE)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => dx1_reg,
+             u2_i => dx2_reg,
+             ADD_SUB => '0',
+            res_o => dx_delayed);  
+               
+     delay_dx: entity work.delay
+    generic map (
+        DELAY_CYCLES => 4,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => dx_delayed,  -- Signal sa DSP-a
+        dout => dx_delayed1 -- Signal nakon kasnjenja
+        );    
+        
+            dy1_inc_dsp: dsp4
+     generic map (
+           FIXED_SIZE => FIXED_SIZE)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => i_sine,
+             spacing => dxx_reg,
+            res_o => dy1_delayed);  
+               
+     delay_dy1: entity work.delay
+    generic map (
+        DELAY_CYCLES => 4,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => dy1_delayed,  -- Signal sa DSP-a
+        dout => dy1_delayed1 -- Signal nakon kasnjenja
+        );    
+        
+       dy2_inc_dsp: dsp4
+     generic map (
+           FIXED_SIZE => FIXED_SIZE)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => i_cose,
+             spacing => dyy_reg,
+            res_o => dy2_delayed);  
+               
+     delay_dy2: entity work.delay
+    generic map (
+        DELAY_CYCLES => 4,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => dy2_delayed,  -- Signal sa DSP-a
+        dout => dy2_delayed1 -- Signal nakon kasnjenja
+        );           
+        
+         dy_inc_dsp: dsp2
+     generic map (
+           FIXED_SIZE => FIXED_SIZE)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => dy1_reg,
+             u2_i => dy2_reg,
+             ADD_SUB => '1',
+            res_o => dy_delayed);  
+               
+     delay_dy: entity work.delay
+    generic map (
+        DELAY_CYCLES => 4,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => dy_delayed,  -- Signal sa DSP-a
+        dout => dy_delayed1 -- Signal nakon kasnjenja
+        ); 
+          
+    rfrac_inc_dsp: dsp6
+     generic map (
+           FIXED_SIZE => FIXED_SIZE,
+           WIDTH => WIDTH)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => rx,
+             u2_i => std_logic_vector(ri),
+             ADD_SUB => '1',
+            res_o => rfrac_delayed);  
+               
+     delay_rfrac: entity work.delay
+    generic map (
+        DELAY_CYCLES => 4,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => rfrac_delayed,  -- Signal sa DSP-a
+        dout => rfrac_delayed1 -- Signal nakon kasnjenja
+        );   
+        
+        cfrac_inc_dsp: dsp6
+     generic map (
+           FIXED_SIZE => FIXED_SIZE,
+           WIDTH => WIDTH)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => cx,
+             u2_i => std_logic_vector(ci),
+             ADD_SUB => '1',
+            res_o => cfrac_delayed);  
+               
+     delay_cfrac: entity work.delay
+    generic map (
+        DELAY_CYCLES => 4,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => cfrac_delayed,  -- Signal sa DSP-a
+        dout => cfrac_delayed1 -- Signal nakon kasnjenja
+        );      
+        
+    rweight1_inc_dsp: dsp8
+     generic map (
+           FIXED_SIZE => FIXED_SIZE)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => ONE_FP,
+             u2_i => rfrac, 
+             u3_i => dx_reg,
+            res_o => rweight1_delayed);   
+            
+      delay_rweight1: entity work.delay
+    generic map (
+        DELAY_CYCLES => 4,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => rweight1_delayed,  -- Signal sa DSP-a
+        dout => rweight1_delayed1 -- Signal nakon kasnjenja
+        );   
+          
+      rweight2_inc_dsp: dsp8
+     generic map (
+           FIXED_SIZE => FIXED_SIZE)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => ONE_FP,
+             u2_i => rfrac, 
+             u3_i => dy_reg,
+            res_o => rweight2_delayed);   
+            
+      delay_rweight2: entity work.delay
+    generic map (
+        DELAY_CYCLES => 4,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => rweight2_delayed,  -- Signal sa DSP-a
+        dout => rweight2_delayed1 -- Signal nakon kasnjenja
+        );   
+          
+      cweight1_inc_dsp: dsp8
+     generic map (
+           FIXED_SIZE => FIXED_SIZE)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => ONE_FP,
+             u2_i => cfrac, 
+             u3_i => rweight1,
+            res_o => cweight1_delayed);   
+            
+      delay_cweight1: entity work.delay
+    generic map (
+        DELAY_CYCLES => 4,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => cweight1_delayed,  -- Signal sa DSP-a
+        dout => cweight1_delayed1 -- Signal nakon kasnjenja
+        ); 
+         
+           cweight2_inc_dsp: dsp8
+     generic map (
+           FIXED_SIZE => FIXED_SIZE)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => ONE_FP,
+             u2_i => cfrac, 
+             u3_i => rweight2,
+            res_o => cweight2_delayed);   
+            
+      delay_cweight2: entity work.delay
+    generic map (
+        DELAY_CYCLES => 4,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => cweight2_delayed,  -- Signal sa DSP-a
+        dout => cweight2_delayed1 -- Signal nakon kasnjenja
+        );         
+             
     -- Instanciranje ROM-a
     ROM_inst : rom
         generic map (
@@ -574,10 +998,14 @@ begin
             cx <= (others => '0');
             rfrac <= (others => '0');
             cfrac <= (others => '0');
-            dx <= (others => '0');
-            dy <= (others => '0');
-            dxx <= (others => '0');
-            dyy <= (others => '0');
+            dx1_reg <= (others => '0');
+            dx2_reg <= (others => '0');
+            dx_reg <= (others => '0');
+            dy1_reg <= (others => '0');
+            dy2_reg <= (others => '0');
+            dy_reg <= (others => '0');
+            dxx_reg <= (others => '0');
+            dyy_reg <= (others => '0');
             weight <= (others => '0');
             rweight1 <= (others => '0');
             rweight2 <= (others => '0');
@@ -630,7 +1058,7 @@ begin
                 temp4_rpos_reg <= temp4_rpos_delayed1;
                 state_reg <= ComputeRPos4;
             else
-                -- Pre?i u slede?e stanje i ažuriraj sve registre
+                -- Predji u sledece stanje i ažuriraj sve registre
                 state_reg <= state_next;
 
                 -- Ažuriranje registara sa internim signalima
@@ -647,10 +1075,14 @@ begin
                 cx <= cx_next;
                 rfrac <= rfrac_next;
                 cfrac <= cfrac_next;
-                dx <= dx_next;
-                dy <= dy_next;
-                dxx <= dxx_next;
-                dyy <= dyy_next;
+                dx1_reg <= dx1_next;
+                dx2_reg <= dx2_next;
+                dx_reg <= dx_next;
+                dy1_reg <= dy1_next;
+                dy2_reg <= dy2_next;
+                dy_reg <= dy_next;
+                dxx_reg <= dxx_next;
+                dyy_reg <= dyy_next;
                 weight <= weight_next;
                 rweight1 <= rweight1_next;
                 rweight2 <= rweight2_next;
@@ -700,7 +1132,7 @@ end process;
 
 
     -- Kombinacioni proces za odredjivanje sledecih stanja i vrednosti signala
-    process (bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, temp1_rpos_reg, temp2_rpos_reg, temp3_rpos_reg, temp4_rpos_reg, temp1_cpos_reg, temp2_cpos_reg, temp3_cpos_reg, temp4_cpos_reg, rpos_reg, cpos_reg, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, ri, ci, r, c, rx, cx, rfrac, cfrac, dx, dy, dxx, dyy, weight, rweight1, rweight2, cweight1, cweight2, ori1, ori2, dxx1, dxx2, dyy1, dyy2, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_reg, rom_addr_int, data1_o_reg, data2_o_reg, bram_data_out, bram_addr1_o_next)
+    process (bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, temp1_rpos_reg, temp2_rpos_reg, temp3_rpos_reg, temp4_rpos_reg, temp1_cpos_reg, temp2_cpos_reg, temp3_cpos_reg, temp4_cpos_reg, rpos_reg, cpos_reg, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, ri, ci, r, c, rx, cx, rfrac, cfrac, dx1_reg, dx2_reg, dx_reg, dy1_reg, dy2_reg, dy_reg, dxx_reg, dyy_reg, weight, rweight1, rweight2, cweight1, cweight2, ori1, ori2, dxx1, dxx2, dyy1, dyy2, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_reg, rom_addr_int, data1_o_reg, data2_o_reg, bram_data_out, bram_addr1_o_next)
     begin
         -- Default assignments
         state_next <= state_reg;
@@ -717,41 +1149,54 @@ end process;
         temp3_cpos_next <= temp3_cpos_delayed1;
         temp4_cpos_next <= temp4_cpos_delayed1;
         
+        rpos_next <= rpos_delayed1;
+        cpos_next <= cpos_delayed1;
+        
         rx_next <= rx_delayed1;
         cx_next <= cx_delayed1;
         
-        ri_next <= ri;
-        ci_next <= ci;
-        addSampleStep_next <= addSampleStep;
-        r_next <= r;
-        c_next <= c;
        
-        rfrac_next <= rfrac;
-        cfrac_next <= cfrac;
-        dx_next <= dx;
-        dy_next <= dy;
-        dxx_next <= dxx;
-        dyy_next <= dyy;
+        addSampleStep_next <= addSampleStep;
+        r_next <= signed(r_delayed1);
+        c_next <= signed(c_delayed1);
+       
         weight_next <= weight;
-        rweight1_next <= rweight1;
-        rweight2_next <= rweight2;
-        cweight1_next <= cweight1;
-        cweight2_next <= cweight2;
+
+        dxx1_sum_next <= dxx1_sum_reg;
+        dxx2_sum_next <= dxx2_sum_reg;
+        dyy1_sum_next <= dyy1_sum_reg;
+        dyy2_sum_next <= dyy2_sum_reg;
+        
+        dxx_next <= dxx_delayed1;
+        dyy_next <= dyy_delayed1;
+        
+        dx1_next <= dx1_delayed1;
+        dx2_next <= dx2_delayed1;
+        dx_next <= dx_delayed1;
+        
+        dy1_next <= dy1_delayed1;
+        dy2_next <= dy2_delayed1;
+        dy_next <= dy_delayed1;
+
+        
+        rfrac_next <= rfrac_delayed1;
+        cfrac_next <= cfrac_delayed1;      
+        
         ori1_next <= ori1;
         ori2_next <= ori2;
         dxx1_next <= dxx1;
         dxx2_next <= dxx2;
         dyy1_next <= dyy1;
         dyy2_next <= dyy2;
-        rpos_next <= rpos_delayed1;
-        cpos_next <= cpos_delayed1;
         
+        ri_next <= ri;
+        ci_next <= ci;
        
-
-        dxx1_sum_next <= dxx1_sum_reg;
-        dxx2_sum_next <= dxx2_sum_reg;
-        dyy1_sum_next <= dyy1_sum_reg;
-        dyy2_sum_next <= dyy2_sum_reg;
+        rweight1_next <= rweight1_delayed1;
+        rweight2_next <= rweight2_delayed1;
+        cweight1_next <= cweight1_delayed1;
+        cweight2_next <= cweight2_delayed1;
+       
         
         
         bram_en_int <= '0'; -- Defaultna vrednost za bram_en1_o
@@ -855,18 +1300,8 @@ end process;
             when PositionValidation =>
                 addSampleStep_next <= to_unsigned(to_integer(unsigned(scale(FIXED_SIZE - 1 downto 18))), WIDTH);
                 
-                r_next <= signed(
-                            to_signed(
-                                to_integer(signed(iy)) + (to_integer(signed(i_reg)) - to_integer(signed(iradius))) * to_integer(signed(step)),
-                                WIDTH 
-                            )
-                        );
-                c_next <= signed(
-                             to_signed(
-                                to_integer(signed(ix)) + (to_integer(signed(j_reg)) - to_integer(signed(iradius))) * to_integer(signed(step)),
-                                WIDTH 
-                            )
-                        );
+                r_next <= r;
+                c_next <= c;
                 
                 state_next <= ComputePosition; 
 
@@ -880,12 +1315,18 @@ end process;
 
             when ProcessSample =>
                 -- Ensure the address is always non-negative
-                rom_addr_next <= std_logic_vector(to_unsigned(
-                    abs((to_integer(unsigned(rpos_reg)) * to_integer(unsigned(rpos_reg)) + 
-                         to_integer(unsigned(cpos_reg)) * to_integer(unsigned(cpos_reg))) + 100000) mod 40, 
-                    rom_addr_next'length));
+   
+            
+                -- Ra?unanje kvadrata i sume
+                rpos_squared <= signed(rpos_reg) * signed(rpos_reg);
+                cpos_squared <= signed(cpos_reg) * signed(cpos_reg);
+                
+                sum_squared <= rpos_squared + cpos_squared;
+            
+                -- Ekstrakcija 30-bitnog celog dela i konverzija u std_logic_vector za adresu ROM-a
+                rom_addr_next <= std_logic_vector(sum_squared(2*FIXED_SIZE - 30 - 1 downto 18));
              
-                     weight_next <= std_logic_vector(resize(signed(rom_data_reg), FIXED_SIZE));
+                weight_next <= std_logic_vector(rom_data_reg);
                 state_next <= ComputeDerivatives;
 
              when ComputeDerivatives =>
@@ -1072,22 +1513,32 @@ end process;
                 state_next <= CalculateDerivatives;
 
             when CalculateDerivatives =>
-                dxx_next <= std_logic_vector((signed(weight) * (signed(dxx1) - signed(dxx2)))); 
-                dyy_next <= std_logic_vector((signed(weight) * (signed(dyy1) - signed(dyy2)))); 
-                state_next <= ApplyOrientationTransform;
+                dxx_next <= dxx_reg; 
+                dyy_next <= dyy_reg; 
+                state_next <= ApplyOrientationTransform_1;
 
+            when ApplyOrientationTransform_1 =>
+                dx1_next <= dx1_reg; 
+                dy1_next <= dy1_reg;
+                state_next <= ApplyOrientationTransform_2;
+                
+            when ApplyOrientationTransform_2 =>
+                dx2_next <= dx2_reg; 
+                dy2_next <= dy2_reg;
+                state_next <= ApplyOrientationTransform;
+                
             when ApplyOrientationTransform =>
-                dx_next <= std_logic_vector((signed(i_cose) * signed(dxx) + signed(i_sine) * signed(dyy))); 
-                dy_next <= std_logic_vector((signed(i_sine) * signed(dxx) - signed(i_cose) * signed(dyy)));
+                dx_next <= dx_reg; 
+                dy_next <= dy_reg;
                 state_next <= SetOrientations;
 
             when SetOrientations =>
-                if signed(dx) < 0 then
+                if signed(dx_reg) < 0 then
                     ori1_next <= to_unsigned(0, WIDTH);
                 else
                     ori1_next <= to_unsigned(1, WIDTH);
                 end if;
-                if signed(dy) < 0 then
+                if signed(dy_reg) < 0 then
                     ori2_next <= to_unsigned(2, WIDTH);
                 else
                     ori2_next <= to_unsigned(3, WIDTH);
@@ -1098,7 +1549,7 @@ end process;
                 -- Check rx and set ri accordingly
                 if signed(rx) < 0 then
                     ri_next <= to_unsigned(0, WIDTH);
-                elsif signed(rx) >= to_signed(INDEX_SIZE, FIXED_SIZE) then
+              elsif signed(rx) >= signed(to_signed(to_integer(unsigned(INDEX_SIZE_FP)), INDEX_SIZE_FP'length)) then
                     ri_next <= to_unsigned(INDEX_SIZE - 1, WIDTH);
                 else
                     ri_next <= to_unsigned(to_integer(signed(rx)), WIDTH);
@@ -1107,7 +1558,7 @@ end process;
                 -- Check ci and update ci accordingly
                 if signed(cx) < 0 then
                     ci_next <= to_unsigned(0, WIDTH);
-                elsif signed(cx) >= to_signed(INDEX_SIZE, FIXED_SIZE) then
+                elsif signed(cx) >= signed(to_signed(to_integer(unsigned(INDEX_SIZE_FP)), INDEX_SIZE_FP'length)) then
                     ci_next <= to_unsigned(INDEX_SIZE - 1, WIDTH);
                 else
                     ci_next <= to_unsigned(to_integer(signed(cx)), WIDTH);
@@ -1116,8 +1567,8 @@ end process;
 
             when ComputeFractionalComponents =>
                 -- Compute fractional components
-                rfrac_next <= std_logic_vector(signed(rx) - signed(ri));
-                cfrac_next <= std_logic_vector(signed(cx) - signed(ci));
+                rfrac_next <= rfrac;
+                cfrac_next <= cfrac;
                 state_next <= ValidateIndices;
                 
             when ValidateIndices =>
@@ -1137,13 +1588,13 @@ end process;
                 state_next <= ComputeWeightsR;
 
             when ComputeWeightsR =>
-                rweight1_next <= std_logic_vector((signed(dx) * (signed(ONE_FP) - signed(rfrac))));
-                rweight2_next <= std_logic_vector((signed(dy) * (signed(ONE_FP) - signed(rfrac))));
+                rweight1_next <= rweight1;
+                rweight2_next <= rweight2;
                 state_next <= ComputeWeightsC;
 
             when ComputeWeightsC =>                
-                cweight1_next <= std_logic_vector((signed(rweight1) * (signed(ONE_FP) - signed(cfrac))));
-                cweight2_next <= std_logic_vector((signed(rweight1) * (signed(ONE_FP) - signed(cfrac))));
+                cweight1_next <= cweight1;
+                cweight2_next <= cweight2;
                 bram2_phase_next <= 0;
                 state_next <= UpdateIndexArray0;
                 
@@ -1170,58 +1621,6 @@ end process;
                     state_next <= NextSample;
                 end if;
                 data1_o <= bram_data_out;
-
---            when CheckNextColumn0 =>
---                if ci + 1 < INDEX_SIZE then
---                    if bram2_phase = 0 then
---                        bram_addr_int <= std_logic_vector(to_unsigned(to_integer(unsigned(ri)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci+1)) * 4 + to_integer(unsigned(ori1)), INDEX_ADDRESS_SIZE));
---                        bram_data_out_next <= std_logic_vector(resize(unsigned(data1_o_reg), 10*FIXED_SIZE + 4*WIDTH) + resize(unsigned(rweight1) * resize(to_unsigned(to_integer(signed(cfrac)), 2*FIXED_SIZE + 2*WIDTH), 2*FIXED_SIZE + 2*WIDTH), 10*FIXED_SIZE + 4*WIDTH));
---                        bram_en_int <= '1';
---                        bram_we_int <= '1';
---                        bram2_phase_next <= 1;                            
---                        state_next <= CheckNextColumn1;
---                    end if;
---                else
---                    state_next <= CheckNextRow0;
---                end if;
---                data1_o <= bram_data_out;
-
---            when CheckNextColumn1 =>
---                if bram2_phase = 1 then
---                    bram_addr_int <= std_logic_vector(to_unsigned(to_integer(unsigned(ri)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci+1)) * 4 + to_integer(unsigned(ori2)), INDEX_ADDRESS_SIZE));
---                    bram_data_out_next <= std_logic_vector(resize(unsigned(data2_o_reg), 10*FIXED_SIZE + 4*WIDTH) + resize(unsigned(rweight2) * resize(to_unsigned(to_integer(signed(cfrac)), 2*FIXED_SIZE + 2*WIDTH), 2*FIXED_SIZE + 2*WIDTH), 10*FIXED_SIZE + 4*WIDTH));
---                    bram_en_int <= '1';
---                    bram_we_int <= '1';
---                    bram2_phase_next <= 0;
---                    state_next <= CheckNextRow0;
---                end if;
---                data1_o <= bram_data_out;
-
---            when CheckNextRow0 =>
---                if ri + 1 < INDEX_SIZE then
---                    if bram2_phase = 0 then
---                        bram_addr_int <= std_logic_vector(to_unsigned(to_integer(unsigned(ri + 1)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori1)), INDEX_ADDRESS_SIZE));
---                        bram_data_out_next <= std_logic_vector(resize(unsigned(data1_o_reg), 10 * FIXED_SIZE + 4 * WIDTH) + resize(unsigned(dx) * unsigned(rfrac) * (unsigned(to_signed(1, 2 * WIDTH + 2 * FIXED_SIZE)) - unsigned(cfrac)), 10*FIXED_SIZE + 4 * WIDTH));
---                        bram_en_int <= '1';
---                        bram_we_int <= '1';
---                        bram2_phase_next <= 1;
---                        state_next <= CheckNextRow1;
---                    end if;
---                else
---                    state_next <= NextSample;
---                end if;
---                data1_o <= bram_data_out;
-
---            when CheckNextRow1 =>
---                if bram2_phase = 1 then
---                    bram_addr_int <= std_logic_vector(to_unsigned(to_integer(unsigned(ri + 1)) * (INDEX_SIZE * 4) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori2)), INDEX_ADDRESS_SIZE));
---                    bram_data_out_next <= std_logic_vector(resize(unsigned(data2_o_reg), 10 * FIXED_SIZE + 4 * WIDTH) + resize(unsigned(dy) * unsigned(rfrac) * (unsigned(to_signed(1, 2 * WIDTH + 2 * FIXED_SIZE)) - unsigned(cfrac)), 10*FIXED_SIZE + 4 * WIDTH));
---                    bram_en_int <= '1';
---                    bram_we_int <= '1';
---                    bram2_phase_next <= 0;
---                    state_next <= NextSample;
---                end if;
---                data1_o <= bram_data_out;
 
             when NextSample =>
                 j_next <= j_reg + 1;

@@ -1,6 +1,6 @@
 package ip_pkg is
 type state_type is (
-    idle, StartLoop, InnerLoop, 
+            idle, StartLoop, InnerLoop, 
             ComputeRPos1, ComputeRPos2, ComputeRPos3, ComputeRPos4, ComputeRPos5,
             ComputeCPos1, ComputeCPos2, ComputeCPos3, ComputeCPos4, ComputeCPos5,
             SetRXandCX, BoundaryCheck, PositionValidation, ComputePosition, ProcessSample,
@@ -13,9 +13,9 @@ type state_type is (
             FetchDXX2_1, FetchDXX2_2, FetchDXX2_3, FetchDXX2_4, ComputeDXX2, 
             FetchDYY1_1, FetchDYY1_2, FetchDYY1_3, FetchDYY1_4, ComputeDYY1,
             FetchDYY2_1, FetchDYY2_2, FetchDYY2_3, FetchDYY2_4, ComputeDYY2, 
-      CalculateDerivatives, ApplyOrientationTransform,
+        CalculateDerivatives, ApplyOrientationTransform_1, ApplyOrientationTransform_2, ApplyOrientationTransform,
         SetOrientations, UpdateIndex, ComputeFractionalComponents, ValidateIndices, 
-        ComputeWeightsR, ComputeWeightsC, UpdateIndexArray0, UpdateIndexArray1, CheckNextColumn0, CheckNextColumn1, CheckNextRow0, CheckNextRow1,
+        ComputeWeightsR, ComputeWeightsC, UpdateIndexArray0, UpdateIndexArray1, 
         NextSample, IncrementI, Finish
 );
 
@@ -68,7 +68,6 @@ package body ip_pkg is
 	        when WaitForData14          => return "WaitForData14";
 	        when WaitForData15          => return "WaitForData15";
 	        when WaitForData16          => return "WaitForData16";
-		
             when FetchDXX1_1            => return "FetchDXX1_1";
             when FetchDXX1_2            => return "FetchDXX1_2";
             when ComputeDXX1            => return "ComputeDXX1";
@@ -82,6 +81,8 @@ package body ip_pkg is
             when FetchDYY2_2            => return "FetchDYY2_2";
             when ComputeDYY2            => return "ComputeDYY2";
             when CalculateDerivatives   => return "CalculateDerivatives";
+			when ApplyOrientationTransform_1 => return "ApplyOrientationTransform_1";
+            when ApplyOrientationTransform_2 => return "ApplyOrientationTransform_2";
             when ApplyOrientationTransform => return "ApplyOrientationTransform";
             when SetOrientations        => return "SetOrientations";
             when UpdateIndex            => return "UpdateIndex";
@@ -91,10 +92,6 @@ package body ip_pkg is
             when ComputeWeightsC        => return "ComputeWeightsC";
             when UpdateIndexArray0       => return "UpdateIndexArray0";
 			when UpdateIndexArray1       => return "UpdateIndexArray1";
-            when CheckNextColumn0        => return "CheckNextColumn0";
-			when CheckNextColumn1        => return "CheckNextColumn1";
-            when CheckNextRow0           => return "CheckNextRow0";
-			when CheckNextRow1           => return "CheckNextRow1";
             when NextSample             => return "NextSample";
             when IncrementI             => return "IncrementI";
             when Finish                 => return "Finish";
