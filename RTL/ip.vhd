@@ -324,6 +324,7 @@ signal cweight2_delayed, cweight2_delayed1 : std_logic_vector(FIXED_SIZE - 1 dow
     signal bram_we_int : std_logic := '0';
 
 
+signal counter, counter_next : integer range 0 to 3 := 0;
 
 
 begin
@@ -982,6 +983,9 @@ begin
         if (reset = '1') then
             -- Reset logika
             state_reg <= idle;
+            
+            counter <= 0; -- Reset broja?a
+
             -- Reset svih registara i signala
             i_reg <= (others => '0');
             j_reg <= (others => '0');
@@ -1043,6 +1047,7 @@ begin
         else
                 -- Predji u sledece stanje i a?uriraj sve registre
                 state_reg <= state_next;
+            counter <= counter_next; -- Ažuriranje broja?a
 
                 -- A?uriranje registara sa internim signalima
                 i_reg <= i_next;
@@ -1114,13 +1119,14 @@ end process;
 
 
     -- Kombinacioni proces za odredjivanje sledecih stanja i vrednosti signala
-process (bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, temp1_rpos_reg, temp2_rpos_reg, temp3_rpos_reg, temp4_rpos_reg, temp1_cpos_reg, temp2_cpos_reg, temp3_cpos_reg, temp4_cpos_reg, rpos_reg, cpos_reg, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, ri, ci, r, c, rx, cx, rfrac, cfrac, dx1_reg, dx2_reg, dx_reg, dy1_reg, dy2_reg, dy_reg, dxx_reg, dyy_reg, weight, rweight1, rweight2, cweight1, cweight2, ori1, ori2, dxx1, dxx2, dyy1, dyy2, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_reg, rom_addr_int, data1_o_reg, data2_o_reg, bram_data_out, bram_addr1_o_next, temp1_rpos_delayed1, temp2_rpos_delayed1, temp3_rpos_delayed1, temp4_rpos_delayed1, temp1_cpos_delayed1, temp2_cpos_delayed1, temp3_cpos_delayed1, temp4_cpos_delayed1, rpos_delayed1, cpos_delayed1, rx_delayed1, cx_delayed1, r_delayed1, c_delayed1, dxx_delayed1, dyy_delayed1, dx1_delayed1, dx2_delayed1, dx_delayed1, dy1_delayed1, dy2_delayed1, dy_delayed1, rfrac_delayed1, cfrac_delayed1, rweight1_delayed1, rweight2_delayed1, cweight1_delayed1, cweight2_delayed1)
+process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, temp1_rpos_reg, temp2_rpos_reg, temp3_rpos_reg, temp4_rpos_reg, temp1_cpos_reg, temp2_cpos_reg, temp3_cpos_reg, temp4_cpos_reg, rpos_reg, cpos_reg, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, ri, ci, r, c, rx, cx, rfrac, cfrac, dx1_reg, dx2_reg, dx_reg, dy1_reg, dy2_reg, dy_reg, dxx_reg, dyy_reg, weight, rweight1, rweight2, cweight1, cweight2, ori1, ori2, dxx1, dxx2, dyy1, dyy2, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_reg, rom_addr_int, data1_o_reg, data2_o_reg, bram_data_out, bram_addr1_o_next, temp1_rpos_delayed1, temp2_rpos_delayed1, temp3_rpos_delayed1, temp4_rpos_delayed1, temp1_cpos_delayed1, temp2_cpos_delayed1, temp3_cpos_delayed1, temp4_cpos_delayed1, rpos_delayed1, cpos_delayed1, rx_delayed1, cx_delayed1, r_delayed1, c_delayed1, dxx_delayed1, dyy_delayed1, dx1_delayed1, dx2_delayed1, dx_delayed1, dy1_delayed1, dy2_delayed1, dy_delayed1, rfrac_delayed1, cfrac_delayed1, rweight1_delayed1, rweight2_delayed1, cweight1_delayed1, cweight2_delayed1)
     begin
         -- Default assignments
         state_next <= state_reg;
         i_next <= i_reg;
         j_next <= j_reg;
-        
+            counter_next <= counter; -- Podrazumevano stanje broja?a
+
         temp1_rpos_next <= temp1_rpos_delayed1;
         temp2_rpos_next <= temp2_rpos_delayed1;
         temp3_rpos_next <= temp3_rpos_delayed1;
@@ -1197,7 +1203,7 @@ process (bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, temp1_rpos_
 
         -- Logika FSM-a
         case state_reg is
-            when idle =>
+             when idle =>
                 ready_o <= '1';
                 bram_we_int <= '0';
                 bram_en_int <= '0';
@@ -1209,91 +1215,180 @@ process (bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, temp1_rpos_
                     state_next <= idle;
                 end if;
 
-            when StartLoop =>
-                    j_next <= TO_UNSIGNED (0, WIDTH);
-                state_next <= InnerLoop;
 
-            when InnerLoop =>
+        when StartLoop =>
+            if counter = 3 then
+                counter_next <= 0;
+                j_next <= TO_UNSIGNED(0, WIDTH);
+                state_next <= InnerLoop;
+            else
+                counter_next <= counter + 1;
+                state_next <= StartLoop;
+            end if;
+
+        when InnerLoop =>
+            if counter = 3 then
+                counter_next <= 0;
                 state_next <= ComputeRPos1;
                 dxx1_sum_next <= (others => '0');
                 dxx2_sum_next <= (others => '0');
                 dyy1_sum_next <= (others => '0');
                 dyy2_sum_next <= (others => '0');
-                
-           when ComputeRPos1 =>
-            
+            else
+                counter_next <= counter + 1;
+                state_next <= InnerLoop;
+            end if;
+
+        when ComputeRPos1 =>
+            if counter = 3 then
+                counter_next <= 0;
                 temp1_rpos_next <= temp1_rpos_reg;
                 state_next <= ComputeRPos2;
-           
-        
+            else
+                counter_next <= counter + 1;
+                state_next <= ComputeRPos1;
+            end if;
+
         when ComputeRPos2 =>
+            if counter = 3 then
+                counter_next <= 0;
                 temp2_rpos_next <= temp2_rpos_reg;
                 state_next <= ComputeRPos3;
-           
-             
+            else
+                counter_next <= counter + 1;
+                state_next <= ComputeRPos2;
+            end if;
+
         when ComputeRPos3 =>
-          
+            if counter = 3 then
+                counter_next <= 0;
                 temp3_rpos_next <= temp3_rpos_reg;
                 state_next <= ComputeRPos4;
-           
-            
-            when ComputeRPos4 =>
+            else
+                counter_next <= counter + 1;
+                state_next <= ComputeRPos3;
+            end if;
+
+        when ComputeRPos4 =>
+            if counter = 3 then
+                counter_next <= 0;
                 temp4_rpos_next <= temp4_rpos_reg;
                 state_next <= ComputeRPos5;
-            
-            when ComputeRPos5 =>
+            else
+                counter_next <= counter + 1;
+                state_next <= ComputeRPos4;
+            end if;
+
+        when ComputeRPos5 =>
+            if counter = 3 then
+                counter_next <= 0;
                 rpos_next <= rpos_reg;
                 state_next <= ComputeCPos1;
-            
-            when ComputeCPos1 =>
-             
+            else
+                counter_next <= counter + 1;
+                state_next <= ComputeRPos5;
+            end if;
+
+        when ComputeCPos1 =>
+            if counter = 3 then
+                counter_next <= 0;
                 temp1_cpos_next <= temp1_cpos_reg;
                 state_next <= ComputeCPos2;
-            
-            when ComputeCPos2 =>
+            else
+                counter_next <= counter + 1;
+                state_next <= ComputeCPos1;
+            end if;
+
+        when ComputeCPos2 =>
+            if counter = 3 then
+                counter_next <= 0;
                 temp2_cpos_next <= temp2_cpos_reg;
                 state_next <= ComputeCPos3;
-            
-            when ComputeCPos3 =>
+            else
+                counter_next <= counter + 1;
+                state_next <= ComputeCPos2;
+            end if;
+
+        when ComputeCPos3 =>
+            if counter = 3 then
+                counter_next <= 0;
                 temp3_cpos_next <= temp3_cpos_reg;
                 state_next <= ComputeCPos4;
-            
-            when ComputeCPos4 =>
+            else
+                counter_next <= counter + 1;
+                state_next <= ComputeCPos3;
+            end if;
+
+        when ComputeCPos4 =>
+            if counter = 3 then
+                counter_next <= 0;
                 temp4_cpos_next <= temp4_cpos_reg;
                 state_next <= ComputeCPos5;
-            
-            when ComputeCPos5 =>
+            else
+                counter_next <= counter + 1;
+                state_next <= ComputeCPos4;
+            end if;
+
+        when ComputeCPos5 =>
+            if counter = 3 then
+                counter_next <= 0;
                 cpos_next <= cpos_reg;
                 state_next <= SetRXandCX;
+            else
+                counter_next <= counter + 1;
+                state_next <= ComputeCPos5;
+            end if;
 
-            when SetRXandCX =>
+        when SetRXandCX =>
+            if counter = 3 then
+                counter_next <= 0;
                 rx_next <= rx;
                 cx_next <= cx;
                 state_next <= BoundaryCheck;
+            else
+                counter_next <= counter + 1;
+                state_next <= SetRXandCX;
+            end if;
 
-            when BoundaryCheck =>
+        when BoundaryCheck =>
+            if counter = 3 then
+                counter_next <= 0;
                 if (signed(rx) > -1 and signed(rx) < to_signed(INDEX_SIZE, rx'length)) and
                    (signed(cx) > -1 and signed(cx) < to_signed(INDEX_SIZE, cx'length)) then
                     state_next <= NextSample;
                 else
                     state_next <= PositionValidation;
                 end if;
+            else
+                counter_next <= counter + 1;
+                state_next <= BoundaryCheck;
+            end if;
 
-            when PositionValidation =>
+        when PositionValidation =>
+            if counter = 3 then
+                counter_next <= 0;
                 addSampleStep_next <= to_unsigned(to_integer(unsigned(scale(FIXED_SIZE - 1 downto 18))), WIDTH);
-                
                 r_next <= r;
                 c_next <= c;
-                
-                state_next <= ComputePosition; 
+                state_next <= ComputePosition;
+            else
+                counter_next <= counter + 1;
+                state_next <= PositionValidation;
+            end if;
 
-            when ComputePosition =>
+        when ComputePosition =>
+            if counter = 3 then
+                counter_next <= 0;
                 if (r < 1 + signed(addSampleStep) or r >= IMG_HEIGHT - 1 - signed(addSampleStep) or
                     c < 1 + signed(addSampleStep) or c >= IMG_WIDTH - 1 - signed(addSampleStep)) then
                     state_next <= NextSample;
                 else
                     state_next <= ProcessSample;
                 end if;
+            else
+                counter_next <= counter + 1;
+                state_next <= ComputePosition;
+            end if;
 
             when ProcessSample =>
     rom_addr_next <= std_logic_vector(to_unsigned(
@@ -1488,24 +1583,44 @@ process (bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, temp1_rpos_
                 state_next <= CalculateDerivatives;
 
             when CalculateDerivatives =>
+            if counter = 3 then
+                counter_next <= 0;
                 dxx_next <= dxx_reg; 
                 dyy_next <= dyy_reg; 
                 state_next <= ApplyOrientationTransform_1;
+            else
+                counter_next <= counter + 1;
+            end if;
 
-            when ApplyOrientationTransform_1 =>
+        when ApplyOrientationTransform_1 =>
+            if counter = 3 then
+                counter_next <= 0;
                 dx1_next <= dx1_reg; 
                 dy1_next <= dy1_reg;
                 state_next <= ApplyOrientationTransform_2;
+            else
+                counter_next <= counter + 1;
+            end if;
                 
-            when ApplyOrientationTransform_2 =>
+        when ApplyOrientationTransform_2 =>
+            if counter = 3 then
+                counter_next <= 0;
                 dx2_next <= dx2_reg; 
                 dy2_next <= dy2_reg;
                 state_next <= ApplyOrientationTransform;
-                
-            when ApplyOrientationTransform =>
+            else
+                counter_next <= counter + 1;
+            end if;
+
+        when ApplyOrientationTransform =>
+            if counter = 3 then
+                counter_next <= 0;
                 dx_next <= dx_reg; 
                 dy_next <= dy_reg;
                 state_next <= SetOrientations;
+            else
+                counter_next <= counter + 1;
+            end if;
 
             when SetOrientations =>
                 if signed(dx_reg) < 0 then
@@ -1540,11 +1655,16 @@ process (bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, temp1_rpos_
                 end if;
                 state_next <= ComputeFractionalComponents;
 
-            when ComputeFractionalComponents =>
+           when ComputeFractionalComponents =>
+            if counter = 3 then
+                counter_next <= 0;
                 -- Compute fractional components
                 rfrac_next <= rfrac;
                 cfrac_next <= cfrac;
                 state_next <= ValidateIndices;
+            else
+                counter_next <= counter + 1;
+            end if;
                 
             when ValidateIndices =>
              if signed(rfrac) < 0 then
@@ -1559,19 +1679,28 @@ process (bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, temp1_rpos_
                 cfrac_next <= ONE_FP;  -- or std_logic_vector(signed(ONE_FP))
             end if;
 
-            
                 state_next <= ComputeWeightsR;
 
-            when ComputeWeightsR =>
+             when ComputeWeightsR =>
+            if counter = 3 then
+                counter_next <= 0;
                 rweight1_next <= rweight1;
                 rweight2_next <= rweight2;
                 state_next <= ComputeWeightsC;
+            else
+                counter_next <= counter + 1;
+            end if;
 
-            when ComputeWeightsC =>                
+        when ComputeWeightsC =>                
+            if counter = 3 then
+                counter_next <= 0;
                 cweight1_next <= cweight1;
                 cweight2_next <= cweight2;
                 bram2_phase_next <= 0;
                 state_next <= UpdateIndexArray0;
+            else
+                counter_next <= counter + 1;
+            end if;
                 
             when UpdateIndexArray0 =>
                 if ri >= 0 and ri < INDEX_SIZE and ci >= 0 and ci < INDEX_SIZE then
