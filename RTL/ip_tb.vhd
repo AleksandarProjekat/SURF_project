@@ -183,7 +183,7 @@ end process;
 
 write_to_output_file : process(clk_s)
     variable data_output_line : line;
-    variable data_output_string : string(1 to 10*FIXED_SIZE + 4*WIDTH) := (others => '0'); 
+    variable data_output_string : string(1 to FIXED_SIZE) := (others => '0'); 
 begin
     if falling_edge(clk_s) then
         if tb_c_en_i = '1' then
@@ -275,7 +275,7 @@ begin
 -- Instanciranje BRAM-a za ulazne podatke
     bram_in: entity work.bram
         generic map (
-            WIDTH => FIXED_SIZE,  -- ?irina podataka
+            WIDTH => FIXED_SIZE,  -- sirina podataka
             SIZE => IMG_WIDTH*IMG_HEIGHT,  -- dubina memorije
             SIZE_WIDTH => 15
         )

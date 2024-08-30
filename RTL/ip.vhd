@@ -1107,14 +1107,14 @@ begin
                     rom_data_reg <= rom_data;
                     rom_addr_int <= rom_addr_next;
                 end if;
-
-                if bram2_phase = 0 then
+                
+               if bram2_phase = 0 then
                     data1_o_reg <= bram_data_out;
                 elsif bram2_phase = 1 then
                     data2_o_reg <= bram_data_out;
                 end if;
+                end if;
             end if;
-        end if;
 end process;
 
 
@@ -1708,7 +1708,7 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
                 if ri >= 0 and ri < INDEX_SIZE and ci >= 0 and ci < INDEX_SIZE then
                     if bram2_phase = 0 then
                         bram_addr_int <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori1)), INDEX_ADDRESS_SIZE));
-                        bram_data_out_next <= std_logic_vector(unsigned(data1_o_reg) + unsigned(cweight1));
+                        bram_data_out_next <= std_logic_vector(signed(data1_o_reg) + signed(cweight1));
                         bram_en_int <= '1';
                         bram_we_int <= '1';
                         bram2_phase_next <= 1;
@@ -1723,7 +1723,7 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
            
                 if bram2_phase = 1 then
                     bram_addr_int <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori2)), INDEX_ADDRESS_SIZE));
-                    bram_data_out_next <= std_logic_vector(unsigned(data2_o_reg) + unsigned(cweight2));
+                    bram_data_out_next <= std_logic_vector(signed(data2_o_reg) + signed(cweight2));
                     bram_en_int <= '1';
                     bram_we_int <= '1';
                     bram2_phase_next <= 0;
