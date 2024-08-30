@@ -1702,7 +1702,9 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
                 counter_next <= counter + 1;
             end if;
                 
-            when UpdateIndexArray0 =>
+           when UpdateIndexArray0 =>
+            if counter = 3 then
+                counter_next <= 0;  -- Reset broja?a na 0
                 if ri >= 0 and ri < INDEX_SIZE and ci >= 0 and ci < INDEX_SIZE then
                     if bram2_phase = 0 then
                         bram_addr_int <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori1)), INDEX_ADDRESS_SIZE));
@@ -1714,8 +1716,14 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
                     end if;
                 end if;
                 data1_o <= bram_data_out;
-
-            when UpdateIndexArray1 =>
+            else
+                counter_next <= counter + 1;  -- Pove?anje broja?a
+                state_next <= UpdateIndexArray0;  -- Ostaje u istom stanju dok broja? ne dostigne 3
+            end if;
+        
+        when UpdateIndexArray1 =>
+            if counter = 3 then
+                counter_next <= 0;  -- Reset broja?a na 0
                 if bram2_phase = 1 then
                     bram_addr_int <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori2)), INDEX_ADDRESS_SIZE));
                     bram_data_out_next <= std_logic_vector(unsigned(data2_o_reg) + unsigned(cweight2));
@@ -1725,6 +1733,11 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
                     state_next <= NextSample;
                 end if;
                 data1_o <= bram_data_out;
+            else
+                counter_next <= counter + 1;  -- Pove?anje broja?a
+                state_next <= UpdateIndexArray1;  -- Ostaje u istom stanju dok broja? ne dostigne 3
+            end if;
+
 
             when NextSample =>
                 j_next <= j_reg + 1;
