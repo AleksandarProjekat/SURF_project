@@ -216,6 +216,7 @@ architecture Behavioral of ip is
     constant HALF_INDEX_SIZE_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_unsigned(4*131072, FIXED_SIZE));  -- 2.0
     constant ONE_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_unsigned(2*131072, FIXED_SIZE));  -- 1.0
     constant HALF_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_unsigned(131072, FIXED_SIZE));  -- 0.5
+    constant MINUS_ONE_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_signed(-131072, FIXED_SIZE));  -- -1.0
 
 signal temp1_rpos_delayed, temp1_rpos_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
 signal temp2_rpos_delayed, temp2_rpos_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
@@ -350,7 +351,7 @@ begin
             
     delay_temp1_rpos: entity work.delay
     generic map (
-        DELAY_CYCLES => 4,
+        DELAY_CYCLES => 3,
         SIGNAL_WIDTH => FIXED_SIZE
     )
     port map (
@@ -372,7 +373,7 @@ begin
             
 delay_temp2_rpos: entity work.delay
     generic map (
-        DELAY_CYCLES => 4,
+        DELAY_CYCLES => 3,
         SIGNAL_WIDTH => FIXED_SIZE
     )
     port map (
@@ -416,7 +417,7 @@ delay_temp2_rpos: entity work.delay
             
      delay_temp4_rpos: entity work.delay
     generic map (
-        DELAY_CYCLES => 4,
+        DELAY_CYCLES => 3,
         SIGNAL_WIDTH => FIXED_SIZE
     )
     port map (
@@ -437,7 +438,7 @@ delay_temp2_rpos: entity work.delay
                
      delay_rpos: entity work.delay
     generic map (
-        DELAY_CYCLES => 4,
+        DELAY_CYCLES => 3,
         SIGNAL_WIDTH => FIXED_SIZE
     )
     port map (
@@ -467,7 +468,7 @@ delay_temp2_rpos: entity work.delay
             
      delay_temp1_cpos: entity work.delay
     generic map (
-        DELAY_CYCLES => 4,
+        DELAY_CYCLES => 3,
         SIGNAL_WIDTH => FIXED_SIZE
     )
     port map (
@@ -488,7 +489,7 @@ delay_temp2_rpos: entity work.delay
             
       delay_temp2_cpos: entity work.delay
     generic map (
-        DELAY_CYCLES => 4,
+        DELAY_CYCLES => 3,
         SIGNAL_WIDTH => FIXED_SIZE
     )
     port map (
@@ -533,7 +534,7 @@ delay_temp2_rpos: entity work.delay
         
         delay_temp4_cpos: entity work.delay
     generic map (
-        DELAY_CYCLES => 4,
+        DELAY_CYCLES => 3,
         SIGNAL_WIDTH => FIXED_SIZE
     )
     port map (
@@ -554,7 +555,7 @@ delay_temp2_rpos: entity work.delay
               
        delay_cpos: entity work.delay
     generic map (
-        DELAY_CYCLES => 4,
+        DELAY_CYCLES => 3,
         SIGNAL_WIDTH => FIXED_SIZE
     )
     port map (
@@ -620,7 +621,7 @@ delay_temp2_rpos: entity work.delay
             
       delay_r: entity work.delay
     generic map (
-        DELAY_CYCLES => 4,
+        DELAY_CYCLES => 3,
         SIGNAL_WIDTH => WIDTH
     )
     port map (
@@ -643,7 +644,7 @@ delay_temp2_rpos: entity work.delay
             
       delay_c: entity work.delay
     generic map (
-        DELAY_CYCLES => 4,
+        DELAY_CYCLES => 3,
         SIGNAL_WIDTH => WIDTH
     )
     port map (
@@ -665,7 +666,7 @@ delay_temp2_rpos: entity work.delay
             
       delay_dxx: entity work.delay
     generic map (
-        DELAY_CYCLES => 4,
+        DELAY_CYCLES => 3,
         SIGNAL_WIDTH => FIXED_SIZE
     )
     port map (
@@ -687,7 +688,7 @@ delay_temp2_rpos: entity work.delay
             
       delay_dyy: entity work.delay
     generic map (
-        DELAY_CYCLES => 4,
+        DELAY_CYCLES => 3,
         SIGNAL_WIDTH => FIXED_SIZE
     )
     port map (
@@ -708,7 +709,7 @@ delay_temp2_rpos: entity work.delay
                
      delay_dx1: entity work.delay
     generic map (
-        DELAY_CYCLES => 4,
+        DELAY_CYCLES => 3,
         SIGNAL_WIDTH => FIXED_SIZE
     )
     port map (
@@ -729,7 +730,7 @@ delay_temp2_rpos: entity work.delay
                
      delay_dx2: entity work.delay
     generic map (
-        DELAY_CYCLES => 4,
+        DELAY_CYCLES => 3,
         SIGNAL_WIDTH => FIXED_SIZE
     )
     port map (
@@ -751,7 +752,7 @@ delay_temp2_rpos: entity work.delay
                
      delay_dx: entity work.delay
     generic map (
-        DELAY_CYCLES => 4,
+        DELAY_CYCLES => 3,
         SIGNAL_WIDTH => FIXED_SIZE
     )
     port map (
@@ -772,7 +773,7 @@ delay_temp2_rpos: entity work.delay
                
      delay_dy1: entity work.delay
     generic map (
-        DELAY_CYCLES => 4,
+        DELAY_CYCLES => 3,
         SIGNAL_WIDTH => FIXED_SIZE
     )
     port map (
@@ -793,7 +794,7 @@ delay_temp2_rpos: entity work.delay
                
      delay_dy2: entity work.delay
     generic map (
-        DELAY_CYCLES => 4,
+        DELAY_CYCLES => 3,
         SIGNAL_WIDTH => FIXED_SIZE
     )
     port map (
@@ -815,7 +816,7 @@ delay_temp2_rpos: entity work.delay
                
      delay_dy: entity work.delay
     generic map (
-        DELAY_CYCLES => 4,
+        DELAY_CYCLES => 3,
         SIGNAL_WIDTH => FIXED_SIZE
     )
     port map (
@@ -838,7 +839,7 @@ delay_temp2_rpos: entity work.delay
                
      delay_rfrac: entity work.delay
     generic map (
-        DELAY_CYCLES => 4,
+        DELAY_CYCLES => 3,
         SIGNAL_WIDTH => FIXED_SIZE
     )
     port map (
@@ -861,7 +862,7 @@ delay_temp2_rpos: entity work.delay
                
      delay_cfrac: entity work.delay
     generic map (
-        DELAY_CYCLES => 4,
+        DELAY_CYCLES => 3,
         SIGNAL_WIDTH => FIXED_SIZE
     )
     port map (
@@ -883,7 +884,7 @@ delay_temp2_rpos: entity work.delay
             
       delay_rweight1: entity work.delay
     generic map (
-        DELAY_CYCLES => 4,
+        DELAY_CYCLES => 3,
         SIGNAL_WIDTH => FIXED_SIZE
     )
     port map (
@@ -905,7 +906,7 @@ delay_temp2_rpos: entity work.delay
             
       delay_rweight2: entity work.delay
     generic map (
-        DELAY_CYCLES => 4,
+        DELAY_CYCLES => 3,
         SIGNAL_WIDTH => FIXED_SIZE
     )
     port map (
@@ -927,7 +928,7 @@ delay_temp2_rpos: entity work.delay
             
       delay_cweight1: entity work.delay
     generic map (
-        DELAY_CYCLES => 4,
+        DELAY_CYCLES => 3,
         SIGNAL_WIDTH => FIXED_SIZE
     )
     port map (
@@ -949,7 +950,7 @@ delay_temp2_rpos: entity work.delay
             
       delay_cweight2: entity work.delay
     generic map (
-        DELAY_CYCLES => 4,
+        DELAY_CYCLES => 3,
         SIGNAL_WIDTH => FIXED_SIZE
     )
     port map (
@@ -1242,7 +1243,7 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
         when ComputeRPos1 =>
             if counter = 3 then
                 counter_next <= 0;
-                temp1_rpos_next <= temp1_rpos_reg;
+                temp1_rpos_next <= temp1_rpos_delayed1;
                 state_next <= ComputeRPos2;
             else
                 counter_next <= counter + 1;
@@ -1252,7 +1253,7 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
         when ComputeRPos2 =>
             if counter = 3 then
                 counter_next <= 0;
-                temp2_rpos_next <= temp2_rpos_reg;
+                temp2_rpos_next <= temp2_rpos_delayed1;
                 state_next <= ComputeRPos3;
             else
                 counter_next <= counter + 1;
@@ -1262,7 +1263,7 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
         when ComputeRPos3 =>
             if counter = 3 then
                 counter_next <= 0;
-                temp3_rpos_next <= temp3_rpos_reg;
+                temp3_rpos_next <= temp3_rpos_delayed1;
                 state_next <= ComputeRPos4;
             else
                 counter_next <= counter + 1;
@@ -1272,7 +1273,7 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
         when ComputeRPos4 =>
             if counter = 3 then
                 counter_next <= 0;
-                temp4_rpos_next <= temp4_rpos_reg;
+                temp4_rpos_next <= temp4_rpos_delayed1;
                 state_next <= ComputeRPos5;
             else
                 counter_next <= counter + 1;
@@ -1282,7 +1283,7 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
         when ComputeRPos5 =>
             if counter = 3 then
                 counter_next <= 0;
-                rpos_next <= rpos_reg;
+                rpos_next <= rpos_delayed1;
                 state_next <= ComputeCPos1;
             else
                 counter_next <= counter + 1;
@@ -1292,7 +1293,7 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
         when ComputeCPos1 =>
             if counter = 3 then
                 counter_next <= 0;
-                temp1_cpos_next <= temp1_cpos_reg;
+                temp1_cpos_next <= temp1_cpos_delayed1;
                 state_next <= ComputeCPos2;
             else
                 counter_next <= counter + 1;
@@ -1302,7 +1303,7 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
         when ComputeCPos2 =>
             if counter = 3 then
                 counter_next <= 0;
-                temp2_cpos_next <= temp2_cpos_reg;
+                temp2_cpos_next <= temp2_cpos_delayed1;
                 state_next <= ComputeCPos3;
             else
                 counter_next <= counter + 1;
@@ -1312,7 +1313,7 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
         when ComputeCPos3 =>
             if counter = 3 then
                 counter_next <= 0;
-                temp3_cpos_next <= temp3_cpos_reg;
+                temp3_cpos_next <= temp3_cpos_delayed1;
                 state_next <= ComputeCPos4;
             else
                 counter_next <= counter + 1;
@@ -1322,7 +1323,7 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
         when ComputeCPos4 =>
             if counter = 3 then
                 counter_next <= 0;
-                temp4_cpos_next <= temp4_cpos_reg;
+                temp4_cpos_next <= temp4_cpos_delayed1;
                 state_next <= ComputeCPos5;
             else
                 counter_next <= counter + 1;
@@ -1332,7 +1333,7 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
         when ComputeCPos5 =>
             if counter = 3 then
                 counter_next <= 0;
-                cpos_next <= cpos_reg;
+                cpos_next <= cpos_delayed1;
                 state_next <= SetRXandCX;
             else
                 counter_next <= counter + 1;
@@ -1342,8 +1343,8 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
         when SetRXandCX =>
             if counter = 3 then
                 counter_next <= 0;
-                rx_next <= rx;
-                cx_next <= cx;
+                rx_next <= rx_delayed1;
+                cx_next <= cx_delayed1;
                 state_next <= BoundaryCheck;
             else
                 counter_next <= counter + 1;
@@ -1353,8 +1354,8 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
         when BoundaryCheck =>
             if counter = 3 then
                 counter_next <= 0;
-                if (signed(rx) > -1 and signed(rx) < to_signed(INDEX_SIZE, rx'length)) and
-                   (signed(cx) > -1 and signed(cx) < to_signed(INDEX_SIZE, cx'length)) then
+                if (signed(rx) > signed(MINUS_ONE_FP) and signed(rx) < signed(INDEX_SIZE_FP) and
+                   (signed(cx) > signed(MINUS_ONE_FP) and signed(cx) <  signed(INDEX_SIZE_FP))) then
                     state_next <= NextSample;
                 else
                     state_next <= PositionValidation;
@@ -1368,19 +1369,19 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
             if counter = 3 then
                 counter_next <= 0;
                 addSampleStep_next <= to_unsigned(to_integer(unsigned(scale(FIXED_SIZE - 1 downto 18))), WIDTH);
-                r_next <= r;
-                c_next <= c;
+                r_next <= signed(r_delayed1);
+                c_next <= signed(c_delayed1);
                 state_next <= ComputePosition;
             else
                 counter_next <= counter + 1;
                 state_next <= PositionValidation;
             end if;
 
-        when ComputePosition =>
+        when ComputePosition =>   
             if counter = 3 then
                 counter_next <= 0;
-                if (r < 1 + signed(addSampleStep) or r >= IMG_HEIGHT - 1 - signed(addSampleStep) or
-                    c < 1 + signed(addSampleStep) or c >= IMG_WIDTH - 1 - signed(addSampleStep)) then
+                if (r_next < 1 + signed(addSampleStep) or r_next >= IMG_HEIGHT - 1 - signed(addSampleStep) or
+                    c_next < 1 + signed(addSampleStep) or c_next >= IMG_WIDTH - 1 - signed(addSampleStep)) then
                     state_next <= NextSample;
                 else
                     state_next <= ProcessSample;
@@ -1585,8 +1586,8 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
             when CalculateDerivatives =>
             if counter = 3 then
                 counter_next <= 0;
-                dxx_next <= dxx_reg; 
-                dyy_next <= dyy_reg; 
+                dxx_next <= dxx_delayed1; 
+                dyy_next <= dyy_delayed1; 
                 state_next <= ApplyOrientationTransform_1;
             else
                 counter_next <= counter + 1;
@@ -1595,8 +1596,8 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
         when ApplyOrientationTransform_1 =>
             if counter = 3 then
                 counter_next <= 0;
-                dx1_next <= dx1_reg; 
-                dy1_next <= dy1_reg;
+                dx1_next <= dx1_delayed1; 
+                dy1_next <= dy1_delayed1;
                 state_next <= ApplyOrientationTransform_2;
             else
                 counter_next <= counter + 1;
@@ -1605,8 +1606,8 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
         when ApplyOrientationTransform_2 =>
             if counter = 3 then
                 counter_next <= 0;
-                dx2_next <= dx2_reg; 
-                dy2_next <= dy2_reg;
+                dx2_next <= dx2_delayed1; 
+                dy2_next <= dy2_delayed1;
                 state_next <= ApplyOrientationTransform;
             else
                 counter_next <= counter + 1;
@@ -1615,20 +1616,20 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
         when ApplyOrientationTransform =>
             if counter = 3 then
                 counter_next <= 0;
-                dx_next <= dx_reg; 
-                dy_next <= dy_reg;
+                dx_next <= dx_delayed1; 
+                dy_next <= dy_delayed1;
                 state_next <= SetOrientations;
             else
                 counter_next <= counter + 1;
             end if;
 
             when SetOrientations =>
-                if signed(dx_reg) < 0 then
+                if signed(dx_delayed1) < 0 then
                     ori1_next <= to_unsigned(0, WIDTH);
                 else
                     ori1_next <= to_unsigned(1, WIDTH);
                 end if;
-                if signed(dy_reg) < 0 then
+                if signed(dy_delayed1) < 0 then
                     ori2_next <= to_unsigned(2, WIDTH);
                 else
                     ori2_next <= to_unsigned(3, WIDTH);
@@ -1637,46 +1638,44 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
             
             when UpdateIndex =>
                 -- Check rx and set ri accordingly
-                if signed(rx) < 0 then
+                if signed(rx_delayed1) < 0 then
                     ri_next <= to_unsigned(0, WIDTH);
-              elsif signed(rx) >= signed(to_signed(to_integer(unsigned(INDEX_SIZE_FP)), INDEX_SIZE_FP'length)) then
+              elsif signed(rx_delayed1) >= signed(INDEX_SIZE_FP) then
                     ri_next <= to_unsigned(INDEX_SIZE - 1, WIDTH);
                 else
-                    ri_next <= to_unsigned(to_integer(signed(rx)), WIDTH);
-                end if;
+                ri_next <= to_unsigned(to_integer(unsigned(rx_delayed1(47 downto 18))), WIDTH);                end if;
 
                 -- Check ci and update ci accordingly
-                if signed(cx) < 0 then
+                if signed(cx_delayed1) < 0 then
                     ci_next <= to_unsigned(0, WIDTH);
-                elsif signed(cx) >= signed(to_signed(to_integer(unsigned(INDEX_SIZE_FP)), INDEX_SIZE_FP'length)) then
+                elsif signed(cx_delayed1) >= signed(to_signed(to_integer(unsigned(INDEX_SIZE_FP)), INDEX_SIZE_FP'length)) then
                     ci_next <= to_unsigned(INDEX_SIZE - 1, WIDTH);
                 else
-                    ci_next <= to_unsigned(to_integer(signed(cx)), WIDTH);
-                end if;
+                    ci_next <= to_unsigned(to_integer(unsigned(cx_delayed1(47 downto 18))), WIDTH);                 end if;
                 state_next <= ComputeFractionalComponents;
 
            when ComputeFractionalComponents =>
             if counter = 3 then
                 counter_next <= 0;
                 -- Compute fractional components
-                rfrac_next <= rfrac;
-                cfrac_next <= cfrac;
+                rfrac_next <= rfrac_delayed1;
+                cfrac_next <= cfrac_delayed1;
                 state_next <= ValidateIndices;
             else
                 counter_next <= counter + 1;
             end if;
                 
             when ValidateIndices =>
-             if signed(rfrac) < 0 then
+             if signed(rfrac_delayed1) < 0 then
                 rfrac_next <= std_logic_vector(to_signed(0, FIXED_SIZE));
-            elsif signed(rfrac) >= signed(ONE_FP) then
-                rfrac_next <= ONE_FP;  -- or std_logic_vector(signed(ONE_FP))
+            elsif signed(rfrac_delayed1) >= signed(ONE_FP) then
+                rfrac_next <= ONE_FP;  
             end if;
             
-            if signed(cfrac) < 0 then
+            if signed(cfrac_delayed1) < 0 then
                 cfrac_next <= std_logic_vector(to_signed(0, FIXED_SIZE));
-            elsif signed(cfrac) >= signed(ONE_FP) then
-                cfrac_next <= ONE_FP;  -- or std_logic_vector(signed(ONE_FP))
+            elsif signed(cfrac_delayed1) >= signed(ONE_FP) then
+                cfrac_next <= ONE_FP;  
             end if;
 
                 state_next <= ComputeWeightsR;
@@ -1684,8 +1683,8 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
              when ComputeWeightsR =>
             if counter = 3 then
                 counter_next <= 0;
-                rweight1_next <= rweight1;
-                rweight2_next <= rweight2;
+                rweight1_next <= rweight1_delayed1;
+                rweight2_next <= rweight2_delayed1;
                 state_next <= ComputeWeightsC;
             else
                 counter_next <= counter + 1;
@@ -1696,8 +1695,8 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
               
             if counter = 3 then
                 counter_next <= 0;
-                cweight1_next <= cweight1;
-                cweight2_next <= cweight2;
+                cweight1_next <= cweight1_delayed1;
+                cweight2_next <= cweight2_delayed1;
                 state_next <= UpdateIndexArray0;
             else
                 counter_next <= counter + 1;
@@ -1708,7 +1707,7 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
                 if ri >= 0 and ri < INDEX_SIZE and ci >= 0 and ci < INDEX_SIZE then
                     if bram2_phase = 0 then
                         bram_addr_int <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori1)), INDEX_ADDRESS_SIZE));
-                        bram_data_out_next <= std_logic_vector(signed(data1_o_reg) + signed(cweight1));
+                        bram_data_out_next <= std_logic_vector(signed(data1_o_reg) + signed(cweight1_delayed1));
                         bram_en_int <= '1';
                         bram_we_int <= '1';
                         bram2_phase_next <= 1;
@@ -1723,7 +1722,7 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
            
                 if bram2_phase = 1 then
                     bram_addr_int <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori2)), INDEX_ADDRESS_SIZE));
-                    bram_data_out_next <= std_logic_vector(signed(data2_o_reg) + signed(cweight2));
+                    bram_data_out_next <= std_logic_vector(signed(data2_o_reg) + signed(cweight2_delayed1));
                     bram_en_int <= '1';
                     bram_we_int <= '1';
                     bram2_phase_next <= 0;

@@ -299,7 +299,7 @@ begin
      bram_out: entity work.bram_out
         generic map (
             WIDTH =>48,  -- sirina podataka
-            SIZE => 80000,  -- dubina memorije
+            SIZE => 64,  -- dubina memorije
             SIZE_WIDTH => INDEX_ADDRESS_SIZE
         )
         port map (

@@ -4,7 +4,7 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity bram_out is
     generic (WIDTH: positive := 48;
-             SIZE: positive := 80000;
+             SIZE: positive := 64;
 			 SIZE_WIDTH: positive := 6);
     port (clk_a : in std_logic;
           clk_b : in std_logic;
