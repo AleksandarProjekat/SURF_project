@@ -1643,7 +1643,8 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
               elsif signed(rx_delayed1) >= signed(INDEX_SIZE_FP) then
                     ri_next <= to_unsigned(INDEX_SIZE - 1, WIDTH);
                 else
-                ri_next <= to_unsigned(to_integer(unsigned(rx_delayed1(47 downto 18))), WIDTH);                end if;
+                    ri_next <= to_unsigned(to_integer(unsigned(rx_delayed1(47 downto 18))), WIDTH);                
+                end if;
 
                 -- Check ci and update ci accordingly
                 if signed(cx_delayed1) < 0 then
@@ -1651,7 +1652,8 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
                 elsif signed(cx_delayed1) >= signed(to_signed(to_integer(unsigned(INDEX_SIZE_FP)), INDEX_SIZE_FP'length)) then
                     ci_next <= to_unsigned(INDEX_SIZE - 1, WIDTH);
                 else
-                    ci_next <= to_unsigned(to_integer(unsigned(cx_delayed1(47 downto 18))), WIDTH);                 end if;
+                    ci_next <= to_unsigned(to_integer(unsigned(cx_delayed1(47 downto 18))), WIDTH);                
+                end if;
                 state_next <= ComputeFractionalComponents;
 
            when ComputeFractionalComponents =>
