@@ -208,7 +208,7 @@ architecture Behavioral of ip is
             FetchDYY2_1, FetchDYY2_2, FetchDYY2_3, FetchDYY2_4, ComputeDYY2, 
         CalculateDerivatives, ApplyOrientationTransform_1, ApplyOrientationTransform_2, ApplyOrientationTransform,
         SetOrientations, UpdateIndex, ComputeFractionalComponents, ValidateIndices, 
-        ComputeWeightsR, ComputeWeightsC, UpdateIndexArray0, UpdateIndexArray1, 
+        ComputeWeightsR, ComputeWeightsC, UpdateIndexArray0, UpdateIndexArray1, UpdateDataOut0, UpdateDataOut1, 
         NextSample, IncrementI, Finish
     );
 
@@ -1091,7 +1091,7 @@ begin
                 
                 bram2_phase <= bram2_phase_next;
 
-                bram_data_out <= bram_data_out_next;
+                --bram_data_out <= bram_data_out_next;
                 bram_addr1_o <= bram_addr1_o_next;
 
                 temp1_rpos_reg <= temp1_rpos_next;
@@ -1195,10 +1195,10 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
         
         bram2_phase_next <= bram2_phase;  
 
-        data1_o <= (others => '0');
+        --data1_o <= (others => '0');
         bram_addr_int <= (others => '0');
-        bram_data_out_next <= bram_data_out;
-        c1_data_o <= '0';
+       -- bram_data_out_next <= bram_data_out;
+        --c1_data_o <= '0';
         ready_o <= '0';
 
 
@@ -1713,13 +1713,17 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
                         bram_en_int <= '1';
                         bram_we_int <= '1';
                         bram2_phase_next <= 1;
-                        state_next <= UpdateIndexArray1;
+                        state_next <= UpdateDataOut0;
                     end if;
-                data1_o <= bram_data_out;
               else
                 state_next<= NextSample;
               end if;
         
+        when UpdateDataOut0 =>
+                        data1_o <= bram_data_out_next;
+
+                        state_next<= UpdateIndexArray1;
+
         when UpdateIndexArray1 =>
            
                 if bram2_phase = 1 then
@@ -1728,10 +1732,13 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, te
                     bram_en_int <= '1';
                     bram_we_int <= '1';
                     bram2_phase_next <= 0;
-                    state_next <= NextSample;
+                    state_next <= UpdateDataOut1;
                 end if;
-                data1_o <= bram_data_out;
-           
+                
+            when UpdateDataOut1 =>
+                        data1_o <= bram_data_out_next;
+
+                        state_next<= NextSample;
             when NextSample =>
                 j_next <= j_reg + 1;
                 if (j_next >= to_unsigned(2 * to_integer(iradius), WIDTH)) then

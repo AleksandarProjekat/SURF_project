@@ -15,7 +15,7 @@ type state_type is (
             FetchDYY2_1, FetchDYY2_2, FetchDYY2_3, FetchDYY2_4, ComputeDYY2, 
         CalculateDerivatives, ApplyOrientationTransform_1, ApplyOrientationTransform_2, ApplyOrientationTransform,
         SetOrientations, UpdateIndex, ComputeFractionalComponents, ValidateIndices, 
-        ComputeWeightsR, ComputeWeightsC, UpdateIndexArray0, UpdateIndexArray1, 
+        ComputeWeightsR, ComputeWeightsC, UpdateIndexArray0, UpdateIndexArray1, UpdateDataOut0, UpdateDataOut1,
         NextSample, IncrementI, Finish
 );
 
@@ -92,6 +92,9 @@ package body ip_pkg is
             when ComputeWeightsC        => return "ComputeWeightsC";
             when UpdateIndexArray0       => return "UpdateIndexArray0";
 			when UpdateIndexArray1       => return "UpdateIndexArray1";
+						when UpdateDataOut0       => return "UpdateDataOut0";
+			when UpdateDataOut1       => return "UpdateDataOut1";
+
             when NextSample             => return "NextSample";
             when IncrementI             => return "IncrementI";
             when Finish                 => return "Finish";
