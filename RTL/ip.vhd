@@ -206,7 +206,7 @@ architecture Behavioral of ip is
             FetchDYY1_1, FetchDYY1_2, FetchDYY1_3, FetchDYY1_4, ComputeDYY1,
             FetchDYY2_1, FetchDYY2_2, FetchDYY2_3, FetchDYY2_4, ComputeDYY2, 
         CalculateDerivatives, ApplyOrientationTransform_1, ApplyOrientationTransform,
-        SetOrientations, UpdateIndex, ComputeFractionalComponents, ValidateIndices, 
+        SetOrientations, UpdateIndex, ComputeFractionalComponents, ValidateRfrac, ValidateCfrac,ValidateRfrac1,
         ComputeWeightsR, ComputeWeightsC, UpdateIndexArray0, UpdateIndexArray1, UpdateDataOut0, UpdateDataOut1, 
         NextSample, IncrementI, Finish
     );
@@ -952,7 +952,7 @@ delay_temp2_rpos: entity work.delay
     port map(clk => clk,
              rst => reset,
              u1_i => ONE_FP,
-             u2_i => rfrac_delayed1, 
+             u2_i => rfrac, 
              u3_i => dx_delayed1,
             res_o => rweight1_delayed);   
             
@@ -974,7 +974,7 @@ delay_temp2_rpos: entity work.delay
     port map(clk => clk,
              rst => reset,
              u1_i => ONE_FP,
-             u2_i => rfrac_delayed1, 
+             u2_i => rfrac, 
              u3_i => dy_delayed1,
             res_o => rweight2_delayed);   
             
@@ -996,7 +996,7 @@ delay_temp2_rpos: entity work.delay
     port map(clk => clk,
              rst => reset,
              u1_i => ONE_FP,
-             u2_i => cfrac_delayed1, 
+             u2_i => cfrac, 
              u3_i => rweight1_delayed1,
             res_o => cweight1_delayed);   
             
@@ -1018,7 +1018,7 @@ delay_temp2_rpos: entity work.delay
     port map(clk => clk,
              rst => reset,
              u1_i => ONE_FP,
-             u2_i => cfrac_delayed1, 
+             u2_i => cfrac, 
              u3_i => rweight2_delayed1,
             res_o => cweight2_delayed);   
             
@@ -1683,33 +1683,47 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
                 state_next <= ComputeFractionalComponents;
 
            when ComputeFractionalComponents =>
-            if counter = 3 then
-                counter_next <= 0;
-                -- Compute fractional components
-                rfrac_next <= rfrac_delayed1;
-                cfrac_next <= cfrac_delayed1;
-                state_next <= ValidateIndices;
-            else
-                counter_next <= counter + 1;
-            end if;
-                
-            when ValidateIndices =>
-             if signed(rfrac_delayed1) < 0 then
-                rfrac_next <= std_logic_vector(to_signed(0, FIXED_SIZE));
-            elsif signed(rfrac_delayed1) >= signed(ONE_FP) then
-                rfrac_next <= ONE_FP;  
-            end if;
+                 rfrac_next <= rfrac_delayed1;
+                 cfrac_next <= cfrac_delayed1;
+
+                state_next <= ValidateRfrac;
+
+            when ValidateRfrac =>
             
-            if signed(cfrac_delayed1) < 0 then
-                cfrac_next <= std_logic_vector(to_signed(0, FIXED_SIZE));
-            elsif signed(cfrac_delayed1) >= signed(ONE_FP) then
-                cfrac_next <= ONE_FP;  
-            end if;
 
-                state_next <= ComputeWeightsR;
+                     if signed(rfrac_delayed1) < 0 then
+                        rfrac_next <= std_logic_vector(to_signed(0, FIXED_SIZE));
+                                             state_next <= ValidateRfrac1;
 
+                    elsif signed(rfrac_delayed1) >= signed(ONE_FP) then
+                    
+                        rfrac_next <= ONE_FP;  
+                                             state_next <= ValidateRfrac1;
+                   
+                    end if;
+                     state_next <= ValidateRfrac1;
+           
+           when ValidateRfrac1 =>
+                       rfrac_next <= rfrac;
+                       state_next <= ValidateCfrac;
+
+           when ValidateCfrac =>
+  
+                    if signed(cfrac_delayed1) < 0 then
+                        cfrac_next <= std_logic_vector(to_signed(0, FIXED_SIZE));
+                                             state_next <= ComputeWeightsR;
+
+                    elsif signed(cfrac_delayed1) >= signed(ONE_FP) then
+                        cfrac_next <= ONE_FP; 
+                                             state_next <= ComputeWeightsR;
+  
+                    end if;
+        
+                        state_next <= ComputeWeightsR;
+            
              when ComputeWeightsR =>
-            if counter = 3 then
+
+            if counter = 2 then
                 counter_next <= 0;
                 rweight1_next <= rweight1_delayed1;
                 rweight2_next <= rweight2_delayed1;
@@ -1721,21 +1735,22 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
         when ComputeWeightsC =>  
                         bram2_phase_next <= 0;
               
-            if counter = 3 then
+            if counter = 2 then
                 counter_next <= 0;
                 cweight1_next <= cweight1_delayed1;
                 cweight2_next <= cweight2_delayed1;
+
                 state_next <= UpdateIndexArray0;
             else
                 counter_next <= counter + 1;
             end if;
                 
            when UpdateIndexArray0 =>
-          
+          if counter = 4 then
+                counter_next <= 0;
                 if ri >= 0 and ri < INDEX_SIZE and ci >= 0 and ci < INDEX_SIZE then
                     if bram2_phase = 0 then
                         bram_addr_int <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori1)), INDEX_ADDRESS_SIZE));
-                        bram_data_out_next <= std_logic_vector(signed(data1_o_reg) + signed(cweight1_delayed1));
                         bram_en_int <= '1';
                         bram_we_int <= '1';
                         bram2_phase_next <= 1;
@@ -1744,9 +1759,11 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
               else
                 state_next<= NextSample;
               end if;
-        
+        else
+                counter_next <= counter + 1;
+            end if;
         when UpdateDataOut0 =>
-                        data1_o <= bram_data_out_next;
+                        data1_o <= cweight1;
 
                         state_next<= UpdateIndexArray1;
 
@@ -1754,15 +1771,15 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
            
                 if bram2_phase = 1 then
                     bram_addr_int <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori2)), INDEX_ADDRESS_SIZE));
-                    bram_data_out_next <= std_logic_vector(signed(data2_o_reg) + signed(cweight2_delayed1));
+                    data1_o <= cweight2;
                     bram_en_int <= '1';
                     bram_we_int <= '1';
                     bram2_phase_next <= 0;
                     state_next <= UpdateDataOut1;
                 end if;
+          
                 
             when UpdateDataOut1 =>
-                        data1_o <= bram_data_out_next;
 
                         state_next<= NextSample;
             when NextSample =>

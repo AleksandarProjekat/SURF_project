@@ -145,7 +145,8 @@ begin
     iradius_s <= to_unsigned(17, WIDTH); -- 17 je decimalna vrednost za iradius
     fracr_s <= "000000000000000000000000000000001010000011000010"; --  0.15699263069083616 u binarnom format
     fracc_s <= "000000000000000000000000000000011100110110110110"; --  0.45089018167010253 u binarnom formatu
-    spacing_s <= "000000000000000000000000000000000110100110111001"; -- 0.10324486859844186 u binarnom formatu
+    spacing_s <= "000000000000000000000000000000000110100110111001"; -- 0.103244781494140625 u binarnom formatu
+    
     iy_s <= to_unsigned(38, WIDTH); -- 38 je decimalna vrednost za iy
     ix_s <= to_unsigned(64, WIDTH); -- 64 je decimalna vrednost za ix
     step_s <= to_unsigned(2, WIDTH); -- 2 je decimalna vrednost za step
