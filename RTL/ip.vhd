@@ -194,9 +194,8 @@ architecture Behavioral of ip is
 
  type state_type is (
             idle, StartLoop, InnerLoop, 
-            ComputeRPos1, ComputeRPos2, ComputeRPos3, ComputeRPos4, ComputeRPos5,
-            ComputeCPos1, ComputeCPos2, ComputeCPos3, ComputeCPos4, ComputeCPos5,
-            SetRXandCX, BoundaryCheck, PositionValidation, ComputePosition, ProcessSample,
+            ComputeRPos1, ComputeRPos2, ComputeRPos3, ComputeRPos4, ComputeRPos5,           
+            SetRXandCX, BoundaryCheck, ComputePosition, ProcessSample,
             ComputeDerivatives,
             WaitForData1,WaitForData2,WaitForData3,WaitForData4,
             WaitForData5,WaitForData6,WaitForData7,WaitForData8,
@@ -206,7 +205,7 @@ architecture Behavioral of ip is
             FetchDXX2_1, FetchDXX2_2, FetchDXX2_3, FetchDXX2_4, ComputeDXX2, 
             FetchDYY1_1, FetchDYY1_2, FetchDYY1_3, FetchDYY1_4, ComputeDYY1,
             FetchDYY2_1, FetchDYY2_2, FetchDYY2_3, FetchDYY2_4, ComputeDYY2, 
-        CalculateDerivatives, ApplyOrientationTransform_1, ApplyOrientationTransform_2, ApplyOrientationTransform,
+        CalculateDerivatives, ApplyOrientationTransform_1, ApplyOrientationTransform,
         SetOrientations, UpdateIndex, ComputeFractionalComponents, ValidateIndices, 
         ComputeWeightsR, ComputeWeightsC, UpdateIndexArray0, UpdateIndexArray1, UpdateDataOut0, UpdateDataOut1, 
         NextSample, IncrementI, Finish
@@ -1326,7 +1325,14 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
             if counter = 3 then
                 counter_next <= 0;
                 temp1_rpos_next <= temp1_rpos_delayed1;
+                temp1_cpos_next <= temp1_cpos_delayed1;
+                
+                addSampleStep_next <= to_unsigned(to_integer(unsigned(scale(FIXED_SIZE - 1 downto 18))), WIDTH);
+                
+                r_next <= signed(r_delayed1);
+                c_next <= signed(c_delayed1);
                 state_next <= ComputeRPos2;
+
             else
                 counter_next <= counter + 1;
                 state_next <= ComputeRPos1;
@@ -1336,6 +1342,8 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
             if counter = 3 then
                 counter_next <= 0;
                 temp2_rpos_next <= temp2_rpos_delayed1;
+                temp2_cpos_next <= temp2_cpos_delayed1;
+
                 state_next <= ComputeRPos3;
             else
                 counter_next <= counter + 1;
@@ -1346,6 +1354,8 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
             if counter = 3 then
                 counter_next <= 0;
                 temp3_rpos_next <= temp3_rpos_delayed1;
+                temp3_cpos_next <= temp3_cpos_delayed1;
+                
                 state_next <= ComputeRPos4;
             else
                 counter_next <= counter + 1;
@@ -1356,6 +1366,8 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
             if counter = 3 then
                 counter_next <= 0;
                 temp4_rpos_next <= temp4_rpos_delayed1;
+                temp4_cpos_next <= temp4_cpos_delayed1;
+
                 state_next <= ComputeRPos5;
             else
                 counter_next <= counter + 1;
@@ -1366,62 +1378,14 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
             if counter = 3 then
                 counter_next <= 0;
                 rpos_next <= rpos_delayed1;
-                state_next <= ComputeCPos1;
+                cpos_next <= cpos_delayed1;
+
+                state_next <= SetRXandCX;
             else
                 counter_next <= counter + 1;
                 state_next <= ComputeRPos5;
             end if;
-
-        when ComputeCPos1 =>
-            if counter = 3 then
-                counter_next <= 0;
-                temp1_cpos_next <= temp1_cpos_delayed1;
-                state_next <= ComputeCPos2;
-            else
-                counter_next <= counter + 1;
-                state_next <= ComputeCPos1;
-            end if;
-
-        when ComputeCPos2 =>
-            if counter = 3 then
-                counter_next <= 0;
-                temp2_cpos_next <= temp2_cpos_delayed1;
-                state_next <= ComputeCPos3;
-            else
-                counter_next <= counter + 1;
-                state_next <= ComputeCPos2;
-            end if;
-
-        when ComputeCPos3 =>
-            if counter = 3 then
-                counter_next <= 0;
-                temp3_cpos_next <= temp3_cpos_delayed1;
-                state_next <= ComputeCPos4;
-            else
-                counter_next <= counter + 1;
-                state_next <= ComputeCPos3;
-            end if;
-
-        when ComputeCPos4 =>
-            if counter = 3 then
-                counter_next <= 0;
-                temp4_cpos_next <= temp4_cpos_delayed1;
-                state_next <= ComputeCPos5;
-            else
-                counter_next <= counter + 1;
-                state_next <= ComputeCPos4;
-            end if;
-
-        when ComputeCPos5 =>
-            if counter = 3 then
-                counter_next <= 0;
-                cpos_next <= cpos_delayed1;
-                state_next <= SetRXandCX;
-            else
-                counter_next <= counter + 1;
-                state_next <= ComputeCPos5;
-            end if;
-
+     
         when SetRXandCX =>
             if counter = 3 then
                 counter_next <= 0;
@@ -1440,24 +1404,13 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
                    (signed(cx) > signed(MINUS_ONE_FP) and signed(cx) <  signed(INDEX_SIZE_FP))) then
                     state_next <= NextSample;
                 else
-                    state_next <= PositionValidation;
+                    state_next <= ComputePosition;
                 end if;
             else
                 counter_next <= counter + 1;
                 state_next <= BoundaryCheck;
             end if;
-
-        when PositionValidation =>
-            if counter = 3 then
-                counter_next <= 0;
-                addSampleStep_next <= to_unsigned(to_integer(unsigned(scale(FIXED_SIZE - 1 downto 18))), WIDTH);
-                r_next <= signed(r_delayed1);
-                c_next <= signed(c_delayed1);
-                state_next <= ComputePosition;
-            else
-                counter_next <= counter + 1;
-                state_next <= PositionValidation;
-            end if;
+      
 
         when ComputePosition =>   
             if counter = 3 then
@@ -1676,21 +1629,15 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
             if counter = 3 then
                 counter_next <= 0;
                 dx1_next <= dx1_delayed1; 
-                dy1_next <= dy1_delayed1;
-                state_next <= ApplyOrientationTransform_2;
-            else
-                counter_next <= counter + 1;
-            end if;
-                
-        when ApplyOrientationTransform_2 =>
-            if counter = 3 then
-                counter_next <= 0;
                 dx2_next <= dx2_delayed1; 
+                dy1_next <= dy1_delayed1;
                 dy2_next <= dy2_delayed1;
+
                 state_next <= ApplyOrientationTransform;
             else
                 counter_next <= counter + 1;
             end if;
+                
 
         when ApplyOrientationTransform =>
             if counter = 3 then
