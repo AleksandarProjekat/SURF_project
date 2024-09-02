@@ -389,8 +389,8 @@ delay_temp2_rpos: entity work.delay
             )
     port map(clk => clk,
              rst => reset,
-             u1_i => temp1_rpos_reg,
-             u2_i => temp2_rpos_reg,
+             u1_i => temp1_rpos_delayed1,
+             u2_i => temp2_rpos_delayed1,
             ADD_SUB => '0',  
             res_o => temp3_rpos_delayed);
             
@@ -411,7 +411,7 @@ delay_temp2_rpos: entity work.delay
     port map(clk => clk,
              rst => reset,
              u1_i => std_logic_vector(step),
-             u2_i => temp3_rpos_reg,
+             u2_i => temp3_rpos_delayed1,
              u3_i => fracr,
             res_o => temp4_rpos_delayed);
             
@@ -432,7 +432,7 @@ delay_temp2_rpos: entity work.delay
            FIXED_SIZE => FIXED_SIZE)
     port map(clk => clk,
              rst => reset,
-             u1_i => temp4_rpos_reg,
+             u1_i => temp4_rpos_delayed1,
              spacing => spacing,
             res_o => rpos_delayed);  
                
@@ -505,8 +505,8 @@ delay_temp2_rpos: entity work.delay
             )
     port map(clk => clk,
              rst => reset,
-             u1_i => temp1_cpos_reg,
-             u2_i => temp2_cpos_reg,
+             u1_i => temp1_cpos_delayed1,
+             u2_i => temp2_cpos_delayed1,
              ADD_SUB => '0',
             res_o => temp3_cpos_delayed);
             
@@ -528,7 +528,7 @@ delay_temp2_rpos: entity work.delay
     port map(clk => clk,
              rst => reset,
              u1_i => std_logic_vector(step),
-             u2_i => temp3_cpos_reg,
+             u2_i => temp3_cpos_delayed1,
              u3_i => fracc,
             res_o => temp4_cpos_delayed);      
         
@@ -549,7 +549,7 @@ delay_temp2_rpos: entity work.delay
            FIXED_SIZE => FIXED_SIZE)
     port map(clk => clk,
              rst => reset,
-             u1_i => temp4_cpos_reg,
+             u1_i => temp4_cpos_delayed1,
              spacing => spacing,
             res_o => cpos_delayed); 
               
@@ -570,7 +570,7 @@ delay_temp2_rpos: entity work.delay
            FIXED_SIZE => FIXED_SIZE)
     port map(clk => clk,
              rst => reset,
-             u1_i => rpos_reg,
+             u1_i => rpos_delayed1,
              u2_i => HALF_INDEX_SIZE_FP, --2.0
              u3_i => HALF_FP,   --0.5
             res_o => rx_delayed);
@@ -591,7 +591,7 @@ delay_temp2_rpos: entity work.delay
            FIXED_SIZE => FIXED_SIZE)
     port map(clk => clk,
              rst => reset,
-             u1_i => cpos_reg,
+             u1_i => cpos_delayed1,
              u2_i => HALF_INDEX_SIZE_FP, --2.0
              u3_i => HALF_FP,   --0.5
             res_o => cx_delayed);   
@@ -704,7 +704,7 @@ delay_temp2_rpos: entity work.delay
     port map(clk => clk,
              rst => reset,
              u1_i => i_cose,
-             spacing => dxx_reg,
+             spacing => dxx_delayed1,
             res_o => dx1_delayed);  
                
      delay_dx1: entity work.delay
@@ -725,7 +725,7 @@ delay_temp2_rpos: entity work.delay
     port map(clk => clk,
              rst => reset,
              u1_i => i_sine,
-             spacing => dyy_reg,
+             spacing => dyy_delayed1,
             res_o => dx2_delayed);  
                
      delay_dx2: entity work.delay
@@ -745,8 +745,8 @@ delay_temp2_rpos: entity work.delay
            FIXED_SIZE => FIXED_SIZE)
     port map(clk => clk,
              rst => reset,
-             u1_i => dx1_reg,
-             u2_i => dx2_reg,
+             u1_i => dx1_delayed1,
+             u2_i => dx2_delayed1,
              ADD_SUB => '0',
             res_o => dx_delayed);  
                
@@ -768,7 +768,7 @@ delay_temp2_rpos: entity work.delay
     port map(clk => clk,
              rst => reset,
              u1_i => i_sine,
-             spacing => dxx_reg,
+             spacing => dxx_delayed1,
             res_o => dy1_delayed);  
                
      delay_dy1: entity work.delay
@@ -789,7 +789,7 @@ delay_temp2_rpos: entity work.delay
     port map(clk => clk,
              rst => reset,
              u1_i => i_cose,
-             spacing => dyy_reg,
+             spacing => dyy_delayed1,
             res_o => dy2_delayed);  
                
      delay_dy2: entity work.delay
@@ -809,8 +809,8 @@ delay_temp2_rpos: entity work.delay
            FIXED_SIZE => FIXED_SIZE)
     port map(clk => clk,
              rst => reset,
-             u1_i => dy1_reg,
-             u2_i => dy2_reg,
+             u1_i => dy1_delayed1,
+             u2_i => dy2_delayed1,
              ADD_SUB => '1',
             res_o => dy_delayed);  
                
@@ -832,7 +832,7 @@ delay_temp2_rpos: entity work.delay
            WIDTH => WIDTH)
     port map(clk => clk,
              rst => reset,
-             u1_i => rx,
+             u1_i => rx_delayed1,
              u2_i => std_logic_vector(ri),
              ADD_SUB => '1',
             res_o => rfrac_delayed);  
@@ -855,7 +855,7 @@ delay_temp2_rpos: entity work.delay
            WIDTH => WIDTH)
     port map(clk => clk,
              rst => reset,
-             u1_i => cx,
+             u1_i => cx_delayed1,
              u2_i => std_logic_vector(ci),
              ADD_SUB => '1',
             res_o => cfrac_delayed);  
@@ -878,8 +878,8 @@ delay_temp2_rpos: entity work.delay
     port map(clk => clk,
              rst => reset,
              u1_i => ONE_FP,
-             u2_i => rfrac, 
-             u3_i => dx_reg,
+             u2_i => rfrac_delayed1, 
+             u3_i => dx_delayed1,
             res_o => rweight1_delayed);   
             
       delay_rweight1: entity work.delay
@@ -900,8 +900,8 @@ delay_temp2_rpos: entity work.delay
     port map(clk => clk,
              rst => reset,
              u1_i => ONE_FP,
-             u2_i => rfrac, 
-             u3_i => dy_reg,
+             u2_i => rfrac_delayed1, 
+             u3_i => dy_delayed1,
             res_o => rweight2_delayed);   
             
       delay_rweight2: entity work.delay
@@ -922,8 +922,8 @@ delay_temp2_rpos: entity work.delay
     port map(clk => clk,
              rst => reset,
              u1_i => ONE_FP,
-             u2_i => cfrac, 
-             u3_i => rweight1,
+             u2_i => cfrac_delayed1, 
+             u3_i => rweight1_delayed1,
             res_o => cweight1_delayed);   
             
       delay_cweight1: entity work.delay
@@ -944,8 +944,8 @@ delay_temp2_rpos: entity work.delay
     port map(clk => clk,
              rst => reset,
              u1_i => ONE_FP,
-             u2_i => cfrac, 
-             u3_i => rweight2,
+             u2_i => cfrac_delayed1, 
+             u3_i => rweight2_delayed1,
             res_o => cweight2_delayed);   
             
       delay_cweight2: entity work.delay
@@ -1120,7 +1120,7 @@ end process;
 
 
     -- Kombinacioni proces za odredjivanje sledecih stanja i vrednosti signala
-process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, temp1_rpos_reg, temp2_rpos_reg, temp3_rpos_reg, temp4_rpos_reg, temp1_cpos_reg, temp2_cpos_reg, temp3_cpos_reg, temp4_cpos_reg, rpos_reg, cpos_reg, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, ri, ci, r, c, rx, cx, rfrac, cfrac, dx1_reg, dx2_reg, dx_reg, dy1_reg, dy2_reg, dy_reg, dxx_reg, dyy_reg, weight, rweight1, rweight2, cweight1, cweight2, ori1, ori2, dxx1, dxx2, dyy1, dyy2, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_reg, rom_addr_int, data1_o_reg, data2_o_reg, bram_data_out, bram_addr1_o_next, temp1_rpos_delayed1, temp2_rpos_delayed1, temp3_rpos_delayed1, temp4_rpos_delayed1, temp1_cpos_delayed1, temp2_cpos_delayed1, temp3_cpos_delayed1, temp4_cpos_delayed1, rpos_delayed1, cpos_delayed1, rx_delayed1, cx_delayed1, r_delayed1, c_delayed1, dxx_delayed1, dyy_delayed1, dx1_delayed1, dx2_delayed1, dx_delayed1, dy1_delayed1, dy2_delayed1, dy_delayed1, rfrac_delayed1, cfrac_delayed1, rweight1_delayed1, rweight2_delayed1, cweight1_delayed1, cweight2_delayed1)
+process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, ri, ci, weight, ori1, ori2, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_reg, rom_addr_int, data1_o_reg, data2_o_reg, bram_data_out, bram_addr1_o_next, temp1_rpos_delayed1, temp2_rpos_delayed1, temp3_rpos_delayed1, temp4_rpos_delayed1, temp1_cpos_delayed1, temp2_cpos_delayed1, temp3_cpos_delayed1, temp4_cpos_delayed1, rpos_delayed1, cpos_delayed1, rx_delayed1, cx_delayed1, r_delayed1, c_delayed1, dxx_delayed1, dyy_delayed1, dx1_delayed1, dx2_delayed1, dx_delayed1, dy1_delayed1, dy2_delayed1, dy_delayed1, rfrac_delayed1, cfrac_delayed1, rweight1_delayed1, rweight2_delayed1, cweight1_delayed1, cweight2_delayed1)
     begin
         -- Default assignments
         state_next <= state_reg;
