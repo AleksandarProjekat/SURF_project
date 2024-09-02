@@ -309,6 +309,15 @@ signal cweight2_delayed, cweight2_delayed1 : std_logic_vector(FIXED_SIZE - 1 dow
     signal rom_data_internal : std_logic_vector(FIXED_SIZE - 1 downto 0);
     signal rom_enable : std_logic;
     signal rom_addr_int, rom_addr_next : std_logic_vector(5 downto 0);  -- Dodato za internu adresu
+    
+    signal rpos_squared_delayed, rpos_squared_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+    signal cpos_squared_delayed, cpos_squared_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
+    
+    signal rpos_squared_reg : std_logic_vector(FIXED_SIZE - 1 downto 0);
+    signal cpos_squared_reg : std_logic_vector(FIXED_SIZE - 1 downto 0);
+    signal rpos_squared_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
+    signal cpos_squared_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
+    signal rom_adress_delayed, rom_adress_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
 
     -- Definisanje internog signala za adrese i podatke za ULAZNI bram
     signal bram_addr1_o_next : std_logic_vector(PIXEL_SIZE-1 downto 0);
@@ -653,6 +662,72 @@ delay_temp2_rpos: entity work.delay
         din => c_delayed,  -- Signal sa DSP-a
         dout => c_delayed1 -- Signal nakon kasnjenja
         ); 
+    
+    --ZA GENERISANJE ADRESE ROM
+   rpos_squared_inc_dsp: dsp4
+     generic map (
+           FIXED_SIZE => FIXED_SIZE)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => rpos_reg,
+             spacing => rpos_reg,
+            res_o => rpos_squared_delayed);  
+               
+     delay_rpos_squared: entity work.delay
+    generic map (
+        DELAY_CYCLES => 3,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => rpos_squared_delayed,  -- Signal sa DSP-a
+        dout => rpos_squared_delayed1 -- Signal nakon kasnjenja
+        );
+                   
+    cpos_squared_inc_dsp: dsp4
+     generic map (
+           FIXED_SIZE => FIXED_SIZE)
+    port map(clk => clk,
+             rst => reset,
+             u1_i => cpos_reg,
+             spacing => cpos_reg,
+            res_o => cpos_squared_delayed);  
+               
+     delay_cpos_squared: entity work.delay
+    generic map (
+        DELAY_CYCLES => 3,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => cpos_squared_delayed,  -- Signal sa DSP-a
+        dout => cpos_squared_delayed1 -- Signal nakon kasnjenja
+        );     
+              
+    rom_adress_inc_dsp: dsp2
+     generic map (
+           FIXED_SIZE => FIXED_SIZE
+            )
+    port map(clk => clk,
+             rst => reset,
+             u1_i => rpos_squared_reg,
+             u2_i => cpos_squared_reg,
+            ADD_SUB => '0',  
+            res_o => rom_adress_delayed);
+            
+       delay_rom_adress: entity work.delay
+    generic map (
+        DELAY_CYCLES => 3,
+        SIGNAL_WIDTH => FIXED_SIZE
+    )
+    port map (
+        clk => clk,
+        rst => reset,
+        din => rom_adress_delayed,  -- Signal sa DSP-a
+        dout => rom_adress_delayed1  -- Signal nakon kasnjenja
+    );      
           
         dxx_inc_dsp: dsp8
      generic map (
@@ -970,13 +1045,14 @@ delay_temp2_rpos: entity work.delay
         port map (
             clk_a => clk,
             en_a => rom_enable,
-            addr_a => rom_addr_int,
-            data_a_o => rom_data_reg
+            addr_a => rom_addr_next,
+            data_a_o => rom_data_internal
         );
 
     -- Povezivanje signala za ROM
     rom_enable <= '1' when state_reg = ProcessSample else '0';
-
+    
+    
 -- Sekvencijalni proces za registre
 process (clk)
 begin
@@ -1038,6 +1114,8 @@ begin
             
             rom_addr_int <= (others => '0');
             rom_data_reg <= (others => '0');
+            rpos_squared_reg <= (others => '0');
+            cpos_squared_reg <= (others => '0');
             
             bram2_phase <= 0;
             bram_addr1_o <= (others => '0');
@@ -1104,10 +1182,11 @@ begin
                 temp3_cpos_reg <= temp3_cpos_next;
                 temp4_cpos_reg <= temp4_cpos_next;
 
-                if rom_enable = '1' then
-                    rom_data_reg <= rom_data;
-                    rom_addr_int <= rom_addr_next;
-                end if;
+rpos_squared_reg <= rpos_squared_next;
+cpos_squared_reg <= cpos_squared_next;
+
+--rom_data_internal <= rom_data;
+               
                 
                if bram2_phase = 0 then
                     data1_o_reg <= bram_data_out;
@@ -1120,7 +1199,7 @@ end process;
 
 
     -- Kombinacioni proces za odredjivanje sledecih stanja i vrednosti signala
-process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, ri, ci, weight, ori1, ori2, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_reg, rom_addr_int, data1_o_reg, data2_o_reg, bram_data_out, bram_addr1_o_next, temp1_rpos_delayed1, temp2_rpos_delayed1, temp3_rpos_delayed1, temp4_rpos_delayed1, temp1_cpos_delayed1, temp2_cpos_delayed1, temp3_cpos_delayed1, temp4_cpos_delayed1, rpos_delayed1, cpos_delayed1, rx_delayed1, cx_delayed1, r_delayed1, c_delayed1, dxx_delayed1, dyy_delayed1, dx1_delayed1, dx2_delayed1, dx_delayed1, dy1_delayed1, dy2_delayed1, dy_delayed1, rfrac_delayed1, cfrac_delayed1, rweight1_delayed1, rweight2_delayed1, cweight1_delayed1, cweight2_delayed1)
+process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, ri, ci, weight, ori1, ori2, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_internal, rom_addr_int, data1_o_reg, data2_o_reg, bram_data_out, bram_addr1_o_next, temp1_rpos_delayed1, temp2_rpos_delayed1, temp3_rpos_delayed1, temp4_rpos_delayed1, temp1_cpos_delayed1, temp2_cpos_delayed1, temp3_cpos_delayed1, temp4_cpos_delayed1, rpos_delayed1, cpos_delayed1, rx_delayed1, cx_delayed1, r_delayed1, c_delayed1, dxx_delayed1, dyy_delayed1, dx1_delayed1, dx2_delayed1, dx_delayed1, dy1_delayed1, dy2_delayed1, dy_delayed1, rfrac_delayed1, cfrac_delayed1, rweight1_delayed1, rweight2_delayed1, cweight1_delayed1, cweight2_delayed1)
     begin
         -- Default assignments
         state_next <= state_reg;
@@ -1144,7 +1223,10 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, ir
         rx_next <= rx_delayed1;
         cx_next <= cx_delayed1;
         
-       
+        rpos_squared_next <= rpos_squared_delayed1;
+        cpos_squared_next <= cpos_squared_delayed1;
+        
+ 
         addSampleStep_next <= addSampleStep;
         r_next <= signed(r_delayed1);
         c_next <= signed(c_delayed1);
@@ -1191,7 +1273,7 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, ir
         bram_en_int <= '0'; -- Defaultna vrednost za bram_en1_o
         bram_we_int <= '0'; -- Defaultna vrednost za bram_we1_o
         
-        rom_addr_next <= rom_addr_int; -- Defaultna vrednost za rom_addr_next
+        rom_addr_next <= rom_adress_delayed1(23 downto 18); -- Defaultna vrednost za rom_addr_next
         
         bram2_phase_next <= bram2_phase;  
 
@@ -1392,12 +1474,9 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, ir
             end if;
 
             when ProcessSample =>
-    rom_addr_next <= std_logic_vector(to_unsigned(
-                    abs((to_integer(unsigned(rpos_reg)) * to_integer(unsigned(rpos_reg)) + 
-                         to_integer(unsigned(cpos_reg)) * to_integer(unsigned(cpos_reg))) + 100000) mod 40, 
-                    rom_addr_next'length));
+    rom_addr_next <= rom_adress_delayed1(23 downto 18);
              
-                weight_next <= std_logic_vector(rom_data_reg);
+                weight_next <= std_logic_vector(rom_data_internal);
                 state_next <= ComputeDerivatives;
 
              when ComputeDerivatives =>
@@ -1768,6 +1847,6 @@ process (counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, ir
     addr_do1_o <= bram_addr_int;
     c1_data_o <= bram_en_int;
     bram_we1_o <= bram_we_int;
-    rom_addr <= rom_addr_int;  -- Azuriranje rom_addr signala
+    rom_addr <= rom_addr_next;  -- Azuriranje rom_addr signala
     
 end Behavioral;
