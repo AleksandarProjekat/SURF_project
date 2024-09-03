@@ -34,7 +34,7 @@ architecture Behavioral of tb_ip is
     signal step_s : unsigned(WIDTH - 1 downto 0) := (others => '0');
     signal i_cose_s : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
     signal i_sine_s : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
-    signal scale_s : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
+    signal scale_s : unsigned(WIDTH- 1 downto 0) := (others => '0');
     
     signal bram_addr1_o_s : std_logic_vector(PIXEL_SIZE-1 downto 0);
     signal bram_data_i_s : std_logic_vector(FIXED_SIZE-1 downto 0) := (others => '0');
@@ -123,16 +123,18 @@ begin
     
         -- Initialize the core
         report "Initializing the core!";
-        iradius_s <= to_unsigned(17, WIDTH);
-        fracr_s <= "000000000000000000000000000000001010000011000010";
-        fracc_s <= "000000000000000000000000000000011100110110110110";
-        spacing_s <= "000000000000000000000000000000000110100110111001";
-        iy_s <= to_unsigned(38, WIDTH);
-        ix_s <= to_unsigned(64, WIDTH);
+        
+        -----ITERACIJA 0 
+        iradius_s <= to_unsigned(24, WIDTH);
+        fracr_s <= "000000000000000000000000000000000100010101100110";  --0.06777191162109375
+        fracc_s <= "000000000000000000000000000000000100000110010011";   --0.06403732299804688
+        spacing_s <= "000000000000000000000000000000000100101010000000";  --0.0727539062
+        iy_s <= to_unsigned(32, WIDTH);
+        ix_s <= to_unsigned(45, WIDTH);
         step_s <= to_unsigned(2, WIDTH);
-        i_cose_s <= "000000000000000000000000000000011011011001010001";
-        i_sine_s <= "000000000000000000000000000000111001110101110010";
-        scale_s <= "000000000000000000000000000011001110101000000100";
+        i_cose_s <= "111111111111111111111111111111111101101111011100";   --  -0.0352935791015625
+        i_sine_s <= "000000000000000000000000000000111111111101011100";   --   0.9993743896484375
+        scale_s <= to_unsigned(4, WIDTH);
         rom_en_a_s <= '1';   
 
         -- Start the IP core processing

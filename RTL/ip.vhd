@@ -44,7 +44,7 @@ entity ip is
         step : in unsigned(WIDTH - 1 downto 0);
         i_cose : in std_logic_vector(FIXED_SIZE - 1 downto 0);
         i_sine : in std_logic_vector(FIXED_SIZE - 1 downto 0);
-        scale : in std_logic_vector(FIXED_SIZE - 1 downto 0);
+        scale : in unsigned(WIDTH - 1 downto 0);
         ---------------MEM INTERFEJS ZA SLIKU--------------------
         bram_addr1_o : out std_logic_vector(PIXEL_SIZE-1 downto 0);
         bram_data_i : in std_logic_vector(FIXED_SIZE-1 downto 0);
@@ -215,7 +215,7 @@ architecture Behavioral of ip is
     constant HALF_INDEX_SIZE_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_unsigned(4*131072, FIXED_SIZE));  -- 2.0
     constant ONE_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_unsigned(2*131072, FIXED_SIZE));  -- 1.0
     constant HALF_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_unsigned(131072, FIXED_SIZE));  -- 0.5
-    constant MINUS_ONE_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_signed(-131072, FIXED_SIZE));  -- -1.0
+    constant MINUS_ONE_FP : std_logic_vector(FIXED_SIZE - 1 downto 0) := std_logic_vector(to_signed(-2*131072, FIXED_SIZE));  -- -1.0
 
 signal temp1_rpos_delayed, temp1_rpos_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
 signal temp2_rpos_delayed, temp2_rpos_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
@@ -956,7 +956,7 @@ delay_temp2_rpos: entity work.delay
     port map(clk => clk,
              rst => reset,
              u1_i => ONE_FP,
-             u2_i => rfrac, 
+             u2_i => rfrac_next, 
              u3_i => dx_delayed1,
             res_o => rweight1_delayed);   
             
@@ -978,7 +978,7 @@ delay_temp2_rpos: entity work.delay
     port map(clk => clk,
              rst => reset,
              u1_i => ONE_FP,
-             u2_i => rfrac, 
+             u2_i => rfrac_next, 
              u3_i => dy_delayed1,
             res_o => rweight2_delayed);   
             
@@ -1000,7 +1000,7 @@ delay_temp2_rpos: entity work.delay
     port map(clk => clk,
              rst => reset,
              u1_i => ONE_FP,
-             u2_i => cfrac, 
+             u2_i => cfrac_next, 
              u3_i => rweight1_delayed1,
             res_o => cweight1_delayed);   
             
@@ -1022,7 +1022,7 @@ delay_temp2_rpos: entity work.delay
     port map(clk => clk,
              rst => reset,
              u1_i => ONE_FP,
-             u2_i => cfrac, 
+             u2_i => cfrac_next, 
              u3_i => rweight2_delayed1,
             res_o => cweight2_delayed);   
             
@@ -1347,7 +1347,8 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
                 temp1_rpos_next <= temp1_rpos_delayed1;
                 temp1_cpos_next <= temp1_cpos_delayed1;
                 
-                addSampleStep_next <= to_unsigned(to_integer(unsigned(scale(FIXED_SIZE - 1 downto 18))), WIDTH);
+                --addSampleStep_next <= to_unsigned(to_integer(unsigned(scale(FIXED_SIZE - 1 downto 18))), WIDTH);
+                addSampleStep_next <= scale;
                 
                 r_next <= signed(r_delayed1);
                 c_next <= signed(c_delayed1);
@@ -1418,13 +1419,13 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
             end if;
 
         when BoundaryCheck =>
-            if counter = 3 then
+            if counter = 5 then
                 counter_next <= 0;
-                if (signed(rx) > signed(MINUS_ONE_FP) and signed(rx) < signed(INDEX_SIZE_FP) and
-                   (signed(cx) > signed(MINUS_ONE_FP) and signed(cx) <  signed(INDEX_SIZE_FP))) then
-                    state_next <= NextSample;
-                else
+                if (signed(rx_delayed1) > signed(MINUS_ONE_FP) and signed(rx_delayed1) < signed(INDEX_SIZE_FP) and
+                   (signed(cx_delayed1) > signed(MINUS_ONE_FP) and signed(cx_delayed1) <  signed(INDEX_SIZE_FP))) then
                     state_next <= ComputePosition;
+                else
+                    state_next <= NextSample;
                 end if;
             else
                 counter_next <= counter + 1;
@@ -1433,10 +1434,10 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
       
 
         when ComputePosition =>   
-            if counter = 3 then
+            if counter = 5 then
                 counter_next <= 0;
-                if (r_next < 1 + signed(addSampleStep) or r_next >= IMG_HEIGHT - 1 - signed(addSampleStep) or
-                    c_next < 1 + signed(addSampleStep) or c_next >= IMG_WIDTH - 1 - signed(addSampleStep)) then
+                if (r < 1 + signed(addSampleStep) or r >= IMG_HEIGHT - 1 - signed(addSampleStep) or
+                    c < 1 + signed(addSampleStep) or c >= IMG_WIDTH - 1 - signed(addSampleStep)) then
                     state_next <= NextSample;
                 else
                     state_next <= ProcessSample;
@@ -1748,7 +1749,7 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
         when ComputeWeightsC =>  
                         bram2_phase_next <= 0;
               
-            if counter = 3 then
+            if counter = 6 then
                counter_next <= 0;
                cweight1_next <= cweight1_mux_out;  -- Koristimo izlaz MUX-a
                cweight2_next <= cweight2_mux_out;  -- Koristimo izlaz MUX-a
