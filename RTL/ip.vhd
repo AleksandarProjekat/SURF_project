@@ -335,6 +335,10 @@ signal cweight2_delayed, cweight2_delayed1 : std_logic_vector(FIXED_SIZE - 1 dow
 
 signal counter, counter_next : integer range 0 to 3 := 0;
 
+signal rfrac_mux_out, cfrac_mux_out : std_logic_vector(FIXED_SIZE - 1 downto 0);
+signal rweight1_mux_out, rweight2_mux_out : std_logic_vector(FIXED_SIZE - 1 downto 0);
+signal cweight1_mux_out, cweight2_mux_out : std_logic_vector(FIXED_SIZE - 1 downto 0);
+
 
 begin
 
@@ -1198,7 +1202,7 @@ end process;
 
 
     -- Kombinacioni proces za odredjivanje sledecih stanja i vrednosti signala
-process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, ri, ci, weight, ori1, ori2, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_internal, rom_addr_int, data1_o_reg, data2_o_reg, bram_data_out, bram_addr1_o_next, temp1_rpos_delayed1, temp2_rpos_delayed1, temp3_rpos_delayed1, temp4_rpos_delayed1, temp1_cpos_delayed1, temp2_cpos_delayed1, temp3_cpos_delayed1, temp4_cpos_delayed1, rpos_delayed1, cpos_delayed1, rx_delayed1, cx_delayed1, r_delayed1, c_delayed1, dxx_delayed1, dyy_delayed1, dx1_delayed1, dx2_delayed1, dx_delayed1, dy1_delayed1, dy2_delayed1, dy_delayed1, rfrac_delayed1, cfrac_delayed1, rweight1_delayed1, rweight2_delayed1, cweight1_delayed1, cweight2_delayed1)
+process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, ri, ci, weight, ori1, ori2, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_internal, rom_addr_int, data1_o_reg, data2_o_reg, bram_data_out, bram_addr1_o_next, temp1_rpos_delayed1, temp2_rpos_delayed1, temp3_rpos_delayed1, temp4_rpos_delayed1, temp1_cpos_delayed1, temp2_cpos_delayed1, temp3_cpos_delayed1, temp4_cpos_delayed1, rpos_delayed1, cpos_delayed1, rx_delayed1, cx_delayed1, r_delayed1, c_delayed1, dxx_delayed1, dyy_delayed1, dx1_delayed1, dx2_delayed1, dx_delayed1, dy1_delayed1, dy2_delayed1, dy_delayed1, rfrac_delayed1, cfrac_delayed1, rfrac, cfrac, rweight1_delayed1, rweight2_delayed1, cweight1_delayed1, cweight2_delayed1)
     begin
         -- Default assignments
         state_next <= state_reg;
@@ -1249,8 +1253,8 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
         dy_next <= dy_delayed1;
 
         
-        rfrac_next <= rfrac_delayed1;
-        cfrac_next <= cfrac_delayed1;      
+        --rfrac_next <= rfrac_delayed1;
+        --cfrac_next <= cfrac_delayed1;      
         
         ori1_next <= ori1;
         ori2_next <= ori2;
@@ -1261,13 +1265,32 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
         
         ri_next <= ri;
         ci_next <= ci;
-       
-        rweight1_next <= rweight1_delayed1;
-        rweight2_next <= rweight2_delayed1;
-        cweight1_next <= cweight1_delayed1;
-        cweight2_next <= cweight2_delayed1;
-       
         
+     -- Logika za MUX-ove
+    if state_reg = ComputeWeightsR then
+        rweight1_mux_out <= rweight1_delayed1; -- Aktivna vrednost iz DSP-a
+        rweight2_mux_out <= rweight2_delayed1; -- Aktivna vrednost iz DSP-a
+    else
+        rweight1_mux_out <= (others => '0'); -- Nula kada nije aktivno stanje
+        rweight2_mux_out <= (others => '0'); -- Nula kada nije aktivno stanje
+    end if;
+    
+   
+    if state_reg = ComputeWeightsC then
+        cweight1_mux_out <= cweight1_delayed1; -- Aktivna vrednost iz DSP-a
+        cweight2_mux_out <= cweight2_delayed1; -- Aktivna vrednost iz DSP-a
+    else 
+        cweight1_mux_out <= (others => '0');
+        cweight2_mux_out <= (others => '0');
+    end if;
+    
+    if state_reg = ComputeFractionalComponents then
+        rfrac_mux_out <= rfrac_delayed1; -- Aktivna vrednost iz DSP-a
+        cfrac_mux_out <= cfrac_delayed1; -- Aktivna vrednost iz DSP-a
+    else
+        rfrac_mux_out <= (others => '0'); -- Nula kada nije aktivno stanje
+        cfrac_mux_out <= (others => '0'); -- Nula kada nije aktivno stanje
+    end if;
         
         bram_en_int <= '0'; -- Defaultna vrednost za bram_en1_o
         bram_we_int <= '0'; -- Defaultna vrednost za bram_we1_o
@@ -1322,6 +1345,7 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
             end if;
 
         when ComputeRPos1 =>
+        
             if counter = 3 then
                 counter_next <= 0;
                 temp1_rpos_next <= temp1_rpos_delayed1;
@@ -1683,50 +1707,42 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
                 state_next <= ComputeFractionalComponents;
 
            when ComputeFractionalComponents =>
-                 rfrac_next <= rfrac_delayed1;
-                 cfrac_next <= cfrac_delayed1;
+           if counter = 7 then
+                           counter_next <= 0;
 
+                 rfrac_next <= rfrac_mux_out;
+                 cfrac_next <= cfrac_mux_out;
                 state_next <= ValidateRfrac;
+            else
+                counter_next <= counter + 1;
+            end if;
 
-            when ValidateRfrac =>
-            
-
-                     if signed(rfrac_delayed1) < 0 then
-                        rfrac_next <= std_logic_vector(to_signed(0, FIXED_SIZE));
-                                             state_next <= ValidateRfrac1;
-
-                    elsif signed(rfrac_delayed1) >= signed(ONE_FP) then
-                    
-                        rfrac_next <= ONE_FP;  
-                                             state_next <= ValidateRfrac1;
+           when ValidateRfrac =>
+                -- Validacija rfrac
+                if signed(rfrac) < 0 then
+                    rfrac_next <= std_logic_vector(to_signed(0, FIXED_SIZE));
+                elsif signed(rfrac) >= signed(ONE_FP) then
+                    rfrac_next <= ONE_FP;
+                end if;
                    
-                    end if;
-                     state_next <= ValidateRfrac1;
-           
-           when ValidateRfrac1 =>
-                       rfrac_next <= rfrac;
-                       state_next <= ValidateCfrac;
+                state_next <= ValidateCfrac;
+
 
            when ValidateCfrac =>
-  
-                    if signed(cfrac_delayed1) < 0 then
-                        cfrac_next <= std_logic_vector(to_signed(0, FIXED_SIZE));
-                                             state_next <= ComputeWeightsR;
-
-                    elsif signed(cfrac_delayed1) >= signed(ONE_FP) then
-                        cfrac_next <= ONE_FP; 
-                                             state_next <= ComputeWeightsR;
-  
-                    end if;
-        
-                        state_next <= ComputeWeightsR;
-            
+                if signed(cfrac) < 0 then
+                    cfrac_next <= std_logic_vector(to_signed(0, FIXED_SIZE));
+                elsif signed(cfrac) >= signed(ONE_FP) then
+                    cfrac_next <= ONE_FP; 
+                end if;
+                 
+                state_next <= ComputeWeightsR;
+                        
              when ComputeWeightsR =>
 
             if counter = 2 then
                 counter_next <= 0;
-                rweight1_next <= rweight1_delayed1;
-                rweight2_next <= rweight2_delayed1;
+                rweight1_next <= rweight1_mux_out;
+                rweight2_next <= rweight2_mux_out;
                 state_next <= ComputeWeightsC;
             else
                 counter_next <= counter + 1;
@@ -1736,9 +1752,9 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
                         bram2_phase_next <= 0;
               
             if counter = 2 then
-                counter_next <= 0;
-                cweight1_next <= cweight1_delayed1;
-                cweight2_next <= cweight2_delayed1;
+               counter_next <= 0;
+               cweight1_next <= cweight1_mux_out;  -- Koristimo izlaz MUX-a
+               cweight2_next <= cweight2_mux_out;  -- Koristimo izlaz MUX-a
 
                 state_next <= UpdateIndexArray0;
             else
