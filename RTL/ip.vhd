@@ -1188,7 +1188,6 @@ begin
 rpos_squared_reg <= rpos_squared_next;
 cpos_squared_reg <= cpos_squared_next;
 
---rom_data_internal <= rom_data;
                
                 
                if bram2_phase = 0 then
@@ -1251,10 +1250,7 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
         dy1_next <= dy1_delayed1;
         dy2_next <= dy2_delayed1;
         dy_next <= dy_delayed1;
-
-        
-        --rfrac_next <= rfrac_delayed1;
-        --cfrac_next <= cfrac_delayed1;      
+     
         
         ori1_next <= ori1;
         ori2_next <= ori2;
@@ -1295,7 +1291,7 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
         bram_en_int <= '0'; -- Defaultna vrednost za bram_en1_o
         bram_we_int <= '0'; -- Defaultna vrednost za bram_we1_o
         
-        rom_addr_next <= rom_adress_delayed1(23 downto 18); -- Defaultna vrednost za rom_addr_next
+        --rom_addr_next <= rom_adress_delayed1(23 downto 18); -- Defaultna vrednost za rom_addr_next
         
         bram2_phase_next <= bram2_phase;  
 
@@ -1453,10 +1449,11 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
             when ProcessSample =>
     rom_addr_next <= rom_adress_delayed1(23 downto 18);
              
-                weight_next <= std_logic_vector(rom_data_internal);
                 state_next <= ComputeDerivatives;
 
              when ComputeDerivatives =>
+     weight_next <= std_logic_vector(rom_data_internal);
+
                 -- Set BRAM addresses for the first pixel for dxx1
                 bram_en1_o <= '1';  -- Enable BRAM port
                 bram_addr1_o_next <= std_logic_vector(to_unsigned((to_integer(r) + to_integer(addSampleStep) + 1) * IMG_WIDTH + (to_integer(c) + to_integer(addSampleStep) + 1), PIXEL_SIZE));
@@ -1739,7 +1736,7 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
                         
              when ComputeWeightsR =>
 
-            if counter = 2 then
+            if counter = 3 then
                 counter_next <= 0;
                 rweight1_next <= rweight1_mux_out;
                 rweight2_next <= rweight2_mux_out;
@@ -1751,7 +1748,7 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
         when ComputeWeightsC =>  
                         bram2_phase_next <= 0;
               
-            if counter = 2 then
+            if counter = 3 then
                counter_next <= 0;
                cweight1_next <= cweight1_mux_out;  -- Koristimo izlaz MUX-a
                cweight2_next <= cweight2_mux_out;  -- Koristimo izlaz MUX-a
@@ -1827,6 +1824,5 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
     addr_do1_o <= bram_addr_int;
     c1_data_o <= bram_en_int;
     bram_we1_o <= bram_we_int;
-    rom_addr <= rom_addr_next;  -- Azuriranje rom_addr signala
     
 end Behavioral;
