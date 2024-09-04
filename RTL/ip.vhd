@@ -1762,11 +1762,13 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
             end if;
                 
            when UpdateIndexArray0 =>
-          if counter = 4 then
+          if counter = 5 then
                 counter_next <= 0;
                 if ri >= 0 and ri < INDEX_SIZE and ci >= 0 and ci < INDEX_SIZE then
                     if bram2_phase = 0 then
                         bram_addr_int <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori1)), INDEX_ADDRESS_SIZE));
+                        data1_o <= cweight1;
+
                         bram_en_int <= '1';
                         bram_we_int <= '1';
                         bram2_phase_next <= 1;
@@ -1779,12 +1781,12 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
                 counter_next <= counter + 1;
             end if;
         when UpdateDataOut0 =>
-                        data1_o <= cweight1;
 
                         state_next<= UpdateIndexArray1;
 
         when UpdateIndexArray1 =>
-           
+           if counter = 5 then
+                counter_next <= 0;
                 if bram2_phase = 1 then
                     bram_addr_int <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori2)), INDEX_ADDRESS_SIZE));
                     data1_o <= cweight2;
@@ -1794,7 +1796,9 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
                     state_next <= UpdateDataOut1;
                 end if;
           
-                
+                else
+                counter_next <= counter + 1;
+            end if;
             when UpdateDataOut1 =>
 
                         state_next<= NextSample;
