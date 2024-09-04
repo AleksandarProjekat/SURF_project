@@ -60,7 +60,9 @@ entity ip is
         ---------------KOMANDNI INTERFEJS------------------------
         start_i : in std_logic;
         ---------------STATUSNI INTERFEJS------------------------
-        ready_o : out std_logic
+        ready_o : out std_logic;
+        done : out std_logic
+
     );
 end ip;
 
@@ -301,7 +303,7 @@ signal cweight2_delayed, cweight2_delayed1 : std_logic_vector(FIXED_SIZE - 1 dow
     signal rweight1, rweight2, rweight1_next, rweight2_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
     signal cweight1, cweight2, cweight1_next, cweight2_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
 
-    signal done : std_logic;
+    --signal done : std_logic;
 
     -- Definisanje internog signala za kombinatornu logiku
     signal rom_data_reg : std_logic_vector(FIXED_SIZE - 1 downto 0);
