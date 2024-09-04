@@ -39,15 +39,9 @@ package body ip_pkg is
             when ComputeRPos2           => return "ComputeRPos2";
             when ComputeRPos3           => return "ComputeRPos3";
             when ComputeRPos4           => return "ComputeRPos4";
-            when ComputeRPos5           => return "ComputeRPos5";
-            when ComputeCPos1           => return "ComputeCPos1";
-            when ComputeCPos2           => return "ComputeCPos2";
-            when ComputeCPos3           => return "ComputeCPos3";
-            when ComputeCPos4           => return "ComputeCPos4";
-            when ComputeCPos5           => return "ComputeCPos5";
+            when ComputeRPos5           => return "ComputeRPos5";           
             when SetRXandCX             => return "SetRXandCX";
             when BoundaryCheck          => return "BoundaryCheck";
-            when PositionValidation     => return "PositionValidation";
             when ComputePosition        => return "ComputePosition";
             when ProcessSample          => return "ProcessSample";
             when ComputeDerivatives     => return "ComputeDerivatives";

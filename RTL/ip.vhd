@@ -1770,7 +1770,7 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
                         bram_en_int <= '1';
                         bram_we_int <= '1';
                         bram2_phase_next <= 1;
-                        state_next <= UpdateDataOut0;
+                        state_next <= UpdateIndexArray1;
                     end if;
               else
                 state_next<= NextSample;
