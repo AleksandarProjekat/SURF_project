@@ -1674,35 +1674,40 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
             end if;
 
             when SetOrientations =>
-                if signed(dx_delayed1) < 0 then
+                        if counter = 9 then
+                     counter_next <= 0;
+
+                if signed(dx_reg) < 0 then
                     ori1_next <= to_unsigned(0, WIDTH);
                 else
                     ori1_next <= to_unsigned(1, WIDTH);
                 end if;
-                if signed(dy_delayed1) < 0 then
+                if signed(dy_reg) < 0 then
                     ori2_next <= to_unsigned(2, WIDTH);
                 else
                     ori2_next <= to_unsigned(3, WIDTH);
                 end if;
                 state_next <= UpdateIndex;
-            
+             else
+                counter_next <= counter + 1;
+            end if;
             when UpdateIndex =>
                 -- Check rx and set ri accordingly
-                if signed(rx_delayed1) < 0 then
+                if signed(rx) < 0 then
                     ri_next <= to_unsigned(0, WIDTH);
-              elsif signed(rx_delayed1) >= signed(INDEX_SIZE_FP) then
+              elsif signed(rx) >= signed(INDEX_SIZE_FP) then
                     ri_next <= to_unsigned(INDEX_SIZE - 1, WIDTH);
                 else
-                    ri_next <= to_unsigned(to_integer(unsigned(rx_delayed1(47 downto 18))), WIDTH);                
+                    ri_next <= to_unsigned(to_integer(unsigned(rx(47 downto 18))), WIDTH);                
                 end if;
 
                 -- Check ci and update ci accordingly
-                if signed(cx_delayed1) < 0 then
+                if signed(cx) < 0 then
                     ci_next <= to_unsigned(0, WIDTH);
-                elsif signed(cx_delayed1) >= signed(to_signed(to_integer(unsigned(INDEX_SIZE_FP)), INDEX_SIZE_FP'length)) then
+                elsif signed(cx) >= signed(to_signed(to_integer(unsigned(INDEX_SIZE_FP)), INDEX_SIZE_FP'length)) then
                     ci_next <= to_unsigned(INDEX_SIZE - 1, WIDTH);
                 else
-                    ci_next <= to_unsigned(to_integer(unsigned(cx_delayed1(47 downto 18))), WIDTH);                
+                    ci_next <= to_unsigned(to_integer(unsigned(cx(47 downto 18))), WIDTH);                
                 end if;
                 state_next <= ComputeFractionalComponents;
 
@@ -1764,7 +1769,7 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
            when UpdateIndexArray0 =>
           if counter = 5 then
                 counter_next <= 0;
-                if ri >= 0 and ri < INDEX_SIZE and ci >= 0 and ci < INDEX_SIZE then
+                if ri >= 0 and ri < unsigned(INDEX_SIZE_FP) and ci >= 0 and ci < unsigned(INDEX_SIZE_FP) then
                     if bram2_phase = 0 then
                         bram_addr_int <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori1)), INDEX_ADDRESS_SIZE));
                         data1_o <= cweight1;
