@@ -2,7 +2,6 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 use std.textio.all;
-use std.env.all;  -- Dodali smo ovu biblioteku za koriš?enje std.env.stop
 use work.txt_util.all;
 
 entity tb_ip is
@@ -226,8 +225,7 @@ ip: entity work.ip(Behavioral)
         rom_data => rom_data_s,
         rom_addr => rom_addr_s,
         start_i => start_i_s,
-        ready_o => ready_o_s,
-        done => done_s
+        ready_o => ready_o_s
     );
 
 -- Instantiation of ROM

@@ -60,9 +60,7 @@ entity ip is
         ---------------KOMANDNI INTERFEJS------------------------
         start_i : in std_logic;
         ---------------STATUSNI INTERFEJS------------------------
-        ready_o : out std_logic;
-        done : out std_logic
-
+        ready_o : out std_logic
     );
 end ip;
 
@@ -208,8 +206,8 @@ architecture Behavioral of ip is
             FetchDYY1_1, FetchDYY1_2, FetchDYY1_3, FetchDYY1_4, ComputeDYY1,
             FetchDYY2_1, FetchDYY2_2, FetchDYY2_3, FetchDYY2_4, ComputeDYY2, 
         CalculateDerivatives, ApplyOrientationTransform_1, ApplyOrientationTransform,
-        SetOrientations, UpdateIndex, ComputeFractionalComponents, ValidateRfrac, ValidateCfrac,ValidateRfrac1,
-        ComputeWeightsR, ComputeWeightsC, UpdateIndexArray0, UpdateIndexArray1, UpdateDataOut0, UpdateDataOut1, 
+        SetOrientations, UpdateIndex, ComputeFractionalComponents, ValidateRfrac, ValidateCfrac,
+        ComputeWeightsR, ComputeWeightsC, UpdateIndexArray0, UpdateIndexArray1,
         NextSample, IncrementI, Finish
     );
 
@@ -299,11 +297,13 @@ signal cweight2_delayed, cweight2_delayed1 : std_logic_vector(FIXED_SIZE - 1 dow
     
     signal rfrac, cfrac :  std_logic_vector(FIXED_SIZE - 1 downto 0);
     signal rfrac_next, cfrac_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
-    
+    signal rfrac_mux_out, cfrac_mux_out : std_logic_vector(FIXED_SIZE - 1 downto 0);
+    signal rfrac_mux_next, cfrac_mux_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
+
     signal rweight1, rweight2, rweight1_next, rweight2_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
     signal cweight1, cweight2, cweight1_next, cweight2_next : std_logic_vector(FIXED_SIZE - 1 downto 0);
 
-    --signal done : std_logic;
+    signal done : std_logic;
 
     -- Definisanje internog signala za kombinatornu logiku
     signal rom_data_reg : std_logic_vector(FIXED_SIZE - 1 downto 0);
@@ -325,21 +325,14 @@ signal cweight2_delayed, cweight2_delayed1 : std_logic_vector(FIXED_SIZE - 1 dow
     signal bram_data_i_reg : std_logic_vector(FIXED_SIZE-1 downto 0);
 
     -- Definisanje internog signala za adrese IZLAZNI bram
-    signal data1_o_reg, data2_o_reg : std_logic_vector (FIXED_SIZE - 1 downto 0);  
     signal bram2_phase : integer range 0 to 1 := 0;  -- Faza pristupa BRAM-u
     signal bram2_phase_next : integer range 0 to 1;  -- Pomocni signal za fazu pristupa BRAM-u   
     signal bram_addr_int : std_logic_vector(INDEX_ADDRESS_SIZE-1 downto 0);
-    signal bram_data_out : std_logic_vector(FIXED_SIZE - 1 downto 0);     
-    signal bram_data_out_next : std_logic_vector(FIXED_SIZE - 1 downto 0);  -- Pomocni signal za bram_data_out
     signal bram_en_int : std_logic := '0';
     signal bram_we_int : std_logic := '0';
 
 
 signal counter, counter_next : integer range 0 to 3 := 0;
-
-signal rfrac_mux_out, cfrac_mux_out : std_logic_vector(FIXED_SIZE - 1 downto 0);
-signal rweight1_mux_out, rweight2_mux_out : std_logic_vector(FIXED_SIZE - 1 downto 0);
-signal cweight1_mux_out, cweight2_mux_out : std_logic_vector(FIXED_SIZE - 1 downto 0);
 
 
 begin
@@ -958,7 +951,7 @@ delay_temp2_rpos: entity work.delay
     port map(clk => clk,
              rst => reset,
              u1_i => ONE_FP,
-             u2_i => rfrac_next, 
+             u2_i => rfrac_mux_out, 
              u3_i => dx_delayed1,
             res_o => rweight1_delayed);   
             
@@ -980,7 +973,7 @@ delay_temp2_rpos: entity work.delay
     port map(clk => clk,
              rst => reset,
              u1_i => ONE_FP,
-             u2_i => rfrac_next, 
+             u2_i => rfrac_mux_out, 
              u3_i => dy_delayed1,
             res_o => rweight2_delayed);   
             
@@ -1002,7 +995,7 @@ delay_temp2_rpos: entity work.delay
     port map(clk => clk,
              rst => reset,
              u1_i => ONE_FP,
-             u2_i => cfrac_next, 
+             u2_i => cfrac_mux_out, 
              u3_i => rweight1_delayed1,
             res_o => cweight1_delayed);   
             
@@ -1024,7 +1017,7 @@ delay_temp2_rpos: entity work.delay
     port map(clk => clk,
              rst => reset,
              u1_i => ONE_FP,
-             u2_i => cfrac_next, 
+             u2_i => cfrac_mux_out, 
              u3_i => rweight2_delayed1,
             res_o => cweight2_delayed);   
             
@@ -1082,6 +1075,9 @@ begin
             cx <= (others => '0');
             rfrac <= (others => '0');
             cfrac <= (others => '0');
+            rfrac_mux_out <= (others => '0');            
+            cfrac_mux_out <= (others => '0');
+            
             dx1_reg <= (others => '0');
             dx2_reg <= (others => '0');
             dx_reg <= (others => '0');
@@ -1124,9 +1120,7 @@ begin
             
             bram2_phase <= 0;
             bram_addr1_o <= (others => '0');
-            bram_data_out <= (others => '0');
-            data1_o_reg <= (others => '0');
-            data2_o_reg <= (others => '0');
+            
 
         else
                 -- Predji u sledece stanje i a?uriraj sve registre
@@ -1145,8 +1139,13 @@ begin
                 cpos_reg <= cpos_next;
                 rx <= rx_next;
                 cx <= cx_next;
+                
                 rfrac <= rfrac_next;
                 cfrac <= cfrac_next;
+                
+                rfrac_mux_out <= rfrac_mux_next;
+                cfrac_mux_out <= cfrac_mux_next;
+                
                 dx1_reg <= dx1_next;
                 dx2_reg <= dx2_next;
                 dx_reg <= dx_next;
@@ -1190,26 +1189,24 @@ begin
 rpos_squared_reg <= rpos_squared_next;
 cpos_squared_reg <= cpos_squared_next;
 
+--rom_data_internal <= rom_data;
                
                 
-               if bram2_phase = 0 then
-                    data1_o_reg <= bram_data_out;
-                elsif bram2_phase = 1 then
-                    data2_o_reg <= bram_data_out;
-                end if;
+               
                 end if;
             end if;
 end process;
 
 
     -- Kombinacioni proces za odredjivanje sledecih stanja i vrednosti signala
-process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, counter, bram_data_i, bram2_phase, state_reg, start_i, i_reg, j_reg, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, ri, ci, weight, ori1, ori2, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_internal, rom_addr_int, data1_o_reg, data2_o_reg, bram_data_out, bram_addr1_o_next, temp1_rpos_delayed1, temp2_rpos_delayed1, temp3_rpos_delayed1, temp4_rpos_delayed1, temp1_cpos_delayed1, temp2_cpos_delayed1, temp3_cpos_delayed1, temp4_cpos_delayed1, rpos_delayed1, cpos_delayed1, rx_delayed1, cx_delayed1, r_delayed1, c_delayed1, dxx_delayed1, dyy_delayed1, dx1_delayed1, dx2_delayed1, dx_delayed1, dy1_delayed1, dy2_delayed1, dy_delayed1, rfrac_delayed1, cfrac_delayed1, rfrac, cfrac, rweight1_delayed1, rweight2_delayed1, cweight1_delayed1, cweight2_delayed1, dxx1, dxx2, dyy1, dyy2, rx, cx, r_next, c_next, r, c, rweight1_mux_out, rweight2_mux_out, cweight1_mux_out, cweight2_mux_out, cweight1, cweight2, j_next, i_next)
+process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, counter, bram_data_i, state_reg, start_i, i_reg, j_reg, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, ri, ci, weight, ori1, ori2, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_internal, rom_addr_int , bram_addr1_o_next, temp1_rpos_delayed1, temp2_rpos_delayed1, temp3_rpos_delayed1, temp4_rpos_delayed1, temp1_cpos_delayed1, temp2_cpos_delayed1, temp3_cpos_delayed1, temp4_cpos_delayed1, rpos_delayed1, cpos_delayed1, rx_delayed1, cx_delayed1, r_delayed1, c_delayed1, dxx_delayed1, dyy_delayed1, dx1_delayed1, dx2_delayed1, dx_delayed1, dy1_delayed1, dy2_delayed1, dy_delayed1, rfrac_delayed1, cfrac_delayed1, rweight1_delayed1, rweight2_delayed1, cweight1_delayed1, cweight2_delayed1, cfrac, rfrac)
     begin
         -- Default assignments
         state_next <= state_reg;
         i_next <= i_reg;
         j_next <= j_reg;
-            counter_next <= counter; -- Podrazumevano stanje broja?a
+        
+        counter_next <= counter; -- Podrazumevano stanje broja?a
 
         temp1_rpos_next <= temp1_rpos_delayed1;
         temp2_rpos_next <= temp2_rpos_delayed1;
@@ -1252,7 +1249,13 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
         dy1_next <= dy1_delayed1;
         dy2_next <= dy2_delayed1;
         dy_next <= dy_delayed1;
-     
+
+        
+        rfrac_next <= rfrac_delayed1;
+        cfrac_next <= cfrac_delayed1;      
+        
+        rfrac_mux_next <= rfrac_mux_out;
+        cfrac_mux_next <= cfrac_mux_out;
         
         ori1_next <= ori1;
         ori2_next <= ori2;
@@ -1263,43 +1266,22 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
         
         ri_next <= ri;
         ci_next <= ci;
+       
+        rweight1_next <= rweight1_delayed1;
+        rweight2_next <= rweight2_delayed1;
+        cweight1_next <= cweight1_delayed1;
+        cweight2_next <= cweight2_delayed1;
+       
         
-     -- Logika za MUX-ove
-    if state_reg = ComputeWeightsR then
-        rweight1_mux_out <= rweight1_delayed1; -- Aktivna vrednost iz DSP-a
-        rweight2_mux_out <= rweight2_delayed1; -- Aktivna vrednost iz DSP-a
-    else
-        rweight1_mux_out <= (others => '0'); -- Nula kada nije aktivno stanje
-        rweight2_mux_out <= (others => '0'); -- Nula kada nije aktivno stanje
-    end if;
-    
-   
-    if state_reg = ComputeWeightsC then
-        cweight1_mux_out <= cweight1_delayed1; -- Aktivna vrednost iz DSP-a
-        cweight2_mux_out <= cweight2_delayed1; -- Aktivna vrednost iz DSP-a
-    else 
-        cweight1_mux_out <= (others => '0');
-        cweight2_mux_out <= (others => '0');
-    end if;
-    
-    if state_reg = ComputeFractionalComponents then
-        rfrac_mux_out <= rfrac_delayed1; -- Aktivna vrednost iz DSP-a
-        cfrac_mux_out <= cfrac_delayed1; -- Aktivna vrednost iz DSP-a
-    else
-        rfrac_mux_out <= (others => '0'); -- Nula kada nije aktivno stanje
-        cfrac_mux_out <= (others => '0'); -- Nula kada nije aktivno stanje
-    end if;
         
         bram_en_int <= '0'; -- Defaultna vrednost za bram_en1_o
         bram_we_int <= '0'; -- Defaultna vrednost za bram_we1_o
         
-        --rom_addr_next <= rom_adress_delayed1(23 downto 18); -- Defaultna vrednost za rom_addr_next
+        rom_addr_next <= rom_adress_delayed1(23 downto 18); -- Defaultna vrednost za rom_addr_next
         
         bram2_phase_next <= bram2_phase;  
 
-        --data1_o <= (others => '0');
         bram_addr_int <= (others => '0');
-       -- bram_data_out_next <= bram_data_out;
         --c1_data_o <= '0';
         ready_o <= '0';
 
@@ -1343,13 +1325,11 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
             end if;
 
         when ComputeRPos1 =>
-        
             if counter = 3 then
                 counter_next <= 0;
                 temp1_rpos_next <= temp1_rpos_delayed1;
                 temp1_cpos_next <= temp1_cpos_delayed1;
                 
-                --addSampleStep_next <= to_unsigned(to_integer(unsigned(scale(FIXED_SIZE - 1 downto 18))), WIDTH);
                 addSampleStep_next <= scale;
                 
                 r_next <= signed(r_delayed1);
@@ -1421,10 +1401,10 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
             end if;
 
         when BoundaryCheck =>
-            if counter = 5 then
+            if counter = 3 then
                 counter_next <= 0;
-                if (signed(rx_delayed1) > signed(MINUS_ONE_FP) and signed(rx_delayed1) < signed(INDEX_SIZE_FP) and
-                   (signed(cx_delayed1) > signed(MINUS_ONE_FP) and signed(cx_delayed1) <  signed(INDEX_SIZE_FP))) then
+                if (signed(rx) > signed(MINUS_ONE_FP) and signed(rx) < signed(INDEX_SIZE_FP) and
+                   (signed(cx) > signed(MINUS_ONE_FP) and signed(cx) <  signed(INDEX_SIZE_FP))) then
                     state_next <= ComputePosition;
                 else
                     state_next <= NextSample;
@@ -1436,7 +1416,7 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
       
 
         when ComputePosition =>   
-            if counter = 5 then
+            if counter = 3 then
                 counter_next <= 0;
                 if (r < 1 + signed(addSampleStep) or r >= IMG_HEIGHT - 1 - signed(addSampleStep) or
                     c < 1 + signed(addSampleStep) or c >= IMG_WIDTH - 1 - signed(addSampleStep)) then
@@ -1455,7 +1435,7 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
                 state_next <= ComputeDerivatives;
 
              when ComputeDerivatives =>
-     weight_next <= std_logic_vector(rom_data_internal);
+      weight_next <= std_logic_vector(rom_data_internal);
 
                 -- Set BRAM addresses for the first pixel for dxx1
                 bram_en1_o <= '1';  -- Enable BRAM port
@@ -1673,7 +1653,7 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
                 counter_next <= counter + 1;
             end if;
 
-            when SetOrientations =>
+               when SetOrientations =>
                         if counter = 9 then
                      counter_next <= 0;
 
@@ -1691,6 +1671,7 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
              else
                 counter_next <= counter + 1;
             end if;
+            
             when UpdateIndex =>
                 -- Check rx and set ri accordingly
                 if signed(rx) < 0 then
@@ -1712,42 +1693,54 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
                 state_next <= ComputeFractionalComponents;
 
            when ComputeFractionalComponents =>
-           if counter = 7 then
-                           counter_next <= 0;
+              if counter = 7 then
+                     counter_next <= 0;
+                    rfrac_next <= rfrac_delayed1;
+                    cfrac_next <= cfrac_delayed1;
 
-                 rfrac_next <= rfrac_mux_out;
-                 cfrac_next <= cfrac_mux_out;
-                state_next <= ValidateRfrac;
-            else
-                counter_next <= counter + 1;
+                     state_next <= ValidateRfrac;
+              else
+                    counter_next <= counter + 1;
             end if;
-
-           when ValidateRfrac =>
-                -- Validacija rfrac
-                if signed(rfrac) < 0 then
-                    rfrac_next <= std_logic_vector(to_signed(0, FIXED_SIZE));
-                elsif signed(rfrac) >= signed(ONE_FP) then
-                    rfrac_next <= ONE_FP;
-                end if;
-                   
-                state_next <= ValidateCfrac;
-
+            
+            when ValidateRfrac =>
+            
+                     if signed(rfrac_delayed1) < 0 then
+                        rfrac_mux_next <= std_logic_vector(to_signed(0, FIXED_SIZE));
+                        
+                    elsif signed(rfrac_delayed1) >= signed(ONE_FP) then
+                         rfrac_mux_next <= ONE_FP; 
+                          
+                    else
+                        rfrac_mux_next <= rfrac_next;
+                    end if;
+                    
+                     state_next <= ValidateCfrac;
+           
+          
 
            when ValidateCfrac =>
-                if signed(cfrac) < 0 then
-                    cfrac_next <= std_logic_vector(to_signed(0, FIXED_SIZE));
-                elsif signed(cfrac) >= signed(ONE_FP) then
-                    cfrac_next <= ONE_FP; 
-                end if;
-                 
-                state_next <= ComputeWeightsR;
+  
+                    if signed(cfrac_delayed1) < 0 then
+                        cfrac_mux_next <= std_logic_vector(to_signed(0, FIXED_SIZE));
+
+                    elsif signed(cfrac_delayed1) >= signed(ONE_FP) then
+                        cfrac_mux_next <= ONE_FP; 
                         
+                    else
+                        cfrac_mux_next <= cfrac_next;
+                        
+                    end if;
+                    
+                        state_next <= ComputeWeightsR;
+                        
+            
              when ComputeWeightsR =>
 
-            if counter = 3 then
+            if counter = 4 then
                 counter_next <= 0;
-                rweight1_next <= rweight1_mux_out;
-                rweight2_next <= rweight2_mux_out;
+                rweight1_next <= rweight1_delayed1;
+                rweight2_next <= rweight2_delayed1;
                 state_next <= ComputeWeightsC;
             else
                 counter_next <= counter + 1;
@@ -1756,10 +1749,10 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
         when ComputeWeightsC =>  
                         bram2_phase_next <= 0;
               
-            if counter = 6 then
-               counter_next <= 0;
-               cweight1_next <= cweight1_mux_out;  -- Koristimo izlaz MUX-a
-               cweight2_next <= cweight2_mux_out;  -- Koristimo izlaz MUX-a
+            if counter = 4 then
+                counter_next <= 0;
+                cweight1_next <= cweight1_delayed1;
+                cweight2_next <= cweight2_delayed1;
 
                 state_next <= UpdateIndexArray0;
             else
@@ -1767,9 +1760,9 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
             end if;
                 
            when UpdateIndexArray0 =>
-          if counter = 5 then
+          if counter = 4 then
                 counter_next <= 0;
-                if ri >= 0 and ri < unsigned(INDEX_SIZE_FP) and ci >= 0 and ci < unsigned(INDEX_SIZE_FP) then
+                if ri >= 0 and ri < INDEX_SIZE and ci >= 0 and ci < INDEX_SIZE then
                     if bram2_phase = 0 then
                         bram_addr_int <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori1)), INDEX_ADDRESS_SIZE));
                         data1_o <= cweight1;
@@ -1785,28 +1778,18 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
         else
                 counter_next <= counter + 1;
             end if;
-        when UpdateDataOut0 =>
-
-                        state_next<= UpdateIndexArray1;
-
+      
         when UpdateIndexArray1 =>
-           if counter = 5 then
-                counter_next <= 0;
+           
                 if bram2_phase = 1 then
                     bram_addr_int <= std_logic_vector(to_unsigned((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori2)), INDEX_ADDRESS_SIZE));
                     data1_o <= cweight2;
                     bram_en_int <= '1';
                     bram_we_int <= '1';
                     bram2_phase_next <= 0;
-                    state_next <= UpdateDataOut1;
+                    state_next <= NextSample;
                 end if;
-          
-                else
-                counter_next <= counter + 1;
-            end if;
-            when UpdateDataOut1 =>
-
-                        state_next<= NextSample;
+                                    
             when NextSample =>
                 j_next <= j_reg + 1;
                 if (j_next >= to_unsigned(2 * to_integer(iradius), WIDTH)) then
@@ -1836,5 +1819,6 @@ process (rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, coun
     addr_do1_o <= bram_addr_int;
     c1_data_o <= bram_en_int;
     bram_we1_o <= bram_we_int;
+    rom_addr <= rom_addr_next;  -- Azuriranje rom_addr signala
     
 end Behavioral;

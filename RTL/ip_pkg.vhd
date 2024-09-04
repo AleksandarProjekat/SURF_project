@@ -1,9 +1,8 @@
 package ip_pkg is
 type state_type is (
             idle, StartLoop, InnerLoop, 
-            ComputeRPos1, ComputeRPos2, ComputeRPos3, ComputeRPos4, ComputeRPos5,
-            ComputeCPos1, ComputeCPos2, ComputeCPos3, ComputeCPos4, ComputeCPos5,
-            SetRXandCX, BoundaryCheck, PositionValidation, ComputePosition, ProcessSample,
+            ComputeRPos1, ComputeRPos2, ComputeRPos3, ComputeRPos4, ComputeRPos5,           
+            SetRXandCX, BoundaryCheck, ComputePosition, ProcessSample,
             ComputeDerivatives,
             WaitForData1,WaitForData2,WaitForData3,WaitForData4,
             WaitForData5,WaitForData6,WaitForData7,WaitForData8,
@@ -13,9 +12,9 @@ type state_type is (
             FetchDXX2_1, FetchDXX2_2, FetchDXX2_3, FetchDXX2_4, ComputeDXX2, 
             FetchDYY1_1, FetchDYY1_2, FetchDYY1_3, FetchDYY1_4, ComputeDYY1,
             FetchDYY2_1, FetchDYY2_2, FetchDYY2_3, FetchDYY2_4, ComputeDYY2, 
-        CalculateDerivatives, ApplyOrientationTransform_1, ApplyOrientationTransform_2, ApplyOrientationTransform,
-        SetOrientations, UpdateIndex, ComputeFractionalComponents, ValidateRfrac, ValidateCfrac,ValidateRfrac1,
-        ComputeWeightsR, ComputeWeightsC, UpdateIndexArray0, UpdateIndexArray1, UpdateDataOut0, UpdateDataOut1,
+        CalculateDerivatives, ApplyOrientationTransform_1, ApplyOrientationTransform,
+        SetOrientations, UpdateIndex, ComputeFractionalComponents, ValidateRfrac, ValidateCfrac,
+        ComputeWeightsR, ComputeWeightsC, UpdateIndexArray0, UpdateIndexArray1,
         NextSample, IncrementI, Finish
 );
 
@@ -82,22 +81,17 @@ package body ip_pkg is
             when ComputeDYY2            => return "ComputeDYY2";
             when CalculateDerivatives   => return "CalculateDerivatives";
 			when ApplyOrientationTransform_1 => return "ApplyOrientationTransform_1";
-            when ApplyOrientationTransform_2 => return "ApplyOrientationTransform_2";
             when ApplyOrientationTransform => return "ApplyOrientationTransform";
             when SetOrientations        => return "SetOrientations";
             when UpdateIndex            => return "UpdateIndex";
             when ComputeFractionalComponents => return "ComputeFractionalComponents";
 			when ValidateRfrac        => return "ValidateRfrac";
             when ValidateCfrac        => return "ValidateCfrac";
-            when ValidateRfrac1        => return "ValidateRfrac1";
-
+            
             when ComputeWeightsR        => return "ComputeWeightsR";
             when ComputeWeightsC        => return "ComputeWeightsC";
             when UpdateIndexArray0       => return "UpdateIndexArray0";
-			when UpdateIndexArray1       => return "UpdateIndexArray1";
-						when UpdateDataOut0       => return "UpdateDataOut0";
-			when UpdateDataOut1       => return "UpdateDataOut1";
-
+			when UpdateIndexArray1       => return "UpdateIndexArray1";			
             when NextSample             => return "NextSample";
             when IncrementI             => return "IncrementI";
             when Finish                 => return "Finish";
