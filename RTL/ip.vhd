@@ -35,16 +35,16 @@ entity ip is
     port (
         clk : in std_logic;
         reset : in std_logic;
-        iradius : in unsigned(WIDTH - 1 downto 0);
+        iradius : in std_logic_vector(WIDTH - 1 downto 0);
         fracr : in std_logic_vector(FIXED_SIZE - 1 downto 0);
         fracc : in std_logic_vector(FIXED_SIZE - 1 downto 0);
         spacing : in std_logic_vector(FIXED_SIZE - 1 downto 0);
-        iy : in unsigned(WIDTH - 1 downto 0);
-        ix : in unsigned(WIDTH - 1 downto 0);
-        step : in unsigned(WIDTH - 1 downto 0);
+        iy : in std_logic_vector(WIDTH - 1 downto 0);
+        ix : in std_logic_vector(WIDTH - 1 downto 0);
+        step : in std_logic_vector(WIDTH - 1 downto 0);
         i_cose : in std_logic_vector(FIXED_SIZE - 1 downto 0);
         i_sine : in std_logic_vector(FIXED_SIZE - 1 downto 0);
-        scale : in unsigned(WIDTH - 1 downto 0);
+        scale : in std_logic_vector(WIDTH - 1 downto 0);
         ---------------MEM INTERFEJS ZA SLIKU--------------------
         bram_addr1_o : out std_logic_vector(PIXEL_SIZE-1 downto 0);
         bram_data_i : in std_logic_vector(FIXED_SIZE-1 downto 0);
@@ -1330,7 +1330,7 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
                 temp1_rpos_next <= temp1_rpos_delayed1;
                 temp1_cpos_next <= temp1_cpos_delayed1;
                 
-                addSampleStep_next <= scale;
+                addSampleStep_next <= unsigned(scale);
                 
                 r_next <= signed(r_delayed1);
                 c_next <= signed(c_delayed1);
@@ -1792,7 +1792,7 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
                                     
             when NextSample =>
                 j_next <= j_reg + 1;
-                if (j_next >= to_unsigned(2 * to_integer(iradius), WIDTH)) then
+                if (j_next >= to_unsigned(2 * to_integer(unsigned(iradius)), WIDTH)) then
                     state_next <= IncrementI;
                 else
                     state_next <= InnerLoop;
@@ -1800,7 +1800,7 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
 
             when IncrementI =>
                 i_next <= i_reg + 1;
-                if (i_next >= to_unsigned(2 * to_integer(iradius), WIDTH)) then
+                if (i_next >= to_unsigned(2 * to_integer(unsigned(iradius)), WIDTH)) then
                     state_next <= Finish;
                 else
                     state_next <= StartLoop;

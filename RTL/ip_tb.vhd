@@ -25,16 +25,16 @@ constant IMG_HEIGHT : integer := 129;
 -- Test signals
 signal clk_s : std_logic := '0';
 signal reset_s : std_logic := '0';
-signal iradius_s : unsigned(WIDTH - 1 downto 0) := (others => '0');
+signal iradius_s : std_logic_vector(WIDTH - 1 downto 0) := (others => '0');
 signal fracr_s : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
 signal fracc_s : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
 signal spacing_s : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
-signal iy_s : unsigned(WIDTH - 1 downto 0) := (others => '0');
-signal ix_s : unsigned(WIDTH - 1 downto 0) := (others => '0');
-signal step_s : unsigned(WIDTH - 1 downto 0) := (others => '0');
+signal iy_s : std_logic_vector(WIDTH - 1 downto 0) := (others => '0');
+signal ix_s : std_logic_vector(WIDTH - 1 downto 0) := (others => '0');
+signal step_s : std_logic_vector(WIDTH - 1 downto 0) := (others => '0');
 signal i_cose_s : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
 signal i_sine_s : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
-signal scale_s : unsigned(WIDTH - 1 downto 0) := (others => '0');
+signal scale_s : std_logic_vector(WIDTH - 1 downto 0) := (others => '0');
 
 signal bram_addr1_o_s : std_logic_vector(PIXEL_SIZE-1 downto 0);
 signal bram_data_i_s : std_logic_vector(FIXED_SIZE-1 downto 0) := (others => '0');
@@ -129,16 +129,16 @@ begin
     report "Initializing the core!";
     
     -- Iteration 0 
-    iradius_s <= to_unsigned(24, WIDTH);
+    iradius_s <= "00000011000";
     fracr_s <= "000000000000000000000000000000000100010101100110";  --0.06777191162109375
     fracc_s <= "000000000000000000000000000000000100000110010011";   --0.06403732299804688
     spacing_s <= "000000000000000000000000000000000100101010000000";  --0.0727539062
-    iy_s <= to_unsigned(32, WIDTH);
-    ix_s <= to_unsigned(45, WIDTH);
-    step_s <= to_unsigned(2, WIDTH);
+    iy_s <= "00000100000";
+    ix_s <= "00000101101";
+    step_s <= "00000000010";
     i_cose_s <= "111111111111111111111111111111111101101111011100";   --  -0.0352935791015625
     i_sine_s <= "000000000000000000000000000000111111111101011100";   --   0.9993743896484375
-    scale_s <= to_unsigned(4, WIDTH);
+    scale_s <= "00000000100";
     rom_en_a_s <= '1';   
 
     -- Start the IP core processing
