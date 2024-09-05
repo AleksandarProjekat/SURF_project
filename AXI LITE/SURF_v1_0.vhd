@@ -5,7 +5,7 @@ use ieee.numeric_std.all;
 entity SURF_v1_0 is
 	generic (
 		-- Users to add parameters here
-         WIDTH : integer := 11;            -- Bit width for various unsigned signals
+        WIDTH : integer := 11;            -- Bit width for various unsigned signals
         PIXEL_SIZE : integer := 15;       -- 129 x 129 pixels
         INDEX_ADDRESS_SIZE : integer := 6;
         FIXED_SIZE : integer := 48;       -- Bit width for fixed-point operations
@@ -17,11 +17,12 @@ entity SURF_v1_0 is
 
 
 		-- Parameters of Axi Slave Bus Interface S00_AXI
-		C_S00_AXI_DATA_WIDTH	: integer	:= 64;
+		C_S00_AXI_DATA_WIDTH	: integer	:= 32;
 		C_S00_AXI_ADDR_WIDTH	: integer	:= 7
 	);
 	port (
 		-- Users to add ports here
+		
 		---------------MEM INTERFEJS ZA SLIKU--------------------
         bram_addr1_o : out std_logic_vector(PIXEL_SIZE-1 downto 0);
         bram_data_i : in std_logic_vector(FIXED_SIZE-1 downto 0);
@@ -64,7 +65,8 @@ entity SURF_v1_0 is
 end SURF_v1_0;
 
 architecture arch_imp of SURF_v1_0 is
-        
+
+
     component ip is
         generic (
         WIDTH : integer := 11;            -- Bit width for various unsigned signals
@@ -105,17 +107,19 @@ architecture arch_imp of SURF_v1_0 is
         ---------------STATUSNI INTERFEJS------------------------
         ready_o : out std_logic
     );
-    end component;    
+    end component;  
+    
 	-- component declaration
 	component SURF_v1_0_S00_AXI is
 		generic (
-		C_S_AXI_DATA_WIDTH	: integer	:= 32;
-		C_S_AXI_ADDR_WIDTH	: integer	:= 6;
-		WIDTH : integer := 11;
-        FIXED_SIZE : integer := 48
+		 WIDTH : integer := 11;
+        FIXED_SIZE : integer := 48;
+        LOWER_SIZE : integer := 16;
+ 
+                C_S_AXI_DATA_WIDTH	: integer	:= 32;
+                C_S_AXI_ADDR_WIDTH	: integer	:= 7
 		);
 		port (
-		
 		iradius_axi_o : out std_logic_vector(WIDTH - 1 downto 0);
         fracr_axi_o : out std_logic_vector(FIXED_SIZE - 1 downto 0);
         fracc_axi_o : out std_logic_vector(FIXED_SIZE - 1 downto 0);
@@ -129,30 +133,30 @@ architecture arch_imp of SURF_v1_0 is
         start_i_axi : out std_logic;
         ready_axi_i : in std_logic;
         
-            S_AXI_ACLK	: in std_logic;
-            S_AXI_ARESETN	: in std_logic;
-            S_AXI_AWADDR	: in std_logic_vector(C_S_AXI_ADDR_WIDTH-1 downto 0);
-            S_AXI_AWPROT	: in std_logic_vector(2 downto 0);
-            S_AXI_AWVALID	: in std_logic;
-            S_AXI_AWREADY	: out std_logic;
-            S_AXI_WDATA	: in std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-            S_AXI_WSTRB	: in std_logic_vector((C_S_AXI_DATA_WIDTH/8)-1 downto 0);
-            S_AXI_WVALID	: in std_logic;
-            S_AXI_WREADY	: out std_logic;
-            S_AXI_BRESP	: out std_logic_vector(1 downto 0);
-            S_AXI_BVALID	: out std_logic;
-            S_AXI_BREADY	: in std_logic;
-            S_AXI_ARADDR	: in std_logic_vector(C_S_AXI_ADDR_WIDTH-1 downto 0);
-            S_AXI_ARPROT	: in std_logic_vector(2 downto 0);
-            S_AXI_ARVALID	: in std_logic;
-            S_AXI_ARREADY	: out std_logic;
-            S_AXI_RDATA	: out std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
-            S_AXI_RRESP	: out std_logic_vector(1 downto 0);
-            S_AXI_RVALID	: out std_logic;
-            S_AXI_RREADY	: in std_logic
+                S_AXI_ACLK	: in std_logic;
+                S_AXI_ARESETN	: in std_logic;
+                S_AXI_AWADDR	: in std_logic_vector(C_S_AXI_ADDR_WIDTH-1 downto 0);
+                S_AXI_AWPROT	: in std_logic_vector(2 downto 0);
+                S_AXI_AWVALID	: in std_logic;
+                S_AXI_AWREADY	: out std_logic;
+                S_AXI_WDATA	: in std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+                S_AXI_WSTRB	: in std_logic_vector((C_S_AXI_DATA_WIDTH/8)-1 downto 0);
+                S_AXI_WVALID	: in std_logic;
+                S_AXI_WREADY	: out std_logic;
+                S_AXI_BRESP	: out std_logic_vector(1 downto 0);
+                S_AXI_BVALID	: out std_logic;
+                S_AXI_BREADY	: in std_logic;
+                S_AXI_ARADDR	: in std_logic_vector(C_S_AXI_ADDR_WIDTH-1 downto 0);
+                S_AXI_ARPROT	: in std_logic_vector(2 downto 0);
+                S_AXI_ARVALID	: in std_logic;
+                S_AXI_ARREADY	: out std_logic;
+                S_AXI_RDATA	: out std_logic_vector(C_S_AXI_DATA_WIDTH-1 downto 0);
+                S_AXI_RRESP	: out std_logic_vector(1 downto 0);
+                S_AXI_RVALID	: out std_logic;
+                S_AXI_RREADY	: in std_logic
 		);
 	end component SURF_v1_0_S00_AXI;
-	
+
         signal iradius_s :  std_logic_vector(WIDTH - 1 downto 0);
         signal fracr_s :  std_logic_vector(FIXED_SIZE - 1 downto 0);
         signal fracc_s :  std_logic_vector(FIXED_SIZE - 1 downto 0);
@@ -176,18 +180,17 @@ architecture arch_imp of SURF_v1_0 is
         signal rom_addr_s :  std_logic_vector(5 downto 0);  
 begin
 
-
 -- Instantiation of Axi Bus Interface S00_AXI
 SURF_v1_0_S00_AXI_inst : SURF_v1_0_S00_AXI
 	generic map (
-	   WIDTH => WIDTH,
-        FIXED_SIZE => FIXED_SIZE,
+	  WIDTH => WIDTH,
+      FIXED_SIZE => FIXED_SIZE,
         
-            C_S_AXI_DATA_WIDTH	=> C_S00_AXI_DATA_WIDTH,
-            C_S_AXI_ADDR_WIDTH	=> C_S00_AXI_ADDR_WIDTH
+                C_S_AXI_DATA_WIDTH	=> C_S00_AXI_DATA_WIDTH,
+                C_S_AXI_ADDR_WIDTH	=> C_S00_AXI_ADDR_WIDTH
 	)
 	port map (
-	     iradius_axi_o => iradius_s,
+	    iradius_axi_o => iradius_s,
         fracr_axi_o => fracr_s,
         fracc_axi_o => fracc_s,
         spacing_axi_o => spacing_s, 
@@ -200,31 +203,31 @@ SURF_v1_0_S00_AXI_inst : SURF_v1_0_S00_AXI
         start_i_axi => start_i_s,    
         ready_axi_i => ready_o_s,
         
-            S_AXI_ACLK	=> s00_axi_aclk,
-            S_AXI_ARESETN	=> s00_axi_aresetn,
-            S_AXI_AWADDR	=> s00_axi_awaddr,
-            S_AXI_AWPROT	=> s00_axi_awprot,
-            S_AXI_AWVALID	=> s00_axi_awvalid,
-            S_AXI_AWREADY	=> s00_axi_awready,
-            S_AXI_WDATA	=> s00_axi_wdata,
-            S_AXI_WSTRB	=> s00_axi_wstrb,
-            S_AXI_WVALID	=> s00_axi_wvalid,
-            S_AXI_WREADY	=> s00_axi_wready,
-            S_AXI_BRESP	=> s00_axi_bresp,
-            S_AXI_BVALID	=> s00_axi_bvalid,
-            S_AXI_BREADY	=> s00_axi_bready,
-            S_AXI_ARADDR	=> s00_axi_araddr,
-            S_AXI_ARPROT	=> s00_axi_arprot,
-            S_AXI_ARVALID	=> s00_axi_arvalid,
-            S_AXI_ARREADY	=> s00_axi_arready,
-            S_AXI_RDATA	=> s00_axi_rdata,
-            S_AXI_RRESP	=> s00_axi_rresp,
-            S_AXI_RVALID	=> s00_axi_rvalid,
-            S_AXI_RREADY	=> s00_axi_rready
+                S_AXI_ACLK	=> s00_axi_aclk,
+                S_AXI_ARESETN	=> s00_axi_aresetn,
+                S_AXI_AWADDR	=> s00_axi_awaddr,
+                S_AXI_AWPROT	=> s00_axi_awprot,
+                S_AXI_AWVALID	=> s00_axi_awvalid,
+                S_AXI_AWREADY	=> s00_axi_awready,
+                S_AXI_WDATA	=> s00_axi_wdata,
+                S_AXI_WSTRB	=> s00_axi_wstrb,
+                S_AXI_WVALID	=> s00_axi_wvalid,
+                S_AXI_WREADY	=> s00_axi_wready,
+                S_AXI_BRESP	=> s00_axi_bresp,
+                S_AXI_BVALID	=> s00_axi_bvalid,
+                S_AXI_BREADY	=> s00_axi_bready,
+                S_AXI_ARADDR	=> s00_axi_araddr,
+                S_AXI_ARPROT	=> s00_axi_arprot,
+                S_AXI_ARVALID	=> s00_axi_arvalid,
+                S_AXI_ARREADY	=> s00_axi_arready,
+                S_AXI_RDATA	=> s00_axi_rdata,
+                S_AXI_RRESP	=> s00_axi_rresp,
+                S_AXI_RVALID	=> s00_axi_rvalid,
+                S_AXI_RREADY	=> s00_axi_rready
 	);
 
 	-- Add user logic here
-    ip_inst: ip
+ ip_inst: ip
     generic map (
         WIDTH => WIDTH,
         FIXED_SIZE => FIXED_SIZE
