@@ -24,17 +24,21 @@ entity SURF_v1_0 is
 		-- Users to add ports here
 		
 		---------------MEM INTERFEJS ZA SLIKU--------------------
-        bram_addr1_o : out std_logic_vector(PIXEL_SIZE-1 downto 0);
-        bram_data_i : in std_logic_vector(FIXED_SIZE-1 downto 0);
-        bram_en1_o : out std_logic;
+		clka       : out std_logic;
+		reseta     : out std_logic;
+		ena        : out std_logic;
+		addra      : out std_logic_vector (PIXEL_SIZE - 1 downto 0);
+		dina       : out std_logic_vector (FIXED_SIZE - 1 downto 0);
+		douta      : in std_logic_vector (FIXED_SIZE - 1 downto 0);
+		wea        : out std_logic;
         ---------------MEM INTERFEJS ZA IZLAZ--------------------
-        addr_do1_o : out std_logic_vector (5 downto 0);
-        data1_o : out std_logic_vector (FIXED_SIZE - 1 downto 0);          
-        c1_data_o : out std_logic;
-        bram_we1_o : out std_logic;
-        ---------------INTERFEJS ZA ROM--------------------
-        rom_data : in std_logic_vector(FIXED_SIZE - 1 downto 0);
-        rom_addr : out std_logic_vector(5 downto 0);  
+        clkb       : out std_logic;
+		resetb     : out std_logic;
+		enb        : out std_logic;
+		addrb      : out std_logic_vector (INDEX_ADDRESS_SIZE-1 downto 0);
+		dinb       : out std_logic_vector (FIXED_SIZE - 1 downto 0);
+		doutb      : in std_logic_vector (FIXED_SIZE - 1 downto 0);
+		web        : out std_logic; 
 		-- User ports ends
 		-- Do not modify the ports beyond this line
 
@@ -65,7 +69,35 @@ entity SURF_v1_0 is
 end SURF_v1_0;
 
 architecture arch_imp of SURF_v1_0 is
+        signal reset_s : std_logic;
 
+
+        ------------------ AXI Lite Interface ---------------------
+
+
+        ------------------ Interface to IP -------------------------
+        signal iradius_s :  std_logic_vector(WIDTH - 1 downto 0);
+        signal fracr_s :  std_logic_vector(FIXED_SIZE - 1 downto 0);
+        signal fracc_s :  std_logic_vector(FIXED_SIZE - 1 downto 0);
+        signal spacing_s :  std_logic_vector(FIXED_SIZE - 1 downto 0);
+        signal iy_s :  std_logic_vector(WIDTH - 1 downto 0);
+        signal ix_s :  std_logic_vector(WIDTH - 1 downto 0);
+        signal step_s :  std_logic_vector(WIDTH - 1 downto 0);
+        signal i_cose_s :  std_logic_vector(FIXED_SIZE - 1 downto 0);
+        signal i_sine_s :  std_logic_vector(FIXED_SIZE - 1 downto 0);
+        signal scale_s :  std_logic_vector(WIDTH - 1 downto 0);
+        signal start_i_s :  std_logic;
+        signal ready_o_s :  std_logic;
+        
+        signal bram_addr1_o_s : std_logic_vector(PIXEL_SIZE-1 downto 0);
+        signal bram_data_i_s :  std_logic_vector(FIXED_SIZE-1 downto 0);
+        signal bram_en1_o_s :  std_logic;
+        signal addr_do1_o_s :  std_logic_vector (5 downto 0);
+        signal data1_o_s :  std_logic_vector (FIXED_SIZE - 1 downto 0);          
+        signal c1_data_o_s :  std_logic;
+        signal bram_we1_o_s : std_logic;
+        signal rom_data_s :  std_logic_vector(FIXED_SIZE - 1 downto 0);
+        signal rom_addr_s :  std_logic_vector(5 downto 0);  
 
     component ip is
         generic (
@@ -157,27 +189,6 @@ architecture arch_imp of SURF_v1_0 is
 		);
 	end component SURF_v1_0_S00_AXI;
 
-        signal iradius_s :  std_logic_vector(WIDTH - 1 downto 0);
-        signal fracr_s :  std_logic_vector(FIXED_SIZE - 1 downto 0);
-        signal fracc_s :  std_logic_vector(FIXED_SIZE - 1 downto 0);
-        signal spacing_s :  std_logic_vector(FIXED_SIZE - 1 downto 0);
-        signal iy_s :  std_logic_vector(WIDTH - 1 downto 0);
-        signal ix_s :  std_logic_vector(WIDTH - 1 downto 0);
-        signal step_s :  std_logic_vector(WIDTH - 1 downto 0);
-        signal i_cose_s :  std_logic_vector(FIXED_SIZE - 1 downto 0);
-        signal i_sine_s :  std_logic_vector(FIXED_SIZE - 1 downto 0);
-        signal scale_s :  std_logic_vector(WIDTH - 1 downto 0);
-        signal start_i_s :  std_logic;
-        signal ready_o_s :  std_logic;
-        signal bram_addr1_o_s : std_logic_vector(PIXEL_SIZE-1 downto 0);
-        signal bram_data_i_s :  std_logic_vector(FIXED_SIZE-1 downto 0);
-        signal bram_en1_o_s :  std_logic;
-        signal addr_do1_o_s :  std_logic_vector (5 downto 0);
-        signal data1_o_s :  std_logic_vector (FIXED_SIZE - 1 downto 0);          
-        signal c1_data_o_s :  std_logic;
-        signal bram_we1_o_s : std_logic;
-        signal rom_data_s :  std_logic_vector(FIXED_SIZE - 1 downto 0);
-        signal rom_addr_s :  std_logic_vector(5 downto 0);  
 begin
 
 -- Instantiation of Axi Bus Interface S00_AXI
@@ -233,8 +244,10 @@ SURF_v1_0_S00_AXI_inst : SURF_v1_0_S00_AXI
         FIXED_SIZE => FIXED_SIZE
     )
     port map(
-         clk => s00_axi_aclk,
-        reset => s00_axi_aresetn,
+        clk => s00_axi_aclk,
+        reset => reset_s,
+        
+         ---------------REGISTRI----------------------------------
         iradius => iradius_s,
         fracr => fracr_s,
         fracc => fracc_s,
@@ -245,18 +258,33 @@ SURF_v1_0_S00_AXI_inst : SURF_v1_0_S00_AXI
         i_cose => i_cose_s,
         i_sine => i_sine_s,
         scale => scale_s,
-        bram_addr1_o => bram_addr1_o_s,
-        bram_data_i => bram_data_i_s,
-        bram_en1_o => bram_en1_o_s,
-        addr_do1_o => addr_do1_o_s,
-        data1_o => data1_o_s,        
-        c1_data_o => c1_data_o_s,
-        bram_we1_o => bram_we1_o_s,
+        
+        ---------------MEM INTERFEJS ZA SLIKU--------------------
+
+        bram_addr1_o => addra,
+        bram_data_i => douta,
+        bram_en1_o => ena,
+        ---------------MEM INTERFEJS ZA IZLAZ--------------------
+
+        addr_do1_o => addrb,
+        data1_o => dinb,        
+        c1_data_o => enb,
+        bram_we1_o => web,
+        
         rom_data => rom_data_s,
         rom_addr => rom_addr_s,
+        ---------------KOMANDNI INTERFEJS------------------------
         start_i => start_i_s,
+        ---------------STATUSNI INTERFEJS------------------------
         ready_o => ready_o_s
      );
+     
+        clka <= s00_axi_aclk;
+        clkb <= s00_axi_aclk;
+        reseta <= reset_s;
+        resetb <= reset_s;
+        wea <= '0';
+        dina <= (others => '0');
 	-- User logic ends
 
 end arch_imp;
