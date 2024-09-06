@@ -24,21 +24,21 @@ entity SURF_v1_0 is
 		-- Users to add ports here
 		
 		---------------MEM INTERFEJS ZA SLIKU--------------------
-		clka       : out std_logic;
-		reseta     : out std_logic;
-		ena        : out std_logic;
-		addra      : out std_logic_vector (PIXEL_SIZE - 1 downto 0);
-		dina       : out std_logic_vector (FIXED_SIZE - 1 downto 0);
-		douta      : in std_logic_vector (FIXED_SIZE - 1 downto 0);
-		wea        : out std_logic;
+		clk_a       : out std_logic;
+		reset_a     : out std_logic;
+		en_a        : out std_logic;
+		addr_a      : out std_logic_vector (PIXEL_SIZE - 1 downto 0);
+		data_a_i    : out std_logic_vector (FIXED_SIZE - 1 downto 0);
+		data_a_o    : in std_logic_vector (FIXED_SIZE - 1 downto 0);
+		we_a        : out std_logic;
         ---------------MEM INTERFEJS ZA IZLAZ--------------------
-        clkb       : out std_logic;
-		resetb     : out std_logic;
-		enb        : out std_logic;
-		addrb      : out std_logic_vector (INDEX_ADDRESS_SIZE-1 downto 0);
-		dinb       : out std_logic_vector (FIXED_SIZE - 1 downto 0);
-		doutb      : in std_logic_vector (FIXED_SIZE - 1 downto 0);
-		web        : out std_logic; 
+        clk_b       : out std_logic;
+		reset_b     : out std_logic;
+		en_b        : out std_logic;
+		addr_b      : out std_logic_vector (INDEX_ADDRESS_SIZE-1 downto 0);
+		data_b_i    : out std_logic_vector (FIXED_SIZE - 1 downto 0);
+		data_b_o    : in std_logic_vector (FIXED_SIZE - 1 downto 0);
+		we_b        : out std_logic; 
 		-- User ports ends
 		-- Do not modify the ports beyond this line
 
@@ -149,7 +149,7 @@ architecture arch_imp of SURF_v1_0 is
         LOWER_SIZE : integer := 16;
  
                 C_S_AXI_DATA_WIDTH	: integer	:= 32;
-                C_S_AXI_ADDR_WIDTH	: integer	:= 7
+                C_S_AXI_ADDR_WIDTH	: integer	:= 4
 		);
 		port (
 		iradius_axi_o : out std_logic_vector(WIDTH - 1 downto 0);
@@ -190,6 +190,8 @@ architecture arch_imp of SURF_v1_0 is
 	end component SURF_v1_0_S00_AXI;
 
 begin
+
+reset_s <= not s00_axi_aresetn;
 
 -- Instantiation of Axi Bus Interface S00_AXI
 SURF_v1_0_S00_AXI_inst : SURF_v1_0_S00_AXI
@@ -261,15 +263,15 @@ SURF_v1_0_S00_AXI_inst : SURF_v1_0_S00_AXI
         
         ---------------MEM INTERFEJS ZA SLIKU--------------------
 
-        bram_addr1_o => addra,
-        bram_data_i => douta,
-        bram_en1_o => ena,
+        bram_addr1_o => addr_a,
+        bram_data_i => data_a_o,
+        bram_en1_o => en_a,
         ---------------MEM INTERFEJS ZA IZLAZ--------------------
 
-        addr_do1_o => addrb,
-        data1_o => dinb,        
-        c1_data_o => enb,
-        bram_we1_o => web,
+        addr_do1_o => addr_b,
+        data1_o => data_b_i,        
+        c1_data_o => en_b,
+        bram_we1_o => we_b,
         
         rom_data => rom_data_s,
         rom_addr => rom_addr_s,
@@ -279,12 +281,12 @@ SURF_v1_0_S00_AXI_inst : SURF_v1_0_S00_AXI
         ready_o => ready_o_s
      );
      
-        clka <= s00_axi_aclk;
-        clkb <= s00_axi_aclk;
-        reseta <= reset_s;
-        resetb <= reset_s;
-        wea <= '0';
-        dina <= (others => '0');
+        clk_a <= s00_axi_aclk;
+        clk_b <= s00_axi_aclk;
+        reset_a <= reset_s;
+        reset_b <= reset_s;
+        we_a <= '0';
+        data_a_i <= (others => '0');
 	-- User logic ends
 
 end arch_imp;

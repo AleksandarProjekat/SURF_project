@@ -146,16 +146,16 @@ architecture arch_imp of SURF_v1_0_S00_AXI is
 	signal aw_en	: std_logic;
 
 
-    signal fracr_upper_s : std_logic_vector(C_S_AXI_DATA_WIDTH - 1 downto 0);
-    signal fracr_lower_s : std_logic_vector(LOWER_SIZE - 1 downto 0);
-    signal fracc_upper_s : std_logic_vector(C_S_AXI_DATA_WIDTH - 1 downto 0);
-    signal fracc_lower_s : std_logic_vector(LOWER_SIZE - 1 downto 0);
-    signal spacing_upper_s : std_logic_vector(C_S_AXI_DATA_WIDTH - 1 downto 0);
-    signal spacing_lower_s : std_logic_vector(LOWER_SIZE - 1 downto 0);
-    signal i_cose_upper_s : std_logic_vector(C_S_AXI_DATA_WIDTH - 1 downto 0);
-    signal i_cose_lower_s : std_logic_vector(LOWER_SIZE - 1 downto 0);
-    signal i_sine_upper_s : std_logic_vector(C_S_AXI_DATA_WIDTH - 1 downto 0);
-    signal i_sine_lower_s : std_logic_vector(LOWER_SIZE - 1 downto 0);
+--    signal fracr_upper_s : std_logic_vector(C_S_AXI_DATA_WIDTH - 1 downto 0);
+--    signal fracr_lower_s : std_logic_vector(LOWER_SIZE - 1 downto 0);
+--    signal fracc_upper_s : std_logic_vector(C_S_AXI_DATA_WIDTH - 1 downto 0);
+--    signal fracc_lower_s : std_logic_vector(LOWER_SIZE - 1 downto 0);
+--    signal spacing_upper_s : std_logic_vector(C_S_AXI_DATA_WIDTH - 1 downto 0);
+--    signal spacing_lower_s : std_logic_vector(LOWER_SIZE - 1 downto 0);
+--    signal i_cose_upper_s : std_logic_vector(C_S_AXI_DATA_WIDTH - 1 downto 0);
+--    signal i_cose_lower_s : std_logic_vector(LOWER_SIZE - 1 downto 0);
+--    signal i_sine_upper_s : std_logic_vector(C_S_AXI_DATA_WIDTH - 1 downto 0);
+--    signal i_sine_lower_s : std_logic_vector(LOWER_SIZE - 1 downto 0);
         
 begin
 	-- I/O Connections assignments
@@ -285,7 +285,7 @@ begin
 	            
 	          when b"00001" =>
 	            -- Pisanje donjih 16 bita u `slv_reg1`	            
-	            for byte_index in 0 to 1 loop
+	            for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 	              if ( S_AXI_WSTRB(byte_index) = '1' ) then
 	                -- Respective byte enables are asserted as per write strobes                   
 	                -- slave registor 1
@@ -305,7 +305,7 @@ begin
 	            
 	          when b"00011" =>
 	          	  -- Pisanje donjih 16 bita u `slv_reg3`
-	            for byte_index in 0 to 1 loop
+	            for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 	              if ( S_AXI_WSTRB(byte_index) = '1' ) then
 	                -- Respective byte enables are asserted as per write strobes                   
 	                -- slave registor 3
@@ -325,7 +325,7 @@ begin
 	            
 	          when b"00101" =>
 	               -- Pisanje donjih 16 bita u `slv_reg5`
-	            for byte_index in 0 to 1 loop
+	            for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 	              if ( S_AXI_WSTRB(byte_index) = '1' ) then
 	                -- Respective byte enables are asserted as per write strobes                   
 	                -- slave registor 5
@@ -345,7 +345,7 @@ begin
 	            
 	          when b"00111" =>
                   -- Pisanje donjih 16 bita u `slv_reg7`	          
-	            for byte_index in 0 to 1 loop
+	            for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 	              if ( S_AXI_WSTRB(byte_index) = '1' ) then
 	                -- Respective byte enables are asserted as per write strobes                   
 	                -- slave registor 7
@@ -365,7 +365,7 @@ begin
 	            
 	          when b"01001" =>
 	            -- Pisanje donjih 16 bita u `slv_reg9`	          
-	            for byte_index in 0 to 1 loop
+	            for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
 	              if ( S_AXI_WSTRB(byte_index) = '1' ) then
 	                -- Respective byte enables are asserted as per write strobes                   
 	                -- slave registor 9
@@ -591,25 +591,20 @@ begin
 
 
 	-- Add user logic here
-fracr_upper_s <= slv_reg0;
-fracr_lower_s <= slv_reg1(LOWER_SIZE - 1 downto 0);
-fracr_axi_o <= fracr_upper_s & fracr_lower_s;
 
-fracc_upper_s <= slv_reg2;
-fracc_lower_s <= slv_reg3(LOWER_SIZE - 1 downto 0);
-fracc_axi_o <= fracc_upper_s & fracc_lower_s;
+fracr_axi_o <= slv_reg0 & slv_reg1(LOWER_SIZE - 1 downto 0);
 
-spacing_upper_s <= slv_reg4;
-spacing_lower_s <= slv_reg5(LOWER_SIZE - 1 downto 0);
-spacing_axi_o <= spacing_upper_s & spacing_lower_s;
 
-i_cose_upper_s <= slv_reg6;
-i_cose_lower_s <= slv_reg7(LOWER_SIZE - 1 downto 0);
-i_cose_axi_o <= i_cose_upper_s & i_cose_lower_s;
+fracc_axi_o <= slv_reg2 & slv_reg3(LOWER_SIZE - 1 downto 0);
 
-i_sine_upper_s <= slv_reg8;
-i_sine_lower_s <= slv_reg9(LOWER_SIZE - 1 downto 0);
-i_sine_axi_o <= i_sine_upper_s & i_sine_lower_s;
+
+spacing_axi_o <= slv_reg4 & slv_reg5(LOWER_SIZE - 1 downto 0);
+
+
+i_cose_axi_o <= slv_reg6 & slv_reg7(LOWER_SIZE - 1 downto 0);
+
+
+i_sine_axi_o <= slv_reg8 & slv_reg9(LOWER_SIZE - 1 downto 0);
 
 -- Povezivanje ostalih signala direktno sa registrima
 iradius_axi_o <= slv_reg10(WIDTH - 1 downto 0);
@@ -619,7 +614,7 @@ step_axi_o <= slv_reg13(WIDTH - 1 downto 0);
 scale_axi_o <= slv_reg14(WIDTH - 1 downto 0);
 start_i_axi <= slv_reg15(0);  
 
- slv_reg16 <= std_logic_vector(to_unsigned(0, 31)) & ready_axi_i;                ----da li treba ovde
+ slv_reg16 <= std_logic_vector(to_unsigned(0, 31)) & ready_axi_i;                
 
 	-- User logic ends
 

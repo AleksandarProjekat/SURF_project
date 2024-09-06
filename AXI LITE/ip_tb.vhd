@@ -18,44 +18,52 @@ constant WIDTH : integer := 11;
 constant PIXEL_SIZE : integer := 15;
 constant INDEX_ADDRESS_SIZE : integer := 6;
 constant FIXED_SIZE : integer := 48;
+constant LOWER_SIZE : integer := 16;
+
 constant INDEX_SIZE : integer := 4;
 constant IMG_WIDTH : integer := 129;
 constant IMG_HEIGHT : integer := 129;
 
--- Test signals
-signal clk_s : std_logic := '0';
-signal reset_s : std_logic := '0';
-signal iradius_s : std_logic_vector(WIDTH - 1 downto 0) := (others => '0');
-signal fracr_s : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
-signal fracc_s : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
-signal spacing_s : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
-signal iy_s : std_logic_vector(WIDTH - 1 downto 0) := (others => '0');
-signal ix_s : std_logic_vector(WIDTH - 1 downto 0) := (others => '0');
-signal step_s : std_logic_vector(WIDTH - 1 downto 0) := (others => '0');
-signal i_cose_s : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
-signal i_sine_s : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
-signal scale_s : std_logic_vector(WIDTH - 1 downto 0) := (others => '0');
+----PODACI KOJE CU POSLE POSLATI (BROJEVI IZ VP) 
+    constant FRACR_UPPER_C : std_logic_vector(32-1 downto 0) := "00000000000000000000000000000000";    --0.06777191162109375
+    constant FRACR_LOWER_C : std_logic_vector(15 downto 0) := "0100010101100110";
+    constant FRACC_UPPER_C : std_logic_vector(32-1 downto 0) := "00000000000000000000000000000000";    --0.06403732299804688
+    constant FRACC_LOWER_C : std_logic_vector(15 downto 0) := "0100000110010011";
+    constant SPACING_UPPER_C : std_logic_vector(32-1 downto 0) := "00000000000000000000000000000000";   --0.0727539062
+    constant SPACING_LOWER_C : std_logic_vector(15 downto 0) := "0100101010000000";
+    constant I_COSE_UPPER_C : std_logic_vector(32-1 downto 0) := "11111111111111111111111111111111";     --  -0.0352935791015625
+    constant I_COSE_LOWER_C : std_logic_vector(15 downto 0) := "1101101111011100";
+    constant I_SINE_UPPER_C : std_logic_vector(32-1 downto 0) := "00000000000000000000000000000011";     --   0.9993743896484375
+    constant I_SINE_LOWER_C : std_logic_vector(15 downto 0) := "1111111101011100";
+    constant IRADIUS_C : std_logic_vector(WIDTH - 1 downto 0) := "00000011000";    --24
+    constant IY_C : std_logic_vector(WIDTH - 1 downto 0) := "00000100000";         --32
+    constant IX_C : std_logic_vector(WIDTH - 1 downto 0) := "00000101101";         --45
+    constant STEP_C : std_logic_vector(WIDTH - 1 downto 0) := "00000000010";       --2
+    constant SCALE_C : std_logic_vector(WIDTH - 1 downto 0) := "00000000100";      --4
 
-signal bram_addr1_o_s : std_logic_vector(PIXEL_SIZE-1 downto 0);
-signal bram_data_i_s : std_logic_vector(FIXED_SIZE-1 downto 0) := (others => '0');
-signal bram_en1_o_s : std_logic;
-
-signal addr_do1_o_s : std_logic_vector(5 downto 0);
-signal data1_o_s : std_logic_vector(FIXED_SIZE - 1 downto 0);
-signal c1_data_o_s : std_logic;
-signal bram_we1_o_s : std_logic;
-
-signal rom_data_s : std_logic_vector(FIXED_SIZE - 1 downto 0) := (others => '0');
-signal rom_addr_s : std_logic_vector(5 downto 0);
-
-signal start_i_s : std_logic := '0';
-signal ready_o_s : std_logic;
-signal done_s : std_logic := '0';
-signal rom_data_a_s : std_logic_vector(FIXED_SIZE - 1 downto 0);
-signal rom_en_a_s : std_logic := '0';
-
--- Clock period definition
-constant clk_period : time := 10 ns;
+    ----------------------IP registers-----------------------------
+    constant FRACR_UPPER_REG_ADDR_C : integer := 0;
+    constant FRACR_LOWER_REG_ADDR_C : integer := 4;
+    constant FRACC_UPPER_REG_ADDR_C : integer := 8;
+    constant FRACC_LOWER_REG_ADDR_C : integer := 12;
+    constant SPACING_UPPER_REG_ADDR_C : integer := 16;
+    constant SPACING_LOWER_REG_ADDR_C : integer := 20;
+    constant I_COSE_UPPER_REG_ADDR_C : integer := 24;
+    constant I_COSE_LOWER_REG_ADDR_C : integer := 28;
+    constant I_SINE_UPPER_REG_ADDR_C : integer := 32;
+    constant I_SINE_LOWER_REG_ADDR_C : integer := 36;
+    constant IRADIUS_REG_ADDR_C : integer := 40;
+    constant IY_REG_ADDR_C : integer := 44;
+    constant IX_REG_ADDR_C : integer := 48;
+    constant STEP_REG_ADDR_C : integer := 52;
+    constant SCALE_REG_ADDR_C : integer := 56;
+    constant START_ADDR_C : integer := 60;
+    constant READY_REG_ADDR_C : integer := 64;
+    
+    ---------------------------------------------------------------
+ 
+    signal clk_s: std_logic;
+    signal reset_s: std_logic;
 
 ------------------ Ports for BRAM Initialization -----------------
 
@@ -83,31 +91,419 @@ signal ip_c_we : std_logic;
 signal ip_c_addr : std_logic_vector(5 downto 0);
 signal ip_c_data: std_logic_vector(FIXED_SIZE - 1 downto 0);
 
-begin
-
--- Clock generation process
-clk_gen: process is
-begin
-    clk_s <= '0', '1' after 10 ns;
-    wait for 20 ns;
-end process;
-
-stimulus_generator: process
-variable tv_slika : line;
-begin
-    report "Start !";
+------------------- AXI Interfaces signals ----------------------
     
-    -- Reset signal
-    reset_s <= '1';
-    wait for 5*20 ns; -- wait for 5 clock cycles
-    reset_s <= '0';
-    wait for 5*20 ns; -- wait for 5 clock cycles
+    -- Parameters of Axi-Lite Slave Bus Interface S00_AXI
+    constant C_S00_AXI_DATA_WIDTH_c : integer := 32;
+    constant C_S00_AXI_ADDR_WIDTH_c : integer := 7;
+    
+    -- Ports of Axi-Lite Slave Bus Interface S00_AXI
+    signal s00_axi_aclk_s : std_logic := '0';
+    signal s00_axi_aresetn_s : std_logic := '1';
+    signal s00_axi_awaddr_s : std_logic_vector(C_S00_AXI_ADDR_WIDTH_c-1 downto 0) := (others => '0');
+    signal s00_axi_awprot_s : std_logic_vector(2 downto 0) := (others => '0');
+    signal s00_axi_awvalid_s : std_logic := '0';
+    signal s00_axi_awready_s : std_logic := '0';
+    signal s00_axi_wdata_s : std_logic_vector(C_S00_AXI_DATA_WIDTH_c-1 downto 0) := (others => '0');
+    signal s00_axi_wstrb_s : std_logic_vector((C_S00_AXI_DATA_WIDTH_c/8)-1 downto 0) := (others => '0');
+    signal s00_axi_wvalid_s : std_logic := '0';
+    signal s00_axi_wready_s : std_logic := '0';
+    signal s00_axi_bresp_s : std_logic_vector(1 downto 0) := (others => '0');
+    signal s00_axi_bvalid_s : std_logic := '0';
+    signal s00_axi_bready_s : std_logic := '0';
+    signal s00_axi_araddr_s : std_logic_vector(C_S00_AXI_ADDR_WIDTH_c-1 downto 0) := (others => '0');
+    signal s00_axi_arprot_s : std_logic_vector(2 downto 0) := (others => '0');
+    signal s00_axi_arvalid_s : std_logic := '0';
+    signal s00_axi_arready_s : std_logic := '0';
+    signal s00_axi_rdata_s : std_logic_vector(C_S00_AXI_DATA_WIDTH_c-1 downto 0) := (others => '0');
+    signal s00_axi_rresp_s : std_logic_vector(1 downto 0) := (others => '0');
+    signal s00_axi_rvalid_s : std_logic := '0';
+    signal s00_axi_rready_s : std_logic := '0';
+begin
+
+   reset_s <= not s00_axi_aresetn_s; --reset for BRAM
+   
+clk_gen: process is
+    begin
+        clk_s <= '0', '1' after 10 ns;
+        wait for 20 ns;
+    end process;
+    
+    
+    stimulus_generator: process
+    variable tv_slika  : line;
+    begin
+    report "Start !";
+
+    -- reset AXI-lite interface. Reset will be 10 clock cycles wide
+    s00_axi_aresetn_s <= '0';
+    -- wait for 5 falling edges of AXI-lite clock signal
+    for i in 1 to 5 loop
+        wait until falling_edge(clk_s);
+    end loop;
+    -- release reset
+    s00_axi_aresetn_s <= '1';
+    wait until falling_edge(clk_s);
         
+     ----------------------------------------------------------------------
+
     -- Initialize the core --
     report "Loading the picture dimensions into the core!";
     
+    
+-- Slanje gornjih 32 bita (FRACR_UPPER_C)
+wait until falling_edge(clk_s);
+s00_axi_awaddr_s <= std_logic_vector(to_unsigned(FRACR_UPPER_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
+s00_axi_awvalid_s <= '1';
+s00_axi_wdata_s <= FRACR_UPPER_C;  -- Salje prvih 32 bita
+s00_axi_wvalid_s <= '1';
+s00_axi_wstrb_s <= "1111";
+s00_axi_bready_s <= '1';
+    wait until s00_axi_awready_s = '1';
+    wait until s00_axi_awready_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '0';
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_DATA_WIDTH_c));
+    s00_axi_wvalid_s <= '0';
+    s00_axi_wstrb_s <= "0000";
+    wait until s00_axi_bvalid_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_bready_s <= '0';
+    wait until falling_edge(clk_s);
+
+-- Slanje donjih 16 bita (FRACR_LOWER_C), smestenih u donji deo 32-bitne širine
+wait until falling_edge(clk_s);
+s00_axi_awaddr_s <= std_logic_vector(to_unsigned(FRACR_LOWER_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
+s00_axi_awvalid_s <= '1';
+s00_axi_wdata_s <= std_logic_vector(to_unsigned(0,16)) & FRACR_LOWER_C;  -- Gornjih 16 bita nule, donjih 16 bita nasa vrednost
+s00_axi_wvalid_s <= '1';
+s00_axi_wstrb_s <= "0011";  -- Oznaka da su validni samo donji 2 bajta
+s00_axi_bready_s <= '1';
+    wait until s00_axi_awready_s = '1';
+    wait until s00_axi_awready_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '0';
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_DATA_WIDTH_c));
+    s00_axi_wvalid_s <= '0';
+    s00_axi_wstrb_s <= "0000";
+    wait until s00_axi_bvalid_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_bready_s <= '0';
+    wait until falling_edge(clk_s);
+
+
+    -- wait for 5 falling edges of AXI-lite clock signal
+    for i in 1 to 5 loop
+        wait until falling_edge(clk_s);
+    end loop;
+    
+     -- Slanje gornjih 32 bita (FRACC_UPPER_C)
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(FRACC_UPPER_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '1';
+    s00_axi_wdata_s <= FRACC_UPPER_C;  -- Salje prvih 32 bita
+    s00_axi_wvalid_s <= '1';
+    s00_axi_wstrb_s <= "1111";
+    s00_axi_bready_s <= '1';
+    wait until s00_axi_awready_s = '1';
+    wait until s00_axi_awready_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '0';
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_DATA_WIDTH_c));
+    s00_axi_wvalid_s <= '0';
+    s00_axi_wstrb_s <= "0000";
+    wait until s00_axi_bvalid_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_bready_s <= '0';
+    wait until falling_edge(clk_s);
+    
+    -- Slanje donjih 16 bita (FRACC_LOWER_C), smestenih u donji deo 32-bitne širine
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(FRACC_LOWER_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '1';
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0,16)) & FRACC_LOWER_C;  -- Gornjih 16 bita nule, donjih 16 bita nasa vrednost
+    s00_axi_wvalid_s <= '1';
+    s00_axi_wstrb_s <= "0011";  -- Oznaka da su validni samo donji 2 bajta, odnosno 
+    s00_axi_bready_s <= '1';
+    wait until s00_axi_awready_s = '1';
+    wait until s00_axi_awready_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '0';
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_DATA_WIDTH_c));
+    s00_axi_wvalid_s <= '0';
+    s00_axi_wstrb_s <= "0000";
+    wait until s00_axi_bvalid_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_bready_s <= '0';
+    wait until falling_edge(clk_s);
+    
+    -- wait for 5 falling edges of AXI-lite clock signal
+    for i in 1 to 5 loop
+        wait until falling_edge(clk_s);
+    end loop;
+    
+        -- Slanje gornjih 32 bita (SPACING_UPPER_C)
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(SPACING_UPPER_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '1';
+    s00_axi_wdata_s <= SPACING_UPPER_C;  -- Salje prvih 32 bita
+    s00_axi_wvalid_s <= '1';
+    s00_axi_wstrb_s <= "1111";
+    s00_axi_bready_s <= '1';
+    wait until s00_axi_awready_s = '1';
+    wait until s00_axi_awready_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_awvalid_s <= '0';
+    s00_axi_wvalid_s <= '0';
+    s00_axi_bready_s <= '0';
+    
+    -- Slanje donjih 16 bita (SPACING_LOWER_C), smestenih u donji deo 32-bitne širine
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(SPACING_LOWER_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '1';
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0,16)) & SPACING_LOWER_C;  -- Gornjih 16 bita nule, donjih 16 bita nasa vrednost
+    s00_axi_wvalid_s <= '1';
+    s00_axi_wstrb_s <= "0011";  -- Oznaka da su validni samo donji 2 bajta, odnosno 
+    s00_axi_bready_s <= '1';
+    wait until s00_axi_awready_s = '1';
+    wait until s00_axi_awready_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '0';
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_DATA_WIDTH_c));
+    s00_axi_wvalid_s <= '0';
+    s00_axi_wstrb_s <= "0000";
+    wait until s00_axi_bvalid_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_bready_s <= '0';
+    wait until falling_edge(clk_s);
+    
+    -- wait for 5 falling edges of AXI-lite clock signal
+    for i in 1 to 5 loop
+        wait until falling_edge(clk_s);
+    end loop;
+   
+    
+         -- Slanje gornjih 32 bita (I_COSE_UPPER_C)
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(I_COSE_UPPER_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '1';
+    s00_axi_wdata_s <= I_COSE_UPPER_C;  -- Salje prvih 32 bita
+    s00_axi_wvalid_s <= '1';
+    s00_axi_wstrb_s <= "1111";
+    s00_axi_bready_s <= '1';
+    wait until s00_axi_awready_s = '1';
+    wait until s00_axi_awready_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_awvalid_s <= '0';
+    s00_axi_wvalid_s <= '0';
+    s00_axi_bready_s <= '0';
+    
+    -- Slanje donjih 16 bita (I_COSE_LOWER_C), smestenih u donji deo 32-bitne širine
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(I_COSE_LOWER_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '1';
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0,16)) & I_COSE_LOWER_C;  -- Gornjih 16 bita nule, donjih 16 bita nasa vrednost
+    s00_axi_wvalid_s <= '1';
+    s00_axi_wstrb_s <= "0011";  -- Oznaka da su validni samo donji 2 bajta, odnosno 
+    s00_axi_bready_s <= '1';
+    wait until s00_axi_awready_s = '1';
+    wait until s00_axi_awready_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '0';
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_DATA_WIDTH_c));
+    s00_axi_wvalid_s <= '0';
+    s00_axi_wstrb_s <= "0000";
+    wait until s00_axi_bvalid_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_bready_s <= '0';
+    wait until falling_edge(clk_s);
+    
+    -- wait for 5 falling edges of AXI-lite clock signal
+    for i in 1 to 5 loop
+        wait until falling_edge(clk_s);
+    end loop;
+    
+             -- Slanje gornjih 32 bita (I_SINE_UPPER_C)
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(I_SINE_UPPER_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '1';
+    s00_axi_wdata_s <= I_SINE_UPPER_C;  -- Salje prvih 32 bita
+    s00_axi_wvalid_s <= '1';
+    s00_axi_wstrb_s <= "1111";
+    s00_axi_bready_s <= '1';
+    wait until s00_axi_awready_s = '1';
+    wait until s00_axi_awready_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_awvalid_s <= '0';
+    s00_axi_wvalid_s <= '0';
+    s00_axi_bready_s <= '0';
+    
+    -- Slanje donjih 16 bita (I_SINE_LOWER_C), smestenih u donji deo 32-bitne širine
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(I_SINE_LOWER_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '1';
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0,16)) & I_SINE_LOWER_C;  -- Gornjih 16 bita nule, donjih 16 bita nasa vrednost
+    s00_axi_wvalid_s <= '1';
+    s00_axi_wstrb_s <= "0011";  -- Oznaka da su validni samo donji 2 bajta, odnosno 
+    s00_axi_bready_s <= '1';
+    wait until s00_axi_awready_s = '1';
+    wait until s00_axi_awready_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '0';
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_DATA_WIDTH_c));
+    s00_axi_wvalid_s <= '0';
+    s00_axi_wstrb_s <= "0000";
+    wait until s00_axi_bvalid_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_bready_s <= '0';
+    wait until falling_edge(clk_s);
+    
+    -- wait for 5 falling edges of AXI-lite clock signal
+    for i in 1 to 5 loop
+        wait until falling_edge(clk_s);
+    end loop;
+   
+    
+    -- Set the value for IRADIUS
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(IRADIUS_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '1';
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, 21)) & IRADIUS_C;
+    s00_axi_wvalid_s <= '1';
+    s00_axi_wstrb_s <= "1111";     ----- VALJDA JE NAPISANO U SURF_V1_0_S00 NA KRAJU FAJLA DA SE UZIMA DONJIH 11 BITA PA MOZDA OVO NIJE BITNO
+    s00_axi_bready_s <= '1';
+    wait until s00_axi_awready_s = '1';
+    wait until s00_axi_awready_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '0';
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_DATA_WIDTH_c));
+    s00_axi_wvalid_s <= '0';
+    s00_axi_wstrb_s <= "0000";
+    wait until s00_axi_bvalid_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_bready_s <= '0';
+    wait until falling_edge(clk_s);
+    
+    -- wait for 5 falling edges of AXI-lite clock signal
+    for i in 1 to 5 loop
+        wait until falling_edge(clk_s);
+    end loop;
+    
+      -- Set the value for IY
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(IY_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '1';
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, 21)) & IY_C;
+    s00_axi_wvalid_s <= '1';
+    s00_axi_wstrb_s <= "1111";     ----- VALJDA JE NAPISANO U SURF_V1_0_S00 NA KRAJU FAJLA DA SE UZIMA DONJIH 11 BITA PA MOZDA OVO NIJE BITNO
+    s00_axi_bready_s <= '1';
+    wait until s00_axi_awready_s = '1';
+    wait until s00_axi_awready_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '0';
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_DATA_WIDTH_c));
+    s00_axi_wvalid_s <= '0';
+    s00_axi_wstrb_s <= "0000";
+    wait until s00_axi_bvalid_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_bready_s <= '0';
+    wait until falling_edge(clk_s);
+    
+    -- wait for 5 falling edges of AXI-lite clock signal
+    for i in 1 to 5 loop
+        wait until falling_edge(clk_s);
+    end loop;
+   
+    
+      -- Set the value for IX
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(IX_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '1';
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, 21)) & IX_C;
+    s00_axi_wvalid_s <= '1';
+    s00_axi_wstrb_s <= "1111";     ----- VALJDA JE NAPISANO U SURF_V1_0_S00 NA KRAJU FAJLA DA SE UZIMA DONJIH 11 BITA PA MOZDA OVO NIJE BITNO
+    s00_axi_bready_s <= '1';
+    wait until s00_axi_awready_s = '1';
+    wait until s00_axi_awready_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '0';
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_DATA_WIDTH_c));
+    s00_axi_wvalid_s <= '0';
+    s00_axi_wstrb_s <= "0000";
+    wait until s00_axi_bvalid_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_bready_s <= '0';
+    wait until falling_edge(clk_s);
+    
+      -- Set the value for STEP
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(STEP_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '1';
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, 21)) & STEP_C;
+    s00_axi_wvalid_s <= '1';
+    s00_axi_wstrb_s <= "1111";     ----- VALJDA JE NAPISANO U SURF_V1_0_S00 NA KRAJU FAJLA DA SE UZIMA DONJIH 11 BITA PA MOZDA OVO NIJE BITNO
+    s00_axi_bready_s <= '1';
+    wait until s00_axi_awready_s = '1';
+    wait until s00_axi_awready_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '0';
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_DATA_WIDTH_c));
+    s00_axi_wvalid_s <= '0';
+    s00_axi_wstrb_s <= "0000";
+    wait until s00_axi_bvalid_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_bready_s <= '0';
+    wait until falling_edge(clk_s);
+    
+    -- wait for 5 falling edges of AXI-lite clock signal
+    for i in 1 to 5 loop
+        wait until falling_edge(clk_s);
+    end loop;
+        
+      -- Set the value for SCALE
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(SCALE_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '1';
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, 21)) & SCALE_C;
+    s00_axi_wvalid_s <= '1';
+    s00_axi_wstrb_s <= "1111";     ----- VALJDA JE NAPISANO U SURF_V1_0_S00 NA KRAJU FAJLA DA SE UZIMA DONJIH 11 BITA PA MOZDA OVO NIJE BITNO
+    s00_axi_bready_s <= '1';
+    wait until s00_axi_awready_s = '1';
+    wait until s00_axi_awready_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '0';
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_DATA_WIDTH_c));
+    s00_axi_wvalid_s <= '0';
+    s00_axi_wstrb_s <= "0000";
+    wait until s00_axi_bvalid_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_bready_s <= '0';
+    wait until falling_edge(clk_s);
+    
+    -- wait for 5 falling edges of AXI-lite clock signal
+    for i in 1 to 5 loop
+        wait until falling_edge(clk_s);
+    end loop;
+    
+    -------------------------------------------------------------------------------------------
+
     -- Load the picture into the memory
     report "Loading picture into the memory!";
+    
+    wait until falling_edge(clk_s);
+
     for i in 0 to (IMG_WIDTH*IMG_HEIGHT)-1 loop 
         wait until falling_edge(clk_s);
         readline(pixels1D, tv_slika);
@@ -125,34 +521,93 @@ begin
     tb_a_en_i <= '0';
     tb_a_we_i <= '0';
     
-    -- Initialize the core
-    report "Initializing the core!";
+   -------------------------------------------------------------------------------------------
+    -- Start the ip core --
+    -------------------------------------------------------------------------------------------
+    report "Starting proccesing!";
+    -- Set the start bit (bit 0 in the START_ADDR_C register) to 1
     
-    -- Iteration 0 
-    iradius_s <= "00000011000";
-    fracr_s <= "000000000000000000000000000000000100010101100110";  --0.06777191162109375
-    fracc_s <= "000000000000000000000000000000000100000110010011";   --0.06403732299804688
-    spacing_s <= "000000000000000000000000000000000100101010000000";  --0.0727539062
-    iy_s <= "00000100000";
-    ix_s <= "00000101101";
-    step_s <= "00000000010";
-    i_cose_s <= "111111111111111111111111111111111101101111011100";   --  -0.0352935791015625
-    i_sine_s <= "000000000000000000000000000000111111111101011100";   --   0.9993743896484375
-    scale_s <= "00000000100";
-    rom_en_a_s <= '1';   
-
-    -- Start the IP core processing
-    report "Starting processing!";
-    start_i_s <= '1';
-    wait for clk_period * 2;
-    start_i_s <= '0';
-
-    -- Wait for processing to complete
-    wait until ready_o_s = '1';
-    report "Processing complete!";
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(START_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '1';
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(1, C_S00_AXI_DATA_WIDTH_c));
+    s00_axi_wvalid_s <= '1';
+    s00_axi_wstrb_s <= "1111";
+    s00_axi_bready_s <= '1';
+    wait until s00_axi_awready_s = '1';
+    wait until s00_axi_awready_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '0';
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_DATA_WIDTH_c));
+    s00_axi_wvalid_s <= '0';
+    s00_axi_wstrb_s <= "0000";
+    wait until s00_axi_bvalid_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_bready_s <= '0';
+    wait until falling_edge(clk_s);
     
-    -- Read the output
-    report "Reading the results from output memory!";
+     -- wait for 5 falling edges of AXI-lite clock signal
+    for i in 1 to 5 loop
+        wait until falling_edge(clk_s);
+    end loop;
+
+
+    report "Clearing the start bit!";
+    -- Set the start bit (bit 0 in the START_ADDR_C register) to 0
+    
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(START_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '1';
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_DATA_WIDTH_c));
+    s00_axi_wvalid_s <= '1';
+    s00_axi_wstrb_s <= "1111";
+    s00_axi_bready_s <= '1';
+    wait until s00_axi_awready_s = '1';
+    wait until s00_axi_awready_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awvalid_s <= '0';
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_DATA_WIDTH_c));
+    s00_axi_wvalid_s <= '0';
+    s00_axi_wstrb_s <= "0000";
+    wait until s00_axi_bvalid_s = '0';
+    wait until falling_edge(clk_s);
+    s00_axi_bready_s <= '0';
+    wait until falling_edge(clk_s);
+    
+     -------------------------------------------------------------------------------------------    
+     -- Wait until ip core finishes processing --
+    -------------------------------------------------------------------------------------------
+    report "Waiting for the process to complete!";
+    loop
+        -- Read the content of the Status register
+        wait until falling_edge(clk_s);
+        s00_axi_araddr_s <= std_logic_vector(to_unsigned(READY_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));     
+        s00_axi_arvalid_s <= '1';
+        s00_axi_rready_s <= '1';
+        wait until s00_axi_arready_s = '1';
+        wait until s00_axi_arready_s = '0';
+        wait until falling_edge(clk_s);
+        s00_axi_araddr_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_ADDR_WIDTH_c));
+        s00_axi_arvalid_s <= '0';
+        s00_axi_rready_s <= '0';
+        
+       
+        
+        -- Check is the 1st bit of the Status register set to one
+        if (s00_axi_rdata_s(0) = '1') then
+            -- ip core done
+             report "IP core is done!";
+            exit;
+        else
+            wait for 1000 ns;
+        end if;
+    end loop;
+    
+    ------------------------------------------------------------------------------------------
+    -- Read the output --
+    -------------------------------------------------------------------------------------------
     for k in 0 to 4*INDEX_SIZE*INDEX_SIZE loop
         wait until falling_edge(clk_s);
         tb_c_en_i <= '1';
@@ -188,8 +643,10 @@ begin
 end process;
 
 
--- Instantiation of IP
-ip: entity work.ip(Behavioral)
+---------------------------------------------------------------------------
+---- DUT --
+---------------------------------------------------------------------------
+uut: entity work.SURF_v1_0(arch_imp)
     generic map (
         WIDTH => WIDTH,
         PIXEL_SIZE => PIXEL_SIZE,
@@ -200,70 +657,72 @@ ip: entity work.ip(Behavioral)
         IMG_HEIGHT => IMG_HEIGHT
     )
     port map (
-        clk => clk_s,
-        reset => reset_s,
-        iradius => iradius_s,
-        fracr => fracr_s,
-        fracc => fracc_s,
-        spacing => spacing_s,
-        iy => iy_s,
-        ix => ix_s,
-        step => step_s,
-        i_cose => i_cose_s,
-        i_sine => i_sine_s,
-        scale => scale_s,
-        
-        bram_addr1_o => ip_a_addr,
-        bram_data_i => ip_a_data,
-        bram_en1_o => ip_a_en,
     
-        addr_do1_o => ip_c_addr,
-        data1_o => ip_c_data,    
-        c1_data_o => ip_c_en,
-        bram_we1_o => ip_c_we,
+     -- Interfejs za sliku
+        en_a     => ip_a_en,
+        we_a     => open,
+        addr_a   => ip_a_addr,
+        data_a_i => open,
+        data_a_o => ip_a_data,
+        reset_a   => open,
+        clk_a     => open,
+    
+      -- Interfejs za izlaz
         
-        rom_data => rom_data_s,
-        rom_addr => rom_addr_s,
-        start_i => start_i_s,
-        ready_o => ready_o_s
+        en_b     => open,
+        we_b     => ip_c_we,
+        addr_b   => ip_c_addr,
+        data_b_i => ip_c_data,
+        data_b_o   =>(others=>'0'),
+        reset_b  => open,
+        clk_b    => open,
+        
+ -- Ports of Axi Slave Bus Interface S00_AXI
+        s00_axi_aclk    => clk_s,
+        s00_axi_aresetn => s00_axi_aresetn_s,
+        s00_axi_awaddr  => s00_axi_awaddr_s,
+        s00_axi_awprot  => s00_axi_awprot_s, 
+        s00_axi_awvalid => s00_axi_awvalid_s,
+        s00_axi_awready => s00_axi_awready_s,
+        s00_axi_wdata   => s00_axi_wdata_s,
+        s00_axi_wstrb   => s00_axi_wstrb_s,
+        s00_axi_wvalid  => s00_axi_wvalid_s,
+        s00_axi_wready  => s00_axi_wready_s,
+        s00_axi_bresp   => s00_axi_bresp_s,
+        s00_axi_bvalid  => s00_axi_bvalid_s,
+        s00_axi_bready  => s00_axi_bready_s,
+        s00_axi_araddr  => s00_axi_araddr_s,
+        s00_axi_arprot  => s00_axi_arprot_s,
+        s00_axi_arvalid => s00_axi_arvalid_s,
+        s00_axi_arready => s00_axi_arready_s,
+        s00_axi_rdata   => s00_axi_rdata_s,
+        s00_axi_rresp   => s00_axi_rresp_s,
+        s00_axi_rvalid  => s00_axi_rvalid_s,
+        s00_axi_rready  => s00_axi_rready_s
     );
 
--- Instantiation of ROM
-rom: entity work.rom(Behavioral)
-    generic map (
-        WIDTH => FIXED_SIZE,
-        SIZE => 40,
-        SIZE_WIDTH => 6
-    )
-    port map (
-        clk_a => clk_s,
-        en_a => rom_en_a_s,
-        addr_a => rom_addr_s,
-        data_a_o => rom_data_s
-    );
 
 -- Instantiation of input BRAM
-bram_in: entity work.bram
-    generic map (
-        WIDTH => FIXED_SIZE,  -- data width
-        SIZE => IMG_WIDTH*IMG_HEIGHT,  -- memory depth
-        SIZE_WIDTH => 15
-    )
-    port map (
-        clk_a => clk_s,
-        clk_b => clk_s,
-        en_a => tb_a_en_i,
-        we_a => tb_a_we_i,
-        addr_a => tb_a_addr_i,
-        data_a_i => tb_a_data_i,
-        data_a_o => open,
-
-        en_b => ip_a_en,
-        we_b => ip_a_we,
-        addr_b => ip_a_addr,
-        data_b_i => (others => '0'),
-        data_b_o => ip_a_data
-    );
+bram_in: entity work.bram(Behavioral)
+  generic map (WIDTH =>48,
+             SIZE => IMG_WIDTH*IMG_HEIGHT,
+			 SIZE_WIDTH => 15)
+         port map(
+               clk_a => clk_s,
+               clk_b => clk_s,
+	           en_a=>tb_a_en_i,
+	           we_a=> tb_a_we_i,
+	           addr_a=> tb_a_addr_i,
+	           data_a_i=> tb_a_data_i,
+	           data_a_o=> open,
+	
+	           en_b=>ip_a_en,
+	           we_b=>ip_a_we,
+	           addr_b=>ip_a_addr,
+	           data_b_i=>(others=>'0'),
+	           data_b_o=> ip_a_data	          
+	        );
+    
 
 -- Instantiation of output BRAM
 bram_out: entity work.bram_out
