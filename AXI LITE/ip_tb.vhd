@@ -610,7 +610,7 @@ s00_axi_bready_s <= '1';
     -------------------------------------------------------------------------------------------
    report "Reading the results of from output memory!";
 
-    for k in 0 to 4*INDEX_SIZE*INDEX_SIZE loop
+    for k in 0 to 4*INDEX_SIZE*INDEX_SIZE-1 loop
         wait until falling_edge(clk_s);
         tb_c_en_i <= '1';
         tb_c_we_i <= '0';
@@ -627,13 +627,14 @@ end process;
 
 write_to_output_file : process(clk_s)
     variable data_output_line : line;
-    variable data_output_string : string(1 to FIXED_SIZE) := (others => '0'); 
-    variable prev_addr : std_logic_vector(7 downto 0) := (others => '1');  -- promenite po?etnu vrednost da ne bude 0
+    variable data_output_string : string(1 to FIXED_SIZE) := (others => '0');
+    variable prev_addr : std_logic_vector(7 downto 0) := (others => '1');  -- promenite po?etnu vrednost
     variable first_iteration : boolean := true;  -- signal za pra?enje prve iteracije
 begin
     if falling_edge(clk_s) then
         if tb_c_en_i = '1' then
-            if first_iteration or (tb_c_addr_i /= prev_addr) then  -- upiši ako je prva iteracija ili se adresa promenila
+            -- Upiši samo ako je prva iteracija ili se adresa promenila
+            if first_iteration or (tb_c_addr_i /= prev_addr) then
                 prev_addr := tb_c_addr_i;  -- ažuriraj prethodnu adresu
                 first_iteration := false;  -- postavi signal da prva iteracija više nije aktivna
 
@@ -654,6 +655,8 @@ begin
         end if;
     end if;
 end process;
+
+
 
 
 ---------------------------------------------------------------------------
