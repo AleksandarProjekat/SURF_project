@@ -4,45 +4,45 @@ use IEEE.NUMERIC_STD.ALL;
 
 entity bram is
     generic (WIDTH: positive := 48;
-             SIZE: positive := 16641;
-			 SIZE_WIDTH: positive := 15);
-    port (clk_a : in std_logic;
-          clk_b : in std_logic;
-          en_a: in std_logic;
-          en_b: in std_logic;
-          we_a: in std_logic;
-          we_b: in std_logic;
-          addr_a: in std_logic_vector(SIZE_WIDTH-1 downto 0);
-          addr_b: in std_logic_vector(SIZE_WIDTH-1 downto 0);
-          data_a_i: in std_logic_vector(WIDTH-1 downto 0);
-          data_b_i: in std_logic_vector(WIDTH-1 downto 0);
-          data_a_o: out std_logic_vector(WIDTH-1 downto 0);
-          data_b_o: out std_logic_vector(WIDTH-1 downto 0));
+             SIZE: positive := 129*129*4;
+			 SIZE_WIDTH: positive := 17);
+    port (clka : in std_logic;
+          clkb : in std_logic;
+          ena: in std_logic;
+          enb: in std_logic;
+          wea: in std_logic;
+          web: in std_logic;
+          addra: in std_logic_vector(SIZE_WIDTH-1 downto 0);
+          addrb: in std_logic_vector(SIZE_WIDTH-1 downto 0);
+          dia: in std_logic_vector(WIDTH-1 downto 0);
+          dib: in std_logic_vector(WIDTH-1 downto 0);
+          doa: out std_logic_vector(WIDTH-1 downto 0);
+          dob: out std_logic_vector(WIDTH-1 downto 0));
 end bram;
 
 architecture Behavioral of bram is
     type ram_type is array(SIZE-1 downto 0) of std_logic_vector(WIDTH-1 downto 0);
-    signal RAM: ram_type := (others => (others => '0'));
+    signal RAM: ram_type;
     
     attribute ram_style: string;
     attribute ram_style of RAM: signal is "block";
 begin
-    process(clk_a, clk_b)
+    process(clka, clkb)
     begin
-        if (rising_edge(clk_a)) then
-            if (en_a = '1') then
-                data_a_o <= RAM(to_integer(unsigned(addr_a)));
-                if (we_a = '1') then
-                    RAM(to_integer(unsigned(addr_a))) <= data_a_i;
+        if (rising_edge(clka)) then
+            if (ena = '1') then
+                doa <= RAM(to_integer(unsigned(addra)));
+                if (wea = '1') then
+                    RAM(to_integer(unsigned(addra))) <= dia;
                 end if;
             end if;
         end if;
         
-        if (rising_edge(clk_b)) then
-            if (en_b = '1') then
-                data_b_o <= RAM(to_integer(unsigned(addr_b)));
-                if (we_b = '1') then
-                    RAM(to_integer(unsigned(addr_b))) <= data_b_i;
+        if (rising_edge(clkb)) then
+            if (enb = '1') then
+                dob <= RAM(to_integer(unsigned(addrb)));
+                if (web = '1') then
+                    RAM(to_integer(unsigned(addrb))) <= dib;
                 end if;
             end if;
         end if;

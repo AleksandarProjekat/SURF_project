@@ -15,8 +15,8 @@ file izlaz : text open write_mode is "C:\Users\coa\Desktop\izlaz.txt";
 
 -- Constants
 constant WIDTH : integer := 11;
-constant PIXEL_SIZE : integer := 15;
-constant INDEX_ADDRESS_SIZE : integer := 6;
+constant PIXEL_SIZE : integer := 17;
+constant INDEX_ADDRESS_SIZE : integer := 8;
 constant FIXED_SIZE : integer := 48;
 constant LOWER_SIZE : integer := 16;
 
@@ -75,7 +75,7 @@ signal tb_a_we_i : std_logic;
 
 -- Output BRAM port
 signal tb_c_en_i : std_logic;
-signal tb_c_addr_i : std_logic_vector(5 downto 0);
+signal tb_c_addr_i : std_logic_vector(7 downto 0);
 signal tb_c_data_o : std_logic_vector(FIXED_SIZE - 1 downto 0);
 signal tb_c_we_i : std_logic;
 
@@ -88,7 +88,7 @@ signal ip_a_data: std_logic_vector(FIXED_SIZE-1 downto 0);
 
 signal ip_c_en : std_logic;
 signal ip_c_we : std_logic;
-signal ip_c_addr : std_logic_vector(5 downto 0);
+signal ip_c_addr : std_logic_vector(7 downto 0);
 signal ip_c_data: std_logic_vector(FIXED_SIZE - 1 downto 0);
 
 ------------------- AXI Interfaces signals ----------------------
@@ -508,7 +508,7 @@ s00_axi_bready_s <= '1';
         wait until falling_edge(clk_s);
         readline(pixels1D, tv_slika);
         tb_a_en_i  <= '1';
-        tb_a_addr_i <= std_logic_vector(to_unsigned(i, PIXEL_SIZE)); 
+        tb_a_addr_i <= std_logic_vector(to_unsigned(4*i, PIXEL_SIZE)); 
         tb_a_data_i <= to_std_logic_vector(string(tv_slika));
         tb_a_we_i   <= '1';
      
@@ -608,11 +608,15 @@ s00_axi_bready_s <= '1';
     ------------------------------------------------------------------------------------------
     -- Read the output --
     -------------------------------------------------------------------------------------------
+   report "Reading the results of from output memory!";
+
     for k in 0 to 4*INDEX_SIZE*INDEX_SIZE loop
         wait until falling_edge(clk_s);
         tb_c_en_i <= '1';
         tb_c_we_i <= '0';
-        tb_c_addr_i <= std_logic_vector(to_unsigned(k, 6));
+        tb_c_addr_i <= std_logic_vector(to_unsigned(k*4, 8));
+        wait until falling_edge(clk_s);
+
     end loop;
 
     tb_c_en_i <= '0';
@@ -624,20 +628,29 @@ end process;
 write_to_output_file : process(clk_s)
     variable data_output_line : line;
     variable data_output_string : string(1 to FIXED_SIZE) := (others => '0'); 
+    variable prev_addr : std_logic_vector(7 downto 0) := (others => '1');  -- promenite po?etnu vrednost da ne bude 0
+    variable first_iteration : boolean := true;  -- signal za pra?enje prve iteracije
 begin
     if falling_edge(clk_s) then
         if tb_c_en_i = '1' then
-            data_output_string := (others => '0');
-            for i in 0 to FIXED_SIZE - 1 loop
-                if tb_c_data_o(i) = '1' then
-                    data_output_string(FIXED_SIZE - i) := '1';  
-                else
-                    data_output_string(FIXED_SIZE - i) := '0';  
-                end if;
-            end loop;
+            if first_iteration or (tb_c_addr_i /= prev_addr) then  -- upiši ako je prva iteracija ili se adresa promenila
+                prev_addr := tb_c_addr_i;  -- ažuriraj prethodnu adresu
+                first_iteration := false;  -- postavi signal da prva iteracija više nije aktivna
 
-            write(data_output_line, data_output_string);
-            writeline(izlaz, data_output_line);
+                -- Pripremi podatke za upis
+                data_output_string := (others => '0');
+                for i in 0 to FIXED_SIZE - 1 loop
+                    if tb_c_data_o(i) = '1' then
+                        data_output_string(FIXED_SIZE - i) := '1';  
+                    else
+                        data_output_string(FIXED_SIZE - i) := '0';  
+                    end if;
+                end loop;
+
+                -- Upis podataka u izlazni fajl
+                write(data_output_line, data_output_string);
+                writeline(izlaz, data_output_line);
+            end if;
         end if;
     end if;
 end process;
@@ -659,23 +672,23 @@ uut: entity work.SURF_v1_0(arch_imp)
     port map (
     
      -- Interfejs za sliku
-        en_a     => ip_a_en,
-        we_a     => open,
-        addr_a   => ip_a_addr,
-        data_a_i => open,
-        data_a_o => ip_a_data,
-        reset_a   => open,
-        clk_a     => open,
+        ena     => ip_a_en,
+        wea     => open,
+        addra   => ip_a_addr,
+        dina => open,
+        douta => ip_a_data,
+        reseta   => open,
+        clka     => open,
     
       -- Interfejs za izlaz
         
-        en_b     => open,
-        we_b     => ip_c_we,
-        addr_b   => ip_c_addr,
-        data_b_i => ip_c_data,
-        data_b_o   =>(others=>'0'),
-        reset_b  => open,
-        clk_b    => open,
+        enc     => open,
+        wec     => ip_c_we,
+        addrc   => ip_c_addr,
+        dinc => ip_c_data,
+        doutc   =>(others=>'0'),
+        resetc  => open,
+        clkc    => open,
         
  -- Ports of Axi Slave Bus Interface S00_AXI
         s00_axi_aclk    => clk_s,
@@ -705,22 +718,22 @@ uut: entity work.SURF_v1_0(arch_imp)
 -- Instantiation of input BRAM
 bram_in: entity work.bram(Behavioral)
   generic map (WIDTH =>48,
-             SIZE => IMG_WIDTH*IMG_HEIGHT,
-			 SIZE_WIDTH => 15)
+             SIZE => IMG_WIDTH*IMG_HEIGHT*4,
+			 SIZE_WIDTH => 17)
          port map(
-               clk_a => clk_s,
-               clk_b => clk_s,
-	           en_a=>tb_a_en_i,
-	           we_a=> tb_a_we_i,
-	           addr_a=> tb_a_addr_i,
-	           data_a_i=> tb_a_data_i,
-	           data_a_o=> open,
+                clka => clk_s,
+               clkb => clk_s,
+	           ena=>tb_a_en_i,
+	           wea=> tb_a_we_i,
+	           addra=> tb_a_addr_i,
+	           dia=> tb_a_data_i,
+	           doa=> open,
 	
-	           en_b=>ip_a_en,
-	           we_b=>ip_a_we,
-	           addr_b=>ip_a_addr,
-	           data_b_i=>(others=>'0'),
-	           data_b_o=> ip_a_data	          
+	           enb=>ip_a_en,
+	           web=>ip_a_we,
+	           addrb=>ip_a_addr,
+	           dib=>(others=>'0'),
+	           dob=> ip_a_data    
 	        );
     
 
@@ -728,23 +741,23 @@ bram_in: entity work.bram(Behavioral)
 bram_out: entity work.bram_out
     generic map (
         WIDTH => 48,  -- data width
-        SIZE => 64,  -- memory depth
+        SIZE => 4*64,  -- memory depth
         SIZE_WIDTH => INDEX_ADDRESS_SIZE
     )
     port map (
-        clk_a => clk_s,
-        clk_b => clk_s,
-        en_a => ip_c_en, 
-        we_a => ip_c_we, 
-        addr_a => ip_c_addr, 
-        data_a_i => ip_c_data, 
-        data_a_o => open,
+        clka => clk_s,
+        clkb => clk_s,
+        ena => ip_c_en, 
+        wea => ip_c_we, 
+        addra => ip_c_addr, 
+        dia => ip_c_data, 
+        doa => open,
 
-        en_b => tb_c_en_i,
-        we_b => tb_c_we_i,
-        addr_b => tb_c_addr_i,
-        data_b_i => (others => '0'),
-        data_b_o => tb_c_data_o
+        enb => tb_c_en_i,
+        web => tb_c_we_i,
+        addrb => tb_c_addr_i,
+        dib => (others => '0'),
+        dob => tb_c_data_o
     );
 
 end Behavioral;

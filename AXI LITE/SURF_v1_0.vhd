@@ -6,8 +6,8 @@ entity SURF_v1_0 is
 	generic (
 		-- Users to add parameters here
         WIDTH : integer := 11;            -- Bit width for various unsigned signals
-        PIXEL_SIZE : integer := 15;       -- 129 x 129 pixels
-        INDEX_ADDRESS_SIZE : integer := 6;
+        PIXEL_SIZE : integer := 17;       -- 129 x 129 pixels
+        INDEX_ADDRESS_SIZE : integer := 8;
         FIXED_SIZE : integer := 48;       -- Bit width for fixed-point operations
         INDEX_SIZE : integer := 4;        -- Dimension size for the index array
         IMG_WIDTH : integer := 129;       -- Width of the image
@@ -24,21 +24,21 @@ entity SURF_v1_0 is
 		-- Users to add ports here
 		
 		---------------MEM INTERFEJS ZA SLIKU--------------------
-		clk_a       : out std_logic;
-		reset_a     : out std_logic;
-		en_a        : out std_logic;
-		addr_a      : out std_logic_vector (PIXEL_SIZE - 1 downto 0);
-		data_a_i    : out std_logic_vector (FIXED_SIZE - 1 downto 0);
-		data_a_o    : in std_logic_vector (FIXED_SIZE - 1 downto 0);
-		we_a        : out std_logic;
+		clka       : out std_logic;
+		reseta     : out std_logic;
+		ena        : out std_logic;
+		addra      : out std_logic_vector (PIXEL_SIZE - 1 downto 0);
+		dina    : out std_logic_vector (FIXED_SIZE - 1 downto 0);
+		douta : in std_logic_vector (FIXED_SIZE - 1 downto 0);
+		wea        : out std_logic;
         ---------------MEM INTERFEJS ZA IZLAZ--------------------
-        clk_b       : out std_logic;
-		reset_b     : out std_logic;
-		en_b        : out std_logic;
-		addr_b      : out std_logic_vector (INDEX_ADDRESS_SIZE-1 downto 0);
-		data_b_i    : out std_logic_vector (FIXED_SIZE - 1 downto 0);
-		data_b_o    : in std_logic_vector (FIXED_SIZE - 1 downto 0);
-		we_b        : out std_logic; 
+        clkc       : out std_logic;
+		resetc     : out std_logic;
+		enc        : out std_logic;
+		addrc      : out std_logic_vector (INDEX_ADDRESS_SIZE-1 downto 0);
+		dinc    : out std_logic_vector (FIXED_SIZE - 1 downto 0);
+		doutc : in std_logic_vector (FIXED_SIZE - 1 downto 0);
+		wec        : out std_logic; 
 		-- User ports ends
 		-- Do not modify the ports beyond this line
 
@@ -102,8 +102,8 @@ architecture arch_imp of SURF_v1_0 is
     component ip is
         generic (
         WIDTH : integer := 11;            -- Bit width for various unsigned signals
-        PIXEL_SIZE : integer := 15;       -- 129 x 129 pixels
-        INDEX_ADDRESS_SIZE : integer := 6;
+        PIXEL_SIZE : integer := 17;       -- 129 x 129 pixels
+        INDEX_ADDRESS_SIZE : integer := 8;
         FIXED_SIZE : integer := 48;       -- Bit width for fixed-point operations
         INDEX_SIZE : integer := 4;        -- Dimension size for the index array
         IMG_WIDTH : integer := 129;       -- Width of the image
@@ -127,7 +127,7 @@ architecture arch_imp of SURF_v1_0 is
         bram_data_i : in std_logic_vector(FIXED_SIZE-1 downto 0);
         bram_en1_o : out std_logic;
         ---------------MEM INTERFEJS ZA IZLAZ--------------------
-        addr_do1_o : out std_logic_vector (5 downto 0);
+        addr_do1_o : out std_logic_vector (7 downto 0);
         data1_o : out std_logic_vector (FIXED_SIZE - 1 downto 0);          
         c1_data_o : out std_logic;
         bram_we1_o : out std_logic;
@@ -263,15 +263,15 @@ SURF_v1_0_S00_AXI_inst : SURF_v1_0_S00_AXI
         
         ---------------MEM INTERFEJS ZA SLIKU--------------------
 
-        bram_addr1_o => addr_a,
-        bram_data_i => data_a_o,
-        bram_en1_o => en_a,
+        bram_addr1_o => addra,
+        bram_data_i => douta,
+        bram_en1_o => ena,
         ---------------MEM INTERFEJS ZA IZLAZ--------------------
 
-        addr_do1_o => addr_b,
-        data1_o => data_b_i,        
-        c1_data_o => en_b,
-        bram_we1_o => we_b,
+        addr_do1_o => addrc,
+        data1_o => dinc,        
+        c1_data_o => enc,
+        bram_we1_o => wec,
         
         rom_data => rom_data_s,
         rom_addr => rom_addr_s,
@@ -281,12 +281,12 @@ SURF_v1_0_S00_AXI_inst : SURF_v1_0_S00_AXI
         ready_o => ready_o_s
      );
      
-        clk_a <= s00_axi_aclk;
-        clk_b <= s00_axi_aclk;
-        reset_a <= reset_s;
-        reset_b <= reset_s;
-        we_a <= '0';
-        data_a_i <= (others => '0');
+        clka <= s00_axi_aclk;
+        clkc <= s00_axi_aclk;
+        reseta <= reset_s;
+        resetc <= reset_s;
+        wea <= '0';
+        dina <= (others => '0');
 	-- User logic ends
 
 end arch_imp;
