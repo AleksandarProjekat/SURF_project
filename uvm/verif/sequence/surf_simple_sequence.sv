@@ -199,7 +199,7 @@ class surf_simple_sequence extends surf_base_sequence;
 
         for(i = 0; i < 129*129; i ++)
         begin
-				start_item(seg_item);
+				start_item(surf_item);
 				surf_item.bram_axi = 0;
 				surf_item.img_ena = 1'b1;
 				surf_item.img_addra = i*4;
@@ -213,7 +213,7 @@ class surf_simple_sequence extends surf_base_sequence;
 		
         //  ***********************     START THE PROCESSING   ***********************//   
         $display("\nStarting the system... \n");
-        `uvm_do_with(seg_item,{   surf_item.bram_axi == 1; surf_item.s00_axi_awaddr == AXI_BASE+CMD_REG_OFFSET; surf_item.s00_axi_wdata == 32'd1;});
+        `uvm_do_with(surf_item,{   surf_item.bram_axi == 1; surf_item.s00_axi_awaddr == AXI_BASE+CMD_REG_OFFSET; surf_item.s00_axi_wdata == 32'd1;});
 
     endtask : body
 

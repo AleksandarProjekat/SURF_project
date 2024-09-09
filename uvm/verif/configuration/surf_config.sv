@@ -13,7 +13,7 @@ class surf_config extends uvm_object;
     int fracc_lower;
 	int spacing_upper;
     int	spacing_lower;
-	int i_cose_upper, 
+	int i_cose_upper; 
 	int i_cose_lower;
 	int i_sine_upper;
     int	i_sine_lower;

@@ -24,7 +24,6 @@ module surf_top;
         .addra   (ip_addra),
         .dina    (),
         .douta   (ip_douta),
-        .reseta  (),
         .clka    (),
              
         
@@ -35,7 +34,6 @@ module surf_top;
         .addrc   (s_vif.ip_addrc),
         .dinc    (s_vif.ip_doutc),
         .doutc   (48'd0),
-        .resetc  (),
         .clkc    (),
 
         // Ports of Axi Slave Bus Interface S00_AXI
