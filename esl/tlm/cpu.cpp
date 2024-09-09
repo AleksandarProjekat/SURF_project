@@ -89,9 +89,11 @@ void Cpu::software()
     saveIpoints(fn, ipts);
 
     // print some nice information on the command prompt
-      cout << "Detection time: " <<
+    cout << "Detection time: " <<
         (double)tim2.tv_sec + ((double)tim2.tv_usec)*1e-6 -
         (double)tim1.tv_sec - ((double)tim1.tv_usec)*1e-6 << endl;
+        
+    cout << "Simulacija " << offset << endl;
 
     delete _im;
 
@@ -311,7 +313,7 @@ void Cpu::makeDescriptor() {
 
 void Cpu::createVector(double scale, double row, double col) {
     int i, j, iradius, iy, ix;
-    double spacing, radius, rx, cx;
+    double spacing, inv_spacing, radius, rx, cx;
     double rpos,cpos;
     int step = MAX((int)(scale/2 + 0.5),1);
   
@@ -335,6 +337,8 @@ void Cpu::createVector(double scale, double row, double col) {
   
     // The spacing of _index samples in terms of pixels at this scale
     spacing = scale * _MagFactor;
+    
+    inv_spacing = 1/spacing;
 
     // Radius of _index sample region must extend to diagonal corner of
     // _index patch plus half sample for interpolation.
@@ -355,8 +359,8 @@ void Cpu::createVector(double scale, double row, double col) {
         //cout << "fracr CPU: " << fracr << endl;
     write_hard_double(addr_fracc, fracc);
         //cout << "fracc CPU: " << fracc << endl;
-    write_hard_double(addr_spacing, spacing);
-        //cout << "spacing CPU: " << spacing << endl;
+    write_hard_double(addr_spacing, inv_spacing);
+        //cout << "spacing CPU: " << inv_spacing << endl;
     write_hard_int(addr_step, step);
         //cout << "step CPU: " << step << endl;
     write_hard_double(addr_sine, _sine);

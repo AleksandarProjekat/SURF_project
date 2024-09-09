@@ -10,10 +10,8 @@ Ip::Ip(sc_module_name name) :
     
 {
     SC_THREAD(proc);
-    //_index.resize(_IndexSize, std::vector<std::vector<num_f>>(_IndexSize, std::vector<num_f>(4, 0.0f)));
-    index1D.resize(_IndexSize * _IndexSize * 4);
+    _index.resize(_IndexSize, std::vector<std::vector<num_f>>(_IndexSize, std::vector<num_f>(4, 0.0f)));
     _lookup2.resize(40);
-    _pixels1D.resize(_width*_height);
     interconnect_socket.register_b_transport(this, &Ip::b_transport);
     cout << "IP constructed" << endl;
 }
@@ -57,7 +55,7 @@ void Ip::b_transport(pl_t& pl, sc_time& offset)
                         //cout << "fracc IP: " << fracc << endl;
                     break;
                 case addr_spacing:
-                    spacing = toDouble(buf);
+                    inv_spacing = toDouble(buf);
                         //cout << "spacing IP: " << spacing << endl; 
                     break;
                 case addr_iy:
@@ -111,10 +109,8 @@ void Ip::b_transport(pl_t& pl, sc_time& offset)
 }
 
 
-
 void Ip::proc() {
 
-    
     vector<num_f> _lookup2_pom;
     
     for (int n=0; n<40; n++) {
@@ -124,7 +120,14 @@ void Ip::proc() {
     
     for(int i=0; i<40; i++) {
         _lookup2[i] = static_cast<num_f>(_lookup2_pom[i]);
-    }
+    } 
+    
+    /*vector<num_f> _lookup2;
+    
+    for (int n=0; n<40; n++) {
+        offset += sc_core::sc_time(DELAY, sc_core::SC_NS);
+        _lookup2.push_back(read_rom(addr_rom + n));
+    }*/
           
     vector<num_f> pixels1D;
          
@@ -137,14 +140,28 @@ void Ip::proc() {
             pixels1D.push_back( read_mem(addr_Pixels1 + (w * _height + h)));
         }
     }
-    
-    for (int i = 0; i < _width * _height; i++) {
-        _pixels1D[i] = static_cast<num_f>(pixels1D[i]);
+         
+    _Pixels = new num_f*[_width];
+    for (int i = 0; i < _width; i++) {
+        _Pixels[i] = new num_f[_height];
     }
     
-    for (int i = 0; i < _IndexSize * _IndexSize * 4; i++) {
-        index1D[i] = 0.0;
+    
+    int pixels1D_index2 = 0;
+    for (int w = 0; w < _width; w++) {
+        for (int h = 0; h < _height; h++) {
+            _Pixels[w][h] = static_cast<num_f>(pixels1D[pixels1D_index2++]);
+        }
+    }  
+          
+    // Initialize _index array
+    for (int i = 0; i < _IndexSize; i++) {
+        for (int j = 0; j < _IndexSize; j++) {
+            for (int k = 0; k < 4; k++)
+                _index[i][j][k] = 0.0;
+        }
     }
+        
       
     if (start == 1 && ready == 1)
     {
@@ -156,8 +173,8 @@ void Ip::proc() {
     {
    
         // Examine all points from the gradient image that could lie within the _index square.
-        for (int i = -iradius; i <= iradius; i++) {
-            for (int j = -iradius; j <= iradius; j++) {
+        for (int i = 0; i <= 2*iradius; i++) {
+            for (int j = 0; j <= 2*iradius; j++) {
     
                 /* static int counterfor;
                 counterfor++;
@@ -166,21 +183,23 @@ void Ip::proc() {
                 // Rotate sample offset to make it relative to key orientation.
                 // Uses (x,y) coords.  Also, make subpixel correction as later image
                 // offset must be an integer.  Divide by spacing to put in _index units.
-                rpos = (step*(_cose * i + _sine * j) - fracr) / spacing;
-                cpos = (step*(- _sine * i + _cose * j) - fracc) / spacing;
+                rpos = (step * (_cose * (i - iradius) + _sine * (j - iradius)) - fracr) * inv_spacing;
+
+                cpos = (step * (- _sine * (i - iradius) + _cose * (j - iradius)) - fracc) * inv_spacing;
+
                 
                 // Compute location of sample in terms of real-valued _index array
                 // coordinates.  Subtract 0.5 so that rx of 1.0 means to put full
-                // weight on _index[1] (e.g., when rpos is 0 and _IndexSize is 3.
-                rx = rpos + _IndexSize / 2.0 - 0.5;
-                cx = cpos + _IndexSize / 2.0 - 0.5;
+                // weight on _index[1]
+                rx = rpos + 2.0 - 0.5;
+                cx = cpos + 2.0 - 0.5;
 
                 // Test whether this sample falls within boundary of _index patch
                 if (rx > -1.0 && rx < (double) _IndexSize  &&
                     cx > -1.0 && cx < (double) _IndexSize) {
           
-                    num_i r = iy + i*step;
-                    num_i c = ix + j*step;
+                    num_i r = iy + (i - iradius) * step;
+                    num_i c = ix + (j - iradius) * step;
                     num_i ori1, ori2;
                     num_i ri, ci;
                     
@@ -194,29 +213,14 @@ void Ip::proc() {
                     num_f rfrac, cfrac;
                     num_f rweight1, rweight2, cweight1, cweight2;
                     
+                    
                     if (r >= 1 + addSampleStep && r < _height - 1 - addSampleStep && c >= 1 + addSampleStep && c < _width - 1 - addSampleStep) {
                         weight = _lookup2[num_i(rpos * rpos + cpos * cpos)];
-     
-     
-                        dxx1 = _pixels1D[(r + addSampleStep + 1) * _width + (c + addSampleStep + 1)] 
-                             + _pixels1D[(r - addSampleStep) * _width + c]
-                             - _pixels1D[(r - addSampleStep) * _width + (c + addSampleStep + 1)]
-                             - _pixels1D[(r + addSampleStep + 1) * _width + c];
-         
-                        dxx2 = _pixels1D[(r + addSampleStep + 1) * _width + (c + 1)]
-                             + _pixels1D[(r - addSampleStep) * _width + (c - addSampleStep)]
-                             - _pixels1D[(r - addSampleStep) * _width + (c + 1)]
-                             - _pixels1D[(r + addSampleStep + 1) * _width + (c - addSampleStep)];
-        
-                        dyy1 = _pixels1D[(r + 1) * _width + (c + addSampleStep + 1)]
-                             + _pixels1D[(r - addSampleStep) * _width + (c - addSampleStep)]
-                             - _pixels1D[(r - addSampleStep) * _width + (c + addSampleStep + 1)]
-                             - _pixels1D[(r + 1) * _width + (c - addSampleStep)];
-         
-                        dyy2 = _pixels1D[(r + addSampleStep + 1) * _width + (c + addSampleStep + 1)]
-                             + _pixels1D[r * _width + (c - addSampleStep)]
-                             - _pixels1D[r * _width + (c + addSampleStep + 1)]
-                             - _pixels1D[(r + addSampleStep + 1) * _width + (c - addSampleStep)];
+ 
+                        dxx1 = _Pixels[r + addSampleStep + 1][c + addSampleStep + 1] + _Pixels[r - addSampleStep][c] - _Pixels[r - addSampleStep][c + addSampleStep + 1] - _Pixels[r + addSampleStep + 1][c];
+                        dxx2 = _Pixels[r + addSampleStep + 1][c + 1] + _Pixels[r - addSampleStep][c - addSampleStep] - _Pixels[r - addSampleStep][c + 1] - _Pixels[r + addSampleStep + 1][c - addSampleStep];
+                        dyy1 = _Pixels[r + 1][c + addSampleStep + 1] + _Pixels[r - addSampleStep][c - addSampleStep] - _Pixels[r - addSampleStep][c + addSampleStep + 1] - _Pixels[r + 1][c - addSampleStep];
+                        dyy2 = _Pixels[r + addSampleStep + 1][c + addSampleStep + 1] + _Pixels[r][c - addSampleStep] - _Pixels[r][c + addSampleStep + 1] - _Pixels[r + addSampleStep + 1][c - addSampleStep];
 
                         dxx = weight * (dxx1 - dxx2);
                         dyy = weight * (dyy1 - dyy2);
@@ -250,30 +254,28 @@ void Ip::proc() {
                         rweight2 = dy * (1.0 - rfrac);
                         cweight1 = rweight1 * (1.0 - cfrac);
                         cweight2 = rweight2 * (1.0 - cfrac);
-			    
-			
-			if (ri >= 0 && ri < _IndexSize && ci >= 0 && ci < _IndexSize) {
-			    index1D[ri * (_IndexSize * 4) + ci * 4 + ori1] += cweight1;
-			    index1D[ri * (_IndexSize * 4) + ci * 4 + ori2] += cweight2;
-			}
 
-			// Proverite da li je ci + 1 unutar granica pre pristupa
-			if (ci + 1 < _IndexSize) {
-			    index1D[ri * (_IndexSize * 4) + (ci + 1) * 4 + ori1] += rweight1 * cfrac;
-			    index1D[ri * (_IndexSize * 4) + (ci + 1) * 4 + ori2] += rweight2 * cfrac;
-			}
-
-			// Proverite da li je ri + 1 unutar granica pre pristupa
-			if (ri + 1 < _IndexSize) {
-			    index1D[(ri + 1) * (_IndexSize * 4) + ci * 4 + ori1] += dx * rfrac * (1.0 - cfrac);
-			    index1D[(ri + 1) * (_IndexSize * 4) + ci * 4 + ori2] += dy * rfrac * (1.0 - cfrac);
-			}
+                        if (ri >= 0 && ri < _IndexSize && ci >= 0 && ci < _IndexSize) {
+                            _index[ri][ci][ori1] = cweight1;
+                            _index[ri][ci][ori2] = cweight2;
+                        }
                     }  
                 }
             }
         }
 
         mem.clear();
+
+        num_f* index1D = new num_f[_IndexSize * _IndexSize * 4];
+        
+        int index1D_index = 0;
+        for (int i = 0; i < _IndexSize; i++) {
+            for (int j = 0; j < _IndexSize; j++) {
+                for (int k = 0; k < _IndexSize; k++) {
+                    index1D[index1D_index++] = static_cast<num_f>(_index[i][j][k]);
+                }
+            }
+        }
                   
         for (long unsigned int i = 0; i < _IndexSize*_IndexSize*4; ++i) 
         {
@@ -293,13 +295,18 @@ void Ip::proc() {
             pl.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
             mem_socket->b_transport(pl, offset);
          }
-         
+                  
+         for (int i = 0; i < _width; i++) {
+            delete[] _Pixels[i];
+         }
+         delete[] _Pixels; 
+    
          cout << "Entry from IP to memory completed" << endl;
-         ready = 1;   
+         ready = 1;
 
     }
     
-    //wait(); broj, SC_NS
+    wait(1/118.76, SC_NS); // 1/max frekvencija
     
  
 }

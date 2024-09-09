@@ -8,7 +8,7 @@ echo "Unesite naziv slike iz data foldera(bez .jpg ekstenzije):"
 read IMAGE_NAME
 
 # Argumenti koje želite proslediti programu
-ARGS="-i ${IMAGE_NAME}.jpg -o ../data/${IMAGE_NAME}PSDS.surf"
+ARGS="-i ${IMAGE_NAME}.jpg -o ../data/${IMAGE_NAME}.surf"
 
 # Pokretanje programa
 $EXECUTABLE $ARGS

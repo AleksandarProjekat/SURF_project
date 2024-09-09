@@ -48,8 +48,8 @@ int x;
 int y;
 
 void createVector(double scale, double row, double col);
-//void AddSample(num_i r, num_i c, num_f rpos, num_f cpos, num_f rx, num_f cx, num_i step);
-//void PlaceInIndex(num_f dx, num_i ori1, num_f dy, num_i ori2, num_f rx, num_f cx);
+void AddSample(num_i r, num_i c, num_f rpos, num_f cpos, num_f rx, num_f cx, num_i step);
+void PlaceInIndex(num_f dx, num_i ori1, num_f dy, num_i ori2, num_f rx, num_f cx);
 void normalise();
 void createLookups();
 void initializeGlobals(Image *im, bool dbl, int insi);
@@ -333,7 +333,7 @@ void makeDescriptor() {
 } 
 
 void createVector(double scale, double row, double col) {
-    int iradius, iy, ix;
+    int i, j, iradius, iy, ix;
     double spacing, radius, rpos, cpos, rx, cx;
     int step = MAX((int)(scale/2 + 0.5),1);
   
@@ -345,130 +345,174 @@ void createVector(double scale, double row, double col) {
     double fracr =   _cose * fracy + _sine * fracx;
     double fracc = - _sine * fracy + _cose * fracx;
   
+  
+    //cout << "iy: " << iy << endl;
+    //cout << "ix: " << ix << endl;
+    //cout << "fracy: " << fracy << endl;
+    //cout << "fracx: " << fracx << endl;
+    //cout << "fracr: " << fracr << endl;
+    //cout << "fracc: " << fracc << endl;
+  
+    //cout << "Mag: " << _MagFactor << endl;
     // The spacing of _index samples in terms of pixels at this scale
     spacing = scale * _MagFactor;
+  
+    //cout << "scale: " << scale << endl;
 
     // Radius of _index sample region must extend to diagonal corner of
     // _index patch plus half sample for interpolation.
     radius = 1.4 * spacing * (_IndexSize + 1) / 2.0;
     iradius = (int) (radius/step + 0.5);
+    
+    //cout << "iradius: " << iradius << endl;
   
     // Examine all points from the gradient image that could lie within the
     // _index square.
-	for (int i = 0; i <= 2 * iradius; i++) {
-        	for (int j = 0; j <= 2 * iradius; j++) {
+    for (i = -iradius; i <= iradius; i++)
+        for (j = -iradius; j <= iradius; j++) {
+    
+        /*static int counter;
+        counter++;
+        cout << "Uslo u for petlju: " << counter << " puta" << endl;*/
       
-            // Rotate sample offset to make it relative to key orientation.
-            // Uses (x,y) coords.  Also, make subpixel correction as later image
-            // offset must be an integer.  Divide by spacing to put in _index units.
-            rpos = (step*(_cose * (i - iradius) + _sine * (j - iradius)) - fracr) / spacing;
-            cpos = (step*(- _sine * (i - iradius) + _cose * (j - iradius)) - fracc) / spacing;
+        // Rotate sample offset to make it relative to key orientation.
+        // Uses (x,y) coords.  Also, make subpixel correction as later image
+        // offset must be an integer.  Divide by spacing to put in _index units.
+        rpos = (step*(_cose * i + _sine * j) - fracr) / spacing;
+        cpos = (step*(- _sine * i + _cose * j) - fracc) / spacing;
+      
+        //cout << "rpos: " << rpos << endl;
+        //cout << "cpos: " << cpos << endl;
+        //cout << "/////////////////////////////////////////////" << endl;
+      
+        // Compute location of sample in terms of real-valued _index array
+        // coordinates.  Subtract 0.5 so that rx of 1.0 means to put full
+        // weight on _index[1] (e.g., when rpos is 0 and _IndexSize is 3.
+        rx = rpos + _IndexSize / 2.0 - 0.5;
+        cx = cpos + _IndexSize / 2.0 - 0.5;
+      
+        //cout << "rx: " << rx << endl;
+        //cout << "cx: " << cx << endl;
 
-            // Compute location of sample in terms of real-valued _index array
-            // coordinates.  Subtract 0.5 so that rx of 1.0 means to put full
-            // weight on _index[1] (e.g., when rpos is 0 and _IndexSize is 3.
-            rx = rpos + _IndexSize / 2.0 - 0.5;
-            cx = cpos + _IndexSize / 2.0 - 0.5;
+        // Test whether this sample falls within boundary of _index patch
+        if (rx > -1.0 && rx < (double) _IndexSize  &&
+            cx > -1.0 && cx < (double) _IndexSize) {
+          
+            /*static int counter;
+            counter++;
+            cout << "Uslo u if: " << counter << " puta" << endl;*/
+          
 
-            // Test whether this sample falls within boundary of _index patch
-            if (rx > -1.0 && rx < (double) _IndexSize  &&
-                cx > -1.0 && cx < (double) _IndexSize) {
-
-                num_i r = iy + (i - iradius) * step;
-                num_i c = ix + (j - iradius) * step;
-                num_i ori1, ori2;
-                num_i ri, ci;
-
-
-                num_i addSampleStep = int(scale);
-
-                num_f weight;
-                num_f dxx1, dxx2, dyy1, dyy2;
-                num_f dx, dy;
-                num_f dxx, dyy;
+            num_i r = iy + i*step;
+            num_i c = ix + j*step;
+          
+            //cout << "step1: " << step << endl;
+          
+            //cout << "r: " << r << endl;
+            //cout << "c: " << c << endl;
+          
+            AddSample(r, c, rpos, cpos, rx, cx, int(scale));
                 
-                num_f rfrac, cfrac;
-                num_f rweight1, rweight2, cweight1, cweight2;
-
-                if (r >= 1 + addSampleStep && r < _height - 1 - addSampleStep && c >= 1 + addSampleStep && c < _width - 1 - addSampleStep) {
-                    weight = _lookup2[num_i(rpos * rpos + cpos * cpos)];
- 
-                    dxx1 = _Pixels[r + addSampleStep + 1][c + addSampleStep + 1] + _Pixels[r - addSampleStep][c] - _Pixels[r - addSampleStep][c + addSampleStep + 1] - _Pixels[r + addSampleStep + 1][c];
-                    dxx2 = _Pixels[r + addSampleStep + 1][c + 1] + _Pixels[r - addSampleStep][c - addSampleStep] - _Pixels[r - addSampleStep][c + 1] - _Pixels[r + addSampleStep + 1][c - addSampleStep];
-                    dyy1 = _Pixels[r + 1][c + addSampleStep + 1] + _Pixels[r - addSampleStep][c - addSampleStep] - _Pixels[r - addSampleStep][c + addSampleStep + 1] - _Pixels[r + 1][c - addSampleStep];
-                    dyy2 = _Pixels[r + addSampleStep + 1][c + addSampleStep + 1] + _Pixels[r][c - addSampleStep] - _Pixels[r][c + addSampleStep + 1] - _Pixels[r + addSampleStep + 1][c - addSampleStep];
-
-                    dxx = weight * (dxx1 - dxx2);
-                    dyy = weight * (dyy1 - dyy2);
-                    dx = _cose * dxx + _sine * dyy;
-                    dy = _sine * dxx - _cose * dyy;
-
-                    if (dx < 0) ori1 = 0;
-                    else ori1 = 1;
-
-                    if (dy < 0) ori2 = 2;
-                    else ori2 = 3;
-
-                    if (rx < 0) {
-                        ri = 0;
-                    }
-                    else if (rx >= _IndexSize) {
-                        ri = _IndexSize - 1;
-                    }
-                    else {
-                        ri = rx;
-                    }
-
-                    if (cx < 0) {
-                        ci = 0;
-                    }
-                    else if (cx >= _IndexSize) {
-                        ci = _IndexSize - 1;
-                    }
-                    else {
-                        ci = cx;
-                    }
-
-                    rfrac = rx - ri;
-                    cfrac = cx - ci;
-
-                    if (rfrac < 0.0) {
-                        rfrac = 0.0;
-                    }
-                    else if (rfrac > 1.0) {
-                        rfrac = 1.0;
-                    }
-
-                    if (cfrac < 0.0) {
-                        cfrac = 0.0;
-                    }
-                    else if (cfrac > 1.0) {
-                        cfrac = 1.0;
-                    }
-
-                    rweight1 = dx * (1.0 - rfrac);
-                    rweight2 = dy * (1.0 - rfrac);
-                    cweight1 = rweight1 * (1.0 - cfrac);
-                    cweight2 = rweight2 * (1.0 - cfrac);
-
-                    if (ri >= 0 && ri < _IndexSize && ci >= 0 && ci < _IndexSize) {
-                        _index[ri][ci][ori1] += cweight1;
-                        _index[ri][ci][ori2] += cweight2;
-                    }
-
-                    if (ci + 1 < _IndexSize) {
-                        _index[ri][ci + 1][ori1] += rweight1 * cfrac;
-                        _index[ri][ci + 1][ori2] += rweight2 * cfrac;
-                    }
-
-                    if (ri + 1 < _IndexSize) {
-                        _index[ri + 1][ci][ori1] += dx * rfrac * (1.0 - cfrac);
-                        _index[ri + 1][ci][ori2] += dy * rfrac * (1.0 - cfrac);
-                    }
-                }  
-            }
-        }
+         }  
+    }
+    
+    
 }
+
+
+void AddSample(num_i r, num_i c, num_f rpos,
+                     num_f cpos, num_f rx, num_f cx, num_i step) {
+    num_f weight;
+    num_f dx, dy;
+    num_f dxx, dyy;
+    num_i ori1, ori2;
+  
+    //cout << "_height: " << _height << endl;
+  
+    //cout << "step2: " << step << endl;
+  
+    /*static int counter;
+    counter++;
+    cout << "Uslo u AS: " << counter << " puta, " << "r: " << r << ", c: " << c << ", step: " << step << endl;*/
+   
+    // Clip at image boundaries.
+    if (r < 1+step  ||  r >= _height - 1-step  || c < 1+step  ||  c >= _width - 1-step) {
+    //cout << "uslo u return" << endl;
+        return;}
+     
+     
+ 
+     /*static int callCount = 0;
+    
+    // Inkrementiraj brojac
+    callCount++;
+    
+    // Ispisi vrednost brojaca u terminalu
+    cout << "AddSample je pozvan " << callCount << " puta." << endl;*/
+   
+   
+    /*  static int counter;
+    counter ++;
+    //if (counter == 105)
+      cout << "uslo u add sample: " << counter << " puta, " << "rpos: " << rpos << "cpos: " << cpos << endl;*/
+        
+    /*static int counter;
+    counter++;
+    cout << "Uslo u AddSample: " << counter << " puta" << endl;*/
+
+    //cout << "rpos: " << rpos << endl;
+    //cout << "cpos: " << cpos << endl;
+ 
+    weight = _lookup2[num_i(rpos * rpos + cpos * cpos)];
+  
+   //cout << "weight: " <<  weight << endl;
+
+    dxx = weight*get_wavelet2(_Pixels, c, r, step);
+    dyy = weight*get_wavelet1(_Pixels, c, r, step);
+    dx = _cose*dxx + _sine*dyy;
+    dy = _sine*dxx - _cose*dyy;
+  
+    if (dx < 0) ori1 = 0;
+    else ori1 = 1;
+  
+    if (dy < 0) ori2 = 2;
+    else ori2 = 3;
+  
+    
+    //cout << "dx: " << dx << endl;
+    //cout << "dy: " << dy << endl;
+  
+    PlaceInIndex(dx, ori1 , dy, ori2 , rx, cx);
+}
+
+
+void PlaceInIndex(num_f dx, num_i ori1, num_f dy, num_i ori2, num_f rx, num_f cx) {
+
+    num_i ri = std::max(0, std::min(static_cast<int>(_IndexSize - 1), static_cast<int>(rx)));
+    num_i ci = std::max(0, std::min(static_cast<int>(_IndexSize - 1), static_cast<int>(cx)));
+
+
+    // Izračunavanje frakcionih delova i težina
+    num_f rfrac = rx - ri;
+    num_f cfrac = cx - ci;
+  
+    rfrac = std::max(0.0f, std::min(float(rfrac), 1.0f));
+    cfrac = std::max(0.0f, std::min(float(cfrac), 1.0f));
+  
+    num_f rweight1 = dx * (1.0 - rfrac);
+    num_f rweight2 = dy * (1.0 - rfrac);
+    num_f cweight1 = rweight1 * (1.0 - cfrac);
+    num_f cweight2 = rweight2 * (1.0 - cfrac);
+
+    // Pre nego što pristupamo _index, proveravamo da li su ri i ci unutar granica
+    if (ri >= 0 && ri < _IndexSize && ci >= 0 && ci < _IndexSize) {
+        _index[ri][ci][ori1] = cweight1;
+        _index[ri][ci][ori2] = cweight2;
+    }
+
+  
+}
+
 
 
 // Normalise descriptor vector for illumination invariance for
