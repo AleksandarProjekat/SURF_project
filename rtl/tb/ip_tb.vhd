@@ -57,8 +57,8 @@ constant IMG_HEIGHT : integer := 129;
     constant IX_REG_ADDR_C : integer := 48;
     constant STEP_REG_ADDR_C : integer := 52;
     constant SCALE_REG_ADDR_C : integer := 56;
-    constant START_ADDR_C : integer := 60;
-    constant READY_REG_ADDR_C : integer := 64;
+    constant CMD_REG_ADDR_C : integer := 60;
+    constant STATUS_REG_ADDR_C : integer := 64;
     
     ---------------------------------------------------------------
  
@@ -525,10 +525,10 @@ s00_axi_bready_s <= '1';
     -- Start the ip core --
     -------------------------------------------------------------------------------------------
     report "Starting proccesing!";
-    -- Set the start bit (bit 0 in the START_ADDR_C register) to 1
+    -- Set the start bit (bit 0 in the CMD_REG_ADDR_C register) to 1
     
     wait until falling_edge(clk_s);
-    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(START_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(CMD_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
     s00_axi_awvalid_s <= '1';
     s00_axi_wdata_s <= std_logic_vector(to_unsigned(1, C_S00_AXI_DATA_WIDTH_c));
     s00_axi_wvalid_s <= '1';
@@ -554,10 +554,10 @@ s00_axi_bready_s <= '1';
 
 
     report "Clearing the start bit!";
-    -- Set the start bit (bit 0 in the START_ADDR_C register) to 0
+    -- Set the start bit (bit 0 in the CMD_REG_ADDR_C register) to 0
     
     wait until falling_edge(clk_s);
-    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(START_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
+    s00_axi_awaddr_s <= std_logic_vector(to_unsigned(CMD_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
     s00_axi_awvalid_s <= '1';
     s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, C_S00_AXI_DATA_WIDTH_c));
     s00_axi_wvalid_s <= '1';
@@ -583,7 +583,7 @@ s00_axi_bready_s <= '1';
     loop
         -- Read the content of the Status register
         wait until falling_edge(clk_s);
-        s00_axi_araddr_s <= std_logic_vector(to_unsigned(READY_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));     
+        s00_axi_araddr_s <= std_logic_vector(to_unsigned(STATUS_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));     
         s00_axi_arvalid_s <= '1';
         s00_axi_rready_s <= '1';
         wait until s00_axi_arready_s = '1';
