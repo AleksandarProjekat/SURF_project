@@ -33,16 +33,7 @@ class surf_driver extends uvm_driver#(surf_seq_item);
                     s_vif.img_douta = req.img_douta;
                     s_vif.img_ena = req.img_ena;               
                 end
-                else if (req.bram_axi == 2'd2)
-                begin
-                    s_vif.img_addrb = req.img_addrb;
-						$display("\nreq img_addrb = %0d\n", req.img_addrb);
-						$display("\ns_vif img_addrb = %0d\n", s_vif.img_addrb);
-                    s_vif.img_doutb = req.img_doutb;
-						$display("\nreq img_doutb = %0d\n", req.img_doutb);
-						$display("\ns_vif img_doutb = %0d\n", s_vif.img_doutb);
-                    s_vif.img_enb = req.img_enb;
-                end
+                
                 else if (req.bram_axi == 2'd3)
                 begin                   
                     s_vif.ip_addrc = req.ip_addrc;
@@ -85,7 +76,7 @@ class surf_driver extends uvm_driver#(surf_seq_item);
                         @(posedge s_vif.clk iff s_vif.s00_axi_arready == 0);
                         @(posedge s_vif.clk iff s_vif.s00_axi_arready == 1);
 
-                        s_vif.s00_axi_araddr = 4'd0;
+                        s_vif.s00_axi_araddr = 7'd0;
                         s_vif.s00_axi_arvalid = 1'b0;
 
                         wait(s_vif.s00_axi_rdata == 0)
@@ -123,7 +114,7 @@ class surf_driver extends uvm_driver#(surf_seq_item);
                         @(posedge s_vif.clk iff s_vif.s00_axi_arready == 1);
         
                         wait(s_vif.s00_axi_rdata == 1)
-                        s_vif.s00_axi_araddr = 5'd0;
+                        s_vif.s00_axi_araddr = 7'd0;
                         s_vif.s00_axi_arvalid = 1'b0;
 
 							$display("\nDUT finished! \n");                   

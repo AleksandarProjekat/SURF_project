@@ -1,7 +1,7 @@
 `ifndef SURF_INTERFACE_SV
     `define SURF_INTERFACE_SV
 
-interface surf_interface(input clk, logic rst , logic [31:0] ip_ena, logic [31:0] ip_addra, logic [31:0] ip_douta);
+interface surf_interface(input clk, logic rst , logic [47:0] ip_ena, logic [16:0] ip_addra, logic [47:0] ip_douta);
 
     parameter C_S00_AXI_DATA_WIDTH = 32;
     parameter C_S00_AXI_ADDR_WIDTH = 7;

@@ -6,9 +6,23 @@ class surf_config extends uvm_object;
     string img_input;
     string img_gv;
 
-    // Parametri ulazne slike
-    int rows = 100;
-    int cols = 100;
+    // Parametri ulazne slike                        ///NA KOJE VREDNOSTI INICIJALIZOVATI 
+    int fracr_upper;
+	int fracr_lower;
+	int fracc_upper;
+    int fracc_lower;
+	int spacing_upper;
+    int	spacing_lower;
+	int i_cose_upper, 
+	int i_cose_lower;
+	int i_sine_upper;
+    int	i_sine_lower;
+	int iradius;
+	int iy;
+	int ix;
+	int step;
+	int scale; 
+	
     int i = 0;
     int fd;
     int tmp;

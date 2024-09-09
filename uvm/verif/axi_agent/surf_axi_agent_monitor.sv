@@ -93,7 +93,7 @@ class surf_axi_monitor extends uvm_monitor;
                 // Monitor an Axi writing transaction
                 if(s_vif.s00_axi_awvalid == 1 && s_vif.s00_axi_awready == 1)
                 begin
-                    if(s_vif.s00_axi_wstrb == 15)
+				if (s_vif.s00_axi_wstrb == 4'b1111 || s_vif.s00_axi_wstrb == 4'b0011)
                     begin
                         axi_write_transactions.sample();
                         `uvm_info(get_type_name(),$sformatf("[AXI_Monitor] Gathering information..."), UVM_MEDIUM);
