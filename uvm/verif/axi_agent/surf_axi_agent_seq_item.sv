@@ -36,7 +36,7 @@ class surf_axi_seq_item extends uvm_sequence_item;
 
 
     // Memory - Output image
-    rand logic [16:0] ip_addrc;
+    rand logic [7:0] ip_addrc;
     rand logic [47:0] ip_doutc;
     rand logic ip_enc;
     rand logic [47:0] img_doutc;

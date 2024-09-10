@@ -1,7 +1,7 @@
 `ifndef SURF_INTERFACE_SV
     `define SURF_INTERFACE_SV
 
-interface surf_interface(input clk, logic rst , logic [47:0] ip_ena, logic [16:0] ip_addra, logic [47:0] ip_douta);
+interface surf_interface(input clk, logic rst , logic ip_ena, logic [16:0] ip_addra, logic [47:0] ip_douta);
 
     parameter C_S00_AXI_DATA_WIDTH = 32;
     parameter C_S00_AXI_ADDR_WIDTH = 7;
@@ -12,10 +12,10 @@ interface surf_interface(input clk, logic rst , logic [47:0] ip_ena, logic [16:0
      logic img_ena;
 
     // Memory - Output image
-     logic [16:0] ip_addrc;
+     logic [7:0] ip_addrc;
      logic [47:0] ip_doutc;
      logic ip_enc;
-	 logic [47:0] img_doutc;
+		logic [47:0] img_doutc;
 
     // AXI Lite - Main registers
      logic [C_S00_AXI_ADDR_WIDTH -1:0] s00_axi_awaddr;

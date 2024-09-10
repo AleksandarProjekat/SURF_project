@@ -13,8 +13,8 @@
     parameter I_SINE_UPPER_REG_OFFSET = 32;
     parameter I_SINE_LOWER_REG_OFFSET = 36;
     parameter IRADIUS_REG_OFFSET = 40;
-    parameter IY_REG_REG_OFFSET = 44;
-    parameter IX_REG_REG_OFFSET = 48;
+    parameter IY_REG_OFFSET = 44;
+    parameter IX_REG_OFFSET = 48;
     parameter STEP_REG_OFFSET = 52;
     parameter SCALE_REG_OFFSET = 56;
 	

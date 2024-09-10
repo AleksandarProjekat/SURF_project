@@ -63,14 +63,12 @@ module surf_top;
     bram BRAM_A(
         .clka   (clk), 
         .clkb   (clk),
-        .reseta (rst),
         .ena    (s_vif.img_ena),    
         .wea    (1'b1),
         .addra  (s_vif.img_addra),
         .dia    (s_vif.img_douta),
         .doa    (),
 
-        .resetb (rst),
         .enb    (ip_ena),
         .web    (1'b0),
         .addrb  (ip_addra),
