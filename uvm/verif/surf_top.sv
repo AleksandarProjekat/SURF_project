@@ -10,31 +10,49 @@ module surf_top;
 
     logic ip_ena;
     logic [16:0] ip_addra;
-    logic [47:0] ip_douta;
+    logic [31:0] ip_douta;
 
-
+    logic ip_enb;
+    logic [16:0] ip_addrb;
+    logic [15:0] ip_doutb;
+    
     // Interface
-    surf_interface s_vif(clk,rst,ip_ena,ip_addra,ip_douta);
+    surf_interface s_vif(clk,rst,ip_ena,ip_addra,ip_douta,ip_enb,ip_addrb,ip_doutb);
 
     // DUT
     SURF_v1_0 DUT(
-        // Interfejs za sliku
+        // Interfejs za sliku prvih 32 bita
         .ena     (ip_ena),
         .wea     (),
         .addra   (ip_addra),
         .dina    (),
         .douta   (ip_douta),
         .clka    (),
-             
         
-        // Interfejs za izlaz
+        // Interfejs za sliku drugih 16 bita  
+        .enb     (ip_enb),
+        .web     (),
+        .addrb   (ip_addrb),
+        .dinb    (),
+        .doutb   (ip_doutb),
+        .resetb  (),
+        .clkb    (),  
         
+        // Interfejs za izlaz prvih 32 bita       
         .enc     (),
         .wec     (s_vif.ip_enc),
         .addrc   (s_vif.ip_addrc),
         .dinc    (s_vif.ip_doutc),
-        .doutc   (48'd0),
+        .doutc   (32'd0),
         .clkc    (),
+        
+         // Interfejs za izlaz drugih 16 bita       
+        .en_d     (),
+        .wed     (s_vif.ip_end),
+        .addrd   (s_vif.ip_addrd),
+        .dind    (s_vif.ip_doutd),
+        .doutd   (16'd0),
+        .clkd    (),
 
         // Ports of Axi Slave Bus Interface S00_AXI
         .s00_axi_aclk                  (clk),
@@ -60,7 +78,7 @@ module surf_top;
         .s00_axi_rready                (s_vif.s00_axi_rready)
         );
 
-    bram BRAM_A(
+    bram32_in BRAM_A(
         .clka   (clk), 
         .clkb   (clk),
         .ena    (s_vif.img_ena),    
@@ -72,11 +90,28 @@ module surf_top;
         .enb    (ip_ena),
         .web    (1'b0),
         .addrb  (ip_addra),
-        .dib    (48'd0),
+        .dib    (32'd0),
         .dob    (ip_douta)
     );
    
+     bram16_in BRAM_B(
+        .clka   (clk), 
+        .clkb   (clk),
+       // .reseta (rst),
+        .ena    (s_vif.img_enb),    
+        .wea    (1'b1),
+        .addra  (s_vif.img_addrb),
+        .dia    (s_vif.img_doutb),
+        .doa    (),
     
+        //.resetb (rst),
+        .enb    (ip_enb),
+        .web    (1'b0),
+        .addrb  (ip_addrb),
+        .dib    (16'd0),
+        .dob    (ip_doutb)
+        );
+      
     initial begin
         uvm_config_db#(virtual surf_interface)::set(null,"uvm_test_top.env","surf_interface",s_vif);
         run_test("test_surf_simple");

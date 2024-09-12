@@ -26,19 +26,30 @@ class surf_driver extends uvm_driver#(surf_seq_item);
                 seq_item_port.get_next_item(req);;
                 `uvm_info(get_type_name(), $sformatf("Driver sending...\n%s", req.sprint()), UVM_HIGH);
                 
-                if(req.bram_axi == 2'd0)
+                if(req.bram_axi == 0)
                 begin
 						$display("\nStarting BRAM AXI Transaction...\n");
                     s_vif.img_addra = req.img_addra;
                     s_vif.img_douta = req.img_douta;
-                    s_vif.img_ena = req.img_ena;               
+                    s_vif.img_ena = req.img_ena;  
+                    
+                    s_vif.img_addrb = req.img_addrb;
+                    s_vif.img_doutb = req.img_doutb;
+                    s_vif.img_enb = req.img_enb;
+
                 end
-                
-                else if (req.bram_axi == 2'd3)
+                              
+                else if (req.bram_axi == 3)
                 begin                   
                     s_vif.ip_addrc = req.ip_addrc;
                     s_vif.ip_doutc = req.ip_doutc;
                     s_vif.ip_enc = req.ip_enc;
+                end
+                else if (req.bram_axi == 4)
+                begin                   
+                    s_vif.ip_addrd = req.ip_addrd;
+                    s_vif.ip_doutd = req.ip_doutd;
+                    s_vif.ip_end = req.ip_end;
                 end
                 else
                 begin   

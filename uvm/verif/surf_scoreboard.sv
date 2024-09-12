@@ -34,16 +34,27 @@ class surf_scoreboard extends uvm_scoreboard;
        
         if(checks_enable)
         begin
-            `uvm_info(get_type_name(),$sformatf("[Scoreboard] Scoreboard function write called..."), UVM_MEDIUM);           
-				asrt_img_output : assert(curr_it.ip_doutc == cfg.img_gv_data[curr_it.ip_addrc/4])
+            `uvm_info(get_type_name(),$sformatf("[Scoreboard] Scoreboard function write called..."), UVM_MEDIUM); 
+                      
+				asrt_img_output32 : assert(curr_it.ip_doutc == cfg.img32_gv_data[curr_it.ip_addrc/4])
             `uvm_info(get_type_name(), $sformatf("Match succesfull\nObserved value is %d, expected is %0d.\n", 
                 curr_it.ip_doutc, 
-                cfg.img_gv_data[curr_it.ip_addrc/4]), UVM_MEDIUM)      
+                cfg.img32_gv_data[curr_it.ip_addrc/4]), UVM_MEDIUM)      
             else
-                `uvm_fatal(get_type_name(), $sformatf("\nObserved mismatch for img_output[%0d]\n Observed value is %d, expected is %d.\n",
+                `uvm_fatal(get_type_name(), $sformatf("\nObserved mismatch for img_output32[%0d]\n Observed value is %d, expected is %d.\n",
                 curr_it.ip_addrc/4,
                 curr_it.ip_doutc,
-                cfg.img_gv_data[curr_it.ip_addrc/4]))           
+                cfg.img32_gv_data[curr_it.ip_addrc/4])) 
+                
+				asrt_img_output16 : assert(curr_it.ip_doutd == cfg.img16_gv_data[curr_it.ip_addrd/4])
+            `uvm_info(get_type_name(), $sformatf("Match succesfull\nObserved value is %d, expected is %0d.\n", 
+                curr_it.ip_doutd, 
+                cfg.img16_gv_data[curr_it.ip_addrd/4]), UVM_MEDIUM)      
+            else
+                `uvm_fatal(get_type_name(), $sformatf("\nObserved mismatch for img_output16[%0d]\n Observed value is %d, expected is %d.\n",
+                curr_it.ip_addrd/4,
+                curr_it.ip_doutd,
+                cfg.img16_gv_data[curr_it.ip_addrd/4]))                        
             ++num_of_tr;
         end
     endfunction

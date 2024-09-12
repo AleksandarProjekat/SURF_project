@@ -35,7 +35,7 @@
 class surf_simple_sequence extends surf_base_sequence;
 
     int i = 0;
-    int k = 0;
+    int j = 0;
 
     `uvm_object_utils(surf_simple_sequence)
     surf_seq_item surf_item;
@@ -192,23 +192,27 @@ class surf_simple_sequence extends surf_base_sequence;
             s00_axi_wstrb == 4'b1111;
         });
 
-        //********** LOADING AN IMAGE **********//
-        $display("\nImage loading begins...\n");
+        //********** LOADING AN IMAGE 32 **********//
+        $display("\nImage32 loading begins...\n");
 
-        $display("\nPicture resolution is: %d", 129*129);
+        $display("\nPicture32 resolution is: %d", 129*129);
 
         for(i = 0; i < 129*129; i ++)
         begin
-				start_item(surf_item);
-				surf_item.bram_axi = 0;
+			start_item(surf_item);
+				surf_item.bram_axi = 0;	
+							
 				surf_item.img_ena = 1'b1;
 				surf_item.img_addra = i*4;
-            $display("Image adrress: %d",surf_item.img_addra);
-				surf_item.img_douta = p_sequencer.cfg.img_input_data[i];
-            $display("Loaded %d. pixel",i);
+				surf_item.img_douta = p_sequencer.cfg.img32_input_data[i];
+
+       			surf_item.img_enb = 1'b1;
+				surf_item.img_addrb = j*4;
+				surf_item.img_doutb = p_sequencer.cfg.img16_input_data[i];
+
 				finish_item(surf_item);
-        end
-			$display("\nImage loaded...\n");
+     end 
+			$display("\nImage 32 i 16 loaded...\n");
 
 		
         //  ***********************     START THE PROCESSING   ***********************//   

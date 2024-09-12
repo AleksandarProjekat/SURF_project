@@ -86,7 +86,7 @@ class surf_axi_monitor extends uvm_monitor;
         $display("\nin UVM_AXI_AGENT_MONITOR\n");
         forever begin
             @(posedge s_vif.clk) begin
-            if(s_vif.rst)
+            if(s_vif.rst)                                                //////OBRATI PAZNJU NA RST
             begin
                 curr_it = surf_axi_seq_item::type_id::create("curr_it", this);
 

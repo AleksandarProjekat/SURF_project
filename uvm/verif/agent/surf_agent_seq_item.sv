@@ -28,19 +28,31 @@
 class surf_seq_item extends uvm_sequence_item;
 
     // Control signal - 0 for bram, 1 for AXI lite registers
-    rand logic [1:0] bram_axi;
+    rand logic [2:0] bram_axi;
 
-    // Memory - Input image
+    // Memory - Input image32
     rand logic [16:0] img_addra;
-    rand logic [47:0] img_douta;
+    rand logic [31:0] img_douta;
     rand logic img_ena;
 
-    // Memory - Output image
+    // Memory - Input image16
+    rand logic [16:0] img_addrb;
+    rand logic [15:0] img_doutb;
+    rand logic img_enb;
+    
+    // Memory - Output image32
     rand logic [7:0] ip_addrc;
-    rand logic [47:0] ip_doutc;
+    rand logic [31:0] ip_doutc;
     rand logic ip_enc;
 
-    rand logic [47:0] img_doutc;
+    rand logic [31:0] img_doutc;
+    
+   // Memory - Output image16
+    rand logic [7:0] ip_addrd;
+    rand logic [15:0] ip_doutd;
+    rand logic ip_end;
+
+    rand logic [15:0] img_doutd;
 
     // AXI Lite - Main registers
     rand logic [C_S00_AXI_ADDR_WIDTH -1:0] s00_axi_awaddr;
@@ -68,9 +80,17 @@ class surf_seq_item extends uvm_sequence_item;
         `uvm_field_int(img_douta, UVM_DEFAULT );
         `uvm_field_int(img_ena, UVM_DEFAULT );
 
+        `uvm_field_int(img_addrb, UVM_DEFAULT );
+        `uvm_field_int(img_doutb, UVM_DEFAULT );
+        `uvm_field_int(img_enb, UVM_DEFAULT );
+
         `uvm_field_int(ip_addrc, UVM_DEFAULT );
         `uvm_field_int(ip_doutc, UVM_DEFAULT );
         `uvm_field_int(ip_enc, UVM_DEFAULT );
+        
+        `uvm_field_int(ip_addrd, UVM_DEFAULT );
+        `uvm_field_int(ip_doutd, UVM_DEFAULT );
+        `uvm_field_int(ip_end, UVM_DEFAULT );
         
         `uvm_field_int(s00_axi_awaddr, UVM_DEFAULT );
         `uvm_field_int(s00_axi_awprot, UVM_DEFAULT );
