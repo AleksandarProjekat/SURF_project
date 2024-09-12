@@ -2,8 +2,8 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
-entity bram_out is
-    generic (WIDTH: positive := 48;
+entity bram16_out is
+    generic (WIDTH: positive := 16;
              SIZE: positive := 4*64;
 			 SIZE_WIDTH: positive := 8);
     port (clka : in std_logic;
@@ -18,9 +18,9 @@ entity bram_out is
           dib: in std_logic_vector(WIDTH-1 downto 0);
           doa: out std_logic_vector(WIDTH-1 downto 0);
           dob: out std_logic_vector(WIDTH-1 downto 0));
-end bram_out;
+end bram16_out;
 
-architecture Behavioral of bram_out is
+architecture Behavioral of bram16_out is
     type ram_type is array(SIZE-1 downto 0) of std_logic_vector(WIDTH-1 downto 0);
     shared variable RAM: ram_type;
     

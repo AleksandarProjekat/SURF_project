@@ -28,6 +28,8 @@ entity ip is
         PIXEL_SIZE : integer := 17;       -- 129 x 129 pixels
         INDEX_ADDRESS_SIZE : integer := 8;
         FIXED_SIZE : integer := 48;       -- Bit width for fixed-point operations
+        BRAM_32_DATA : integer := 32;
+        BRAM_16_DATA : integer := 16;
         INDEX_SIZE : integer := 4;        -- Dimension size for the index array
         IMG_WIDTH : integer := 129;       -- Width of the image
         IMG_HEIGHT : integer := 129       -- Height of the image
@@ -45,15 +47,22 @@ entity ip is
         i_cose : in std_logic_vector(FIXED_SIZE - 1 downto 0);
         i_sine : in std_logic_vector(FIXED_SIZE - 1 downto 0);
         scale : in std_logic_vector(WIDTH - 1 downto 0);
-        ---------------MEM INTERFEJS ZA SLIKU--------------------
-        bram_addr1_o : out std_logic_vector(PIXEL_SIZE-1 downto 0);
-        bram_data_i : in std_logic_vector(FIXED_SIZE-1 downto 0);
+        ---------------MEM INTERFEJSI ZA SLIKU--------------------
+        bram_addr1_o : out std_logic_vector(PIXEL_SIZE -1 downto 0);
+        bram_addr2_o : out std_logic_vector(PIXEL_SIZE -1 downto 0);
+        bram_data32_i : in std_logic_vector(BRAM_32_DATA -1 downto 0);
+        bram_data16_i : in std_logic_vector(BRAM_16_DATA -1 downto 0);
         bram_en1_o : out std_logic;
-        ---------------MEM INTERFEJS ZA IZLAZ--------------------
+        bram_en2_o : out std_logic;
+        ---------------MEM INTERFEJSI ZA IZLAZ--------------------
         addr_do1_o : out std_logic_vector (7 downto 0);
-        data1_o : out std_logic_vector (FIXED_SIZE - 1 downto 0);          
+        addr_do2_o : out std_logic_vector (7 downto 0);
+        data32_o : out std_logic_vector (BRAM_32_DATA - 1 downto 0);          
+        data16_o : out std_logic_vector (BRAM_16_DATA - 1 downto 0);          
         c1_data_o : out std_logic;
         bram_we1_o : out std_logic;
+        c2_data_o : out std_logic;
+        bram_we2_o : out std_logic;
         ---------------INTERFEJS ZA ROM--------------------
         rom_data : in std_logic_vector(FIXED_SIZE - 1 downto 0);
         rom_addr : out std_logic_vector(5 downto 0);  
@@ -321,15 +330,18 @@ signal cweight2_delayed, cweight2_delayed1 : std_logic_vector(FIXED_SIZE - 1 dow
     signal rom_adress_delayed, rom_adress_delayed1 : std_logic_vector(FIXED_SIZE - 1 downto 0);
 
     -- Definisanje internog signala za adrese i podatke za ULAZNI bram
-    signal bram_addr1_o_next : std_logic_vector(PIXEL_SIZE-1 downto 0);
-    signal bram_data_i_reg : std_logic_vector(FIXED_SIZE-1 downto 0);
+    signal bram_addr1_o_next, bram_addr2_o_next : std_logic_vector(PIXEL_SIZE-1 downto 0);
 
     -- Definisanje internog signala za adrese IZLAZNI bram
     signal bram2_phase : integer range 0 to 1 := 0;  -- Faza pristupa BRAM-u
     signal bram2_phase_next : integer range 0 to 1;  -- Pomocni signal za fazu pristupa BRAM-u   
-    signal bram_addr_int : std_logic_vector(INDEX_ADDRESS_SIZE-1 downto 0);
-    signal bram_en_int : std_logic := '0';
-    signal bram_we_int : std_logic := '0';
+    signal bram_addr1_int : std_logic_vector(INDEX_ADDRESS_SIZE-1 downto 0);
+    signal bram_addr2_int : std_logic_vector(INDEX_ADDRESS_SIZE-1 downto 0);
+
+    signal bram_en1_int : std_logic := '0';
+    signal bram_we1_int : std_logic := '0';
+    signal bram_en2_int : std_logic := '0';
+    signal bram_we2_int : std_logic := '0';
 
 
 signal counter, counter_next : integer range 0 to 3 := 0;
@@ -1120,7 +1132,8 @@ begin
             
             bram2_phase <= 0;
             bram_addr1_o <= (others => '0');
-            
+            bram_addr2_o <= (others => '0');
+
 
         else
                 -- Predji u sledece stanje i a?uriraj sve registre
@@ -1175,6 +1188,7 @@ begin
 
                 --bram_data_out <= bram_data_out_next;
                 bram_addr1_o <= bram_addr1_o_next;
+                bram_addr2_o <= bram_addr2_o_next;
 
                 temp1_rpos_reg <= temp1_rpos_next;
                 temp2_rpos_reg <= temp2_rpos_next;
@@ -1199,7 +1213,7 @@ end process;
 
 
     -- Kombinacioni proces za odredjivanje sledecih stanja i vrednosti signala
-process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, counter, bram_data_i, state_reg, start_i, i_reg, j_reg, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, ri, ci, weight, ori1, ori2, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_internal, rom_addr_int , bram_addr1_o_next, temp1_rpos_delayed1, temp2_rpos_delayed1, temp3_rpos_delayed1, temp4_rpos_delayed1, temp1_cpos_delayed1, temp2_cpos_delayed1, temp3_cpos_delayed1, temp4_cpos_delayed1, rpos_delayed1, cpos_delayed1, rx_delayed1, cx_delayed1, r_delayed1, c_delayed1, dxx_delayed1, dyy_delayed1, dx1_delayed1, dx2_delayed1, dx_delayed1, dy1_delayed1, dy2_delayed1, dy_delayed1, rfrac_delayed1, cfrac_delayed1, rweight1_delayed1, rweight2_delayed1, cweight1_delayed1, cweight2_delayed1, cfrac, rfrac)
+process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed1, cpos_squared_delayed1, counter, bram_data32_i, bram_data16_i, state_reg, start_i, i_reg, j_reg, iradius, fracr, fracc, spacing, iy, ix, step, i_cose, i_sine, scale, ri, ci, weight, ori1, ori2, dxx1_sum_reg, dxx2_sum_reg, dyy1_sum_reg, dyy2_sum_reg, addSampleStep, rom_data_internal, rom_addr_int , bram_addr1_o_next, bram_addr2_o_next, temp1_rpos_delayed1, temp2_rpos_delayed1, temp3_rpos_delayed1, temp4_rpos_delayed1, temp1_cpos_delayed1, temp2_cpos_delayed1, temp3_cpos_delayed1, temp4_cpos_delayed1, rpos_delayed1, cpos_delayed1, rx_delayed1, cx_delayed1, r_delayed1, c_delayed1, dxx_delayed1, dyy_delayed1, dx1_delayed1, dx2_delayed1, dx_delayed1, dy1_delayed1, dy2_delayed1, dy_delayed1, rfrac_delayed1, cfrac_delayed1, rweight1_delayed1, rweight2_delayed1, cweight1_delayed1, cweight2_delayed1, cfrac, rfrac)
     begin
         -- Default assignments
         state_next <= state_reg;
@@ -1274,14 +1288,18 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
        
         
         
-        bram_en_int <= '0'; -- Defaultna vrednost za bram_en1_o
-        bram_we_int <= '0'; -- Defaultna vrednost za bram_we1_o
+        bram_en1_int <= '0'; 
+        bram_we1_int <= '0';
+        bram_en2_int <= '0'; 
+        bram_we2_int <= '0';  
         
         rom_addr_next <= rom_adress_delayed1(23 downto 18); -- Defaultna vrednost za rom_addr_next
         
         bram2_phase_next <= bram2_phase;  
 
-        bram_addr_int <= (others => '0');
+        bram_addr1_int <= (others => '0');
+        bram_addr2_int <= (others => '0');
+
         --c1_data_o <= '0';
         ready_o <= '0';
 
@@ -1290,9 +1308,10 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
         case state_reg is
              when idle =>
                 ready_o <= '1';
-                bram_we_int <= '0';
-                bram_en_int <= '0';
-                
+                bram_we1_int <= '0';
+                bram_en1_int <= '0';
+                bram_we2_int <= '0';
+                bram_en2_int <= '0';
                 if start_i = '1' then
                     i_next <= TO_UNSIGNED (0, WIDTH);
                     state_next <= StartLoop;
@@ -1439,7 +1458,11 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
 
                 -- Set BRAM addresses for the first pixel for dxx1
                 bram_en1_o <= '1';  -- Enable BRAM port
+                bram_en2_o <= '1';  -- Enable BRAM port
+
                 bram_addr1_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r) + to_integer(addSampleStep) + 1) * IMG_WIDTH + (to_integer(c) + to_integer(addSampleStep) + 1)), PIXEL_SIZE));
+                bram_addr2_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r) + to_integer(addSampleStep) + 1) * IMG_WIDTH + (to_integer(c) + to_integer(addSampleStep) + 1)), PIXEL_SIZE));
+
                 state_next <= WaitForData1;
                 
  when WaitForData1 =>
@@ -1447,9 +1470,11 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
   
             when FetchDXX1_1 =>
                 -- Capture the data from BRAM for the first pixel of dxx1
-                dxx1_sum_next <= bram_data_i;  
+                dxx1_sum_next <= bram_data32_i & bram_data16_i;  
                 -- Set BRAM addresses for the second pixel for dxx1
                 bram_addr1_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r) - to_integer(addSampleStep)) * IMG_WIDTH + to_integer(c)), PIXEL_SIZE));
+                bram_addr2_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r) - to_integer(addSampleStep)) * IMG_WIDTH + to_integer(c)), PIXEL_SIZE));
+
                 state_next <= WaitForData2;
             
              when WaitForData2 =>
@@ -1457,9 +1482,11 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
   
             when FetchDXX1_2 =>
                 -- Capture the data from BRAM for the second pixel of dxx1
-                dxx1_sum_next <= std_logic_vector(signed(dxx1_sum_reg) + signed(bram_data_i));                
+                dxx1_sum_next <= std_logic_vector(signed(dxx1_sum_reg) + signed(bram_data32_i & bram_data16_i));                
                 -- Set BRAM addresses for the third pixel for dxx1
                 bram_addr1_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r) - to_integer(addSampleStep)) * IMG_WIDTH + (to_integer(c) + to_integer(addSampleStep) + 1)), PIXEL_SIZE));
+                bram_addr2_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r) - to_integer(addSampleStep)) * IMG_WIDTH + (to_integer(c) + to_integer(addSampleStep) + 1)), PIXEL_SIZE));
+                
                 state_next <= WaitForData3;
                 
  when WaitForData3 =>
@@ -1467,16 +1494,18 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
   
             when FetchDXX1_3 =>
                 -- Capture the data from BRAM for the third pixel of dxx1
-                dxx1_sum_next <= std_logic_vector(signed(dxx1_sum_reg) - signed(bram_data_i));                
+                dxx1_sum_next <= std_logic_vector(signed(dxx1_sum_reg) - signed(bram_data32_i & bram_data16_i));                
                 -- Set BRAM addresses for the fourth pixel for dxx1
                 bram_addr1_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r) + to_integer(addSampleStep) + 1) * IMG_WIDTH + to_integer(c)), PIXEL_SIZE));
+                bram_addr2_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r) + to_integer(addSampleStep) + 1) * IMG_WIDTH + to_integer(c)), PIXEL_SIZE));
+
                 state_next <= WaitForData4;
                 
   when WaitForData4 =>           
    state_next <= FetchDXX1_4; 
              when FetchDXX1_4 =>
                   -- Capture the data from BRAM for the fourth pixel of dxx1
-                dxx1_sum_next <= std_logic_vector(signed(dxx1_sum_reg) - signed(bram_data_i));                
+                dxx1_sum_next <= std_logic_vector(signed(dxx1_sum_reg) - signed(bram_data32_i & bram_data16_i));                
                 state_next <= ComputeDXX1;
             
             when ComputeDXX1 =>
@@ -1484,6 +1513,8 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
                 dxx1_next <= dxx1_sum_reg;
                 -- Set BRAM addresses for the first pixel for dxx2
                 bram_addr1_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r) + to_integer(addSampleStep) + 1) * IMG_WIDTH + to_integer(c + 1)), PIXEL_SIZE));
+                bram_addr2_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r) + to_integer(addSampleStep) + 1) * IMG_WIDTH + to_integer(c + 1)), PIXEL_SIZE));
+
                 state_next <= WaitForData5;
                 
   when WaitForData5 =>
@@ -1491,9 +1522,11 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
   
             when FetchDXX2_1 =>
                 -- Capture the data from BRAM for the first pixel of dxx2
-                dxx2_sum_next <= bram_data_i;
+                dxx2_sum_next <= bram_data32_i & bram_data16_i;
                 -- Set BRAM addresses for the second pixel for dxx2
                 bram_addr1_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r) - to_integer(addSampleStep)) * IMG_WIDTH + (to_integer(c) - to_integer(addSampleStep))), PIXEL_SIZE));
+                bram_addr2_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r) - to_integer(addSampleStep)) * IMG_WIDTH + (to_integer(c) - to_integer(addSampleStep))), PIXEL_SIZE));
+   
                 state_next <= WaitForData6;
                 
   when WaitForData6 =>
@@ -1501,9 +1534,11 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
   
             when FetchDXX2_2 =>
                 -- Capture the data from BRAM for the second pixel of dxx2
-                dxx2_sum_next <= std_logic_vector(signed(dxx2_sum_reg) + signed(bram_data_i)); 
+                dxx2_sum_next <= std_logic_vector(signed(dxx2_sum_reg) + signed(bram_data32_i & bram_data16_i)); 
                 -- Set BRAM addresses for the third pixel for dxx2
                 bram_addr1_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r) - to_integer(addSampleStep)) * IMG_WIDTH + (to_integer(c) + 1)), PIXEL_SIZE));
+                bram_addr2_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r) - to_integer(addSampleStep)) * IMG_WIDTH + (to_integer(c) + 1)), PIXEL_SIZE));
+
                 state_next <= WaitForData7;
                 
      when WaitForData7 =>
@@ -1511,9 +1546,11 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
         
             when FetchDXX2_3 =>
                 -- Capture the data from BRAM for the third pixel of dxx2
-                dxx2_sum_next <= std_logic_vector(signed(dxx2_sum_reg) - signed(bram_data_i));
+                dxx2_sum_next <= std_logic_vector(signed(dxx2_sum_reg) - signed(bram_data32_i & bram_data16_i));
                 -- Set BRAM addresses for the fourth pixel for dxx2
                 bram_addr1_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r) + to_integer(addSampleStep) + 1) * IMG_WIDTH + to_integer(c - to_integer(addSampleStep))), PIXEL_SIZE));
+                bram_addr2_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r) + to_integer(addSampleStep) + 1) * IMG_WIDTH + to_integer(c - to_integer(addSampleStep))), PIXEL_SIZE));
+
                 state_next <= WaitForData8;
                 
    when WaitForData8 =>
@@ -1521,7 +1558,7 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
            
             when FetchDXX2_4 =>
                 -- Capture the data from BRAM for the fourth pixel of dxx2
-                dxx2_sum_next <= std_logic_vector(signed(dxx2_sum_reg) - signed(bram_data_i));
+                dxx2_sum_next <= std_logic_vector(signed(dxx2_sum_reg) - signed(bram_data32_i & bram_data16_i));
                 state_next <= ComputeDXX2;
             
             when ComputeDXX2 =>
@@ -1529,6 +1566,8 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
                 dxx2_next <= dxx2_sum_reg;
                 -- Set BRAM addresses for the first pixel for dyy1
                 bram_addr1_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r + 1) * IMG_WIDTH + to_integer(c + to_integer(addSampleStep) + 1))), PIXEL_SIZE));
+                bram_addr2_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r + 1) * IMG_WIDTH + to_integer(c + to_integer(addSampleStep) + 1))), PIXEL_SIZE));
+
                 state_next <= WaitForData9;
                 
   when WaitForData9 =>
@@ -1536,9 +1575,11 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
          
             when FetchDYY1_1 =>
                 -- Capture the data from BRAM for the first pixel of dyy1
-                dyy1_sum_next <= bram_data_i;
+                dyy1_sum_next <= bram_data32_i & bram_data16_i;
                 -- Set BRAM addresses for the second pixel for dyy1
                 bram_addr1_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r - to_integer(addSampleStep)) * IMG_WIDTH + to_integer(c - to_integer(addSampleStep)))), PIXEL_SIZE));
+                bram_addr2_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r - to_integer(addSampleStep)) * IMG_WIDTH + to_integer(c - to_integer(addSampleStep)))), PIXEL_SIZE));
+
                 state_next <= WaitForData10;
                 
  when WaitForData10 =>
@@ -1546,9 +1587,11 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
             
             when FetchDYY1_2 =>
                 -- Capture the data from BRAM for the second pixel of dyy1
-                dyy1_sum_next <= std_logic_vector(signed(dyy1_sum_reg) + signed(bram_data_i));
+                dyy1_sum_next <= std_logic_vector(signed(dyy1_sum_reg) + signed(bram_data32_i & bram_data16_i));
                 -- Set BRAM addresses for the third pixel for dyy1
                 bram_addr1_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r - to_integer(addSampleStep)) * IMG_WIDTH + to_integer(c + to_integer(addSampleStep) + 1))), PIXEL_SIZE));
+                bram_addr2_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r - to_integer(addSampleStep)) * IMG_WIDTH + to_integer(c + to_integer(addSampleStep) + 1))), PIXEL_SIZE));
+
                 state_next <= WaitForData11;
                 
  when WaitForData11 =>
@@ -1556,9 +1599,11 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
             
             when FetchDYY1_3 =>
                 -- Capture the data from BRAM for the third pixel of dyy1
-                dyy1_sum_next <= std_logic_vector(signed(dyy1_sum_reg) - signed(bram_data_i));                 
+                dyy1_sum_next <= std_logic_vector(signed(dyy1_sum_reg) - signed(bram_data32_i & bram_data16_i));                 
                 -- Set BRAM addresses for the fourth pixel for dyy1
                 bram_addr1_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r + 1) * IMG_WIDTH + to_integer(c - to_integer(addSampleStep)))), PIXEL_SIZE));
+                bram_addr2_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r + 1) * IMG_WIDTH + to_integer(c - to_integer(addSampleStep)))), PIXEL_SIZE));
+
                 state_next <= WaitForData12;
                 
  when WaitForData12 =>
@@ -1566,7 +1611,7 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
        
             when FetchDYY1_4 =>
                 -- Capture the data from BRAM for the fourth pixel of dyy1
-                dyy1_sum_next <= std_logic_vector(signed(dyy1_sum_reg) - signed(bram_data_i));
+                dyy1_sum_next <= std_logic_vector(signed(dyy1_sum_reg) - signed(bram_data32_i & bram_data16_i));
                 state_next <= ComputeDYY1;
             
             when ComputeDYY1 =>
@@ -1574,6 +1619,8 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
                 dyy1_next <= dyy1_sum_reg;
                 -- Set BRAM addresses for the first pixel for dyy2
                 bram_addr1_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r + to_integer(addSampleStep) + 1) * IMG_WIDTH + to_integer(c + to_integer(addSampleStep) + 1))), PIXEL_SIZE));
+                bram_addr2_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r + to_integer(addSampleStep) + 1) * IMG_WIDTH + to_integer(c + to_integer(addSampleStep) + 1))), PIXEL_SIZE));
+
                 state_next <= WaitForData13;
                 
  when WaitForData13 =>
@@ -1581,9 +1628,11 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
             
             when FetchDYY2_1 =>
                 -- Capture the data from BRAM for the first pixel of dyy2
-                dyy2_sum_next <= bram_data_i;
+                dyy2_sum_next <= bram_data32_i & bram_data16_i;
                 -- Set BRAM addresses for the second pixel for dyy2
                 bram_addr1_o_next <= std_logic_vector(to_unsigned(4*(to_integer(r) * IMG_WIDTH + to_integer(c - to_integer(addSampleStep))), PIXEL_SIZE));
+                bram_addr2_o_next <= std_logic_vector(to_unsigned(4*(to_integer(r) * IMG_WIDTH + to_integer(c - to_integer(addSampleStep))), PIXEL_SIZE));
+
                 state_next <= WaitForData14;
                 
   when WaitForData14 =>
@@ -1591,9 +1640,11 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
         
             when FetchDYY2_2 =>
                 -- Capture the data from BRAM for the second pixel of dyy2
-                dyy2_sum_next <= std_logic_vector(signed(dyy2_sum_reg) + signed(bram_data_i));
+                dyy2_sum_next <= std_logic_vector(signed(dyy2_sum_reg) + signed(bram_data32_i & bram_data16_i));
                 -- Set BRAM addresses for the third pixel for dyy2
                 bram_addr1_o_next <= std_logic_vector(to_unsigned(4*(to_integer(r) * IMG_WIDTH + to_integer(c + to_integer(addSampleStep) + 1)), PIXEL_SIZE));
+                bram_addr2_o_next <= std_logic_vector(to_unsigned(4*(to_integer(r) * IMG_WIDTH + to_integer(c + to_integer(addSampleStep) + 1)), PIXEL_SIZE));
+
                 state_next <= WaitForData15;
                 
   when WaitForData15 =>
@@ -1601,9 +1652,11 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
             
             when FetchDYY2_3 =>
                 -- Capture the data from BRAM for the third pixel of dyy2
-                dyy2_sum_next <= std_logic_vector(signed(dyy2_sum_reg) - signed(bram_data_i));
+                dyy2_sum_next <= std_logic_vector(signed(dyy2_sum_reg) - signed(bram_data32_i & bram_data16_i));
                 -- Set BRAM addresses for the fourth pixel for dyy2
                 bram_addr1_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r + to_integer(addSampleStep) + 1) * IMG_WIDTH + to_integer(c - to_integer(addSampleStep)))), PIXEL_SIZE));
+                bram_addr2_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r + to_integer(addSampleStep) + 1) * IMG_WIDTH + to_integer(c - to_integer(addSampleStep)))), PIXEL_SIZE));
+ 
                 state_next <= WaitForData16;
                 
  when WaitForData16 =>
@@ -1611,7 +1664,7 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
              
             when FetchDYY2_4 =>
                 -- Capture the data from BRAM for the fourth pixel of dyy2
-                dyy2_sum_next <= std_logic_vector(signed(dyy2_sum_reg) - signed(bram_data_i));
+                dyy2_sum_next <= std_logic_vector(signed(dyy2_sum_reg) - signed(bram_data32_i & bram_data16_i));
                 state_next <= ComputeDYY2;
             
             when ComputeDYY2 =>
@@ -1764,11 +1817,15 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
                 counter_next <= 0;
                 if ri >= 0 and ri < INDEX_SIZE and ci >= 0 and ci < INDEX_SIZE then
                     if bram2_phase = 0 then
-                        bram_addr_int <= std_logic_vector(to_unsigned(4*((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori1))), INDEX_ADDRESS_SIZE));
-                        data1_o <= cweight1;
+                        bram_addr1_int <= std_logic_vector(to_unsigned(4*((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori1))), INDEX_ADDRESS_SIZE));
+                        data32_o <= cweight1(47 downto 16);
+                        bram_addr2_int <= std_logic_vector(to_unsigned(4*((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori1))), INDEX_ADDRESS_SIZE));
+                        data16_o <= cweight1(15 downto 0);
 
-                        bram_en_int <= '1';
-                        bram_we_int <= '1';
+                        bram_en1_int <= '1';
+                        bram_we1_int <= '1';
+                        bram_en2_int <= '1';
+                        bram_we2_int <= '1';
                         bram2_phase_next <= 1;
                         state_next <= UpdateIndexArray1;
                     end if;
@@ -1782,10 +1839,15 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
         when UpdateIndexArray1 =>
            
                 if bram2_phase = 1 then
-                    bram_addr_int <= std_logic_vector(to_unsigned(4*((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori2))), INDEX_ADDRESS_SIZE));
-                    data1_o <= cweight2;
-                    bram_en_int <= '1';
-                    bram_we_int <= '1';
+                    bram_addr1_int <= std_logic_vector(to_unsigned(4*((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori2))), INDEX_ADDRESS_SIZE));
+                    data32_o <= cweight2(47 downto 16);
+                    bram_addr2_int <= std_logic_vector(to_unsigned(4*((to_integer(unsigned(ri)) * (INDEX_SIZE * 4)) + to_integer(unsigned(ci)) * 4 + to_integer(unsigned(ori2))), INDEX_ADDRESS_SIZE));
+                    data16_o <= cweight2(15 downto 0);
+                    
+                       bram_en1_int <= '1';
+                       bram_we1_int <= '1';
+                       bram_en2_int <= '1';
+                       bram_we2_int <= '1';
                     bram2_phase_next <= 0;
                     state_next <= NextSample;
                 end if;
@@ -1816,9 +1878,14 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
     end process;
 
     -- Azuriranje izlaznih portova 
-    addr_do1_o <= bram_addr_int;
-    c1_data_o <= bram_en_int;
-    bram_we1_o <= bram_we_int;
+    addr_do1_o <= bram_addr1_int;
+    addr_do2_o <= bram_addr2_int;
+
+    c1_data_o <= bram_en1_int;
+    bram_we1_o <= bram_we1_int;
+    c2_data_o <= bram_en2_int;
+    bram_we2_o <= bram_we2_int;
+    
     rom_addr <= rom_addr_next;  -- Azuriranje rom_addr signala
     
 end Behavioral;

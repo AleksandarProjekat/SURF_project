@@ -2,8 +2,8 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
-entity bram is
-    generic (WIDTH: positive := 48;
+entity bram16_in is
+    generic (WIDTH: positive := 16;                    ---- BRAM ZA DONJIH 16 BITA ZA ULAZNE PODATKE PIXELS1D
              SIZE: positive := 129*129*4;
 			 SIZE_WIDTH: positive := 17);
     port (clka : in std_logic;
@@ -18,9 +18,9 @@ entity bram is
           dib: in std_logic_vector(WIDTH-1 downto 0);
           doa: out std_logic_vector(WIDTH-1 downto 0);
           dob: out std_logic_vector(WIDTH-1 downto 0));
-end bram;
+end bram16_in;
 
-architecture Behavioral of bram is
+architecture Behavioral of bram16_in is
     type ram_type is array(SIZE-1 downto 0) of std_logic_vector(WIDTH-1 downto 0);
     signal RAM: ram_type;
     

@@ -10,6 +10,8 @@ entity SURF_v1_0 is
         INDEX_ADDRESS_SIZE : integer := 8;
         FIXED_SIZE : integer := 48;       -- Bit width for fixed-point operations
         INDEX_SIZE : integer := 4;        -- Dimension size for the index array
+        BRAM_32_DATA : integer := 32;
+        BRAM_16_DATA : integer := 16;
         IMG_WIDTH : integer := 129;       -- Width of the image
         IMG_HEIGHT : integer := 129;       -- Height of the image
 		-- User parameters ends
@@ -23,22 +25,38 @@ entity SURF_v1_0 is
 	port (
 		-- Users to add ports here
 		
-		---------------MEM INTERFEJS ZA SLIKU--------------------
+		---------------MEM INTERFEJS ZA SLIKU32--------------------
 		clka       : out std_logic;
 		reseta     : out std_logic;
 		ena        : out std_logic;
 		addra      : out std_logic_vector (PIXEL_SIZE - 1 downto 0);
-		dina    : out std_logic_vector (FIXED_SIZE - 1 downto 0);
-		douta : in std_logic_vector (FIXED_SIZE - 1 downto 0);
+		dina    : out std_logic_vector (BRAM_32_DATA - 1 downto 0);
+		douta : in std_logic_vector (BRAM_32_DATA - 1 downto 0);
 		wea        : out std_logic;
-        ---------------MEM INTERFEJS ZA IZLAZ--------------------
+		---------------MEM INTERFEJS ZA SLIKU16--------------------
+		clkb       : out std_logic;
+		resetb     : out std_logic;
+		enb        : out std_logic;
+		addrb      : out std_logic_vector (PIXEL_SIZE - 1 downto 0);
+		dinb    : out std_logic_vector (BRAM_16_DATA - 1 downto 0);
+		doutb : in std_logic_vector (BRAM_16_DATA - 1 downto 0);
+		web        : out std_logic;
+        ---------------MEM INTERFEJS ZA IZLAZ32--------------------
         clkc       : out std_logic;
 		resetc     : out std_logic;
 		enc        : out std_logic;
 		addrc      : out std_logic_vector (INDEX_ADDRESS_SIZE-1 downto 0);
-		dinc    : out std_logic_vector (FIXED_SIZE - 1 downto 0);
-		doutc : in std_logic_vector (FIXED_SIZE - 1 downto 0);
+		dinc    : out std_logic_vector (BRAM_32_DATA - 1 downto 0);
+		doutc : in std_logic_vector (BRAM_32_DATA - 1 downto 0);
 		wec        : out std_logic; 
+		---------------MEM INTERFEJS ZA IZLAZ16--------------------
+        clkd       : out std_logic;
+		resetd     : out std_logic;
+		en_d        : out std_logic;
+		addrd      : out std_logic_vector (INDEX_ADDRESS_SIZE-1 downto 0);
+		dind    : out std_logic_vector (BRAM_16_DATA - 1 downto 0);
+		doutd : in std_logic_vector (BRAM_16_DATA - 1 downto 0);
+		wed        : out std_logic; 
 		-- User ports ends
 		-- Do not modify the ports beyond this line
 
@@ -89,22 +107,33 @@ architecture arch_imp of SURF_v1_0 is
         signal start_i_s :  std_logic;
         signal ready_o_s :  std_logic;
         
-        signal bram_addr1_o_s : std_logic_vector(PIXEL_SIZE-1 downto 0);
-        signal bram_data_i_s :  std_logic_vector(FIXED_SIZE-1 downto 0);
-        signal bram_en1_o_s :  std_logic;
-        signal addr_do1_o_s :  std_logic_vector (7 downto 0);
-        signal data1_o_s :  std_logic_vector (FIXED_SIZE - 1 downto 0);          
-        signal c1_data_o_s :  std_logic;
-        signal bram_we1_o_s : std_logic;
+        signal bram_addr1_o : std_logic_vector(PIXEL_SIZE -1 downto 0);
+        signal bram_addr2_o : std_logic_vector(PIXEL_SIZE -1 downto 0);
+        signal bram_data32_i : std_logic_vector(BRAM_32_DATA -1 downto 0);
+        signal bram_data16_i : std_logic_vector(BRAM_16_DATA -1 downto 0);
+        signal bram_en1_o : std_logic;
+        signal bram_en2_o : std_logic;
+        
+        signal addr_do1_o : std_logic_vector (7 downto 0);
+        signal addr_do2_o : std_logic_vector (7 downto 0);
+        signal data32_o : std_logic_vector (BRAM_32_DATA - 1 downto 0);          
+        signal data16_o : std_logic_vector (BRAM_16_DATA - 1 downto 0);          
+        signal c1_data_o : std_logic;
+        signal bram_we1_o : std_logic;
+        signal c2_data_o : std_logic;
+        signal bram_we2_o : std_logic;
+
         signal rom_data_s :  std_logic_vector(FIXED_SIZE - 1 downto 0);
         signal rom_addr_s :  std_logic_vector(5 downto 0);  
-
+        
     component ip is
         generic (
         WIDTH : integer := 11;            -- Bit width for various unsigned signals
         PIXEL_SIZE : integer := 17;       -- 129 x 129 pixels
         INDEX_ADDRESS_SIZE : integer := 8;
         FIXED_SIZE : integer := 48;       -- Bit width for fixed-point operations
+        BRAM_32_DATA : integer := 32;
+        BRAM_16_DATA : integer := 16;
         INDEX_SIZE : integer := 4;        -- Dimension size for the index array
         IMG_WIDTH : integer := 129;       -- Width of the image
         IMG_HEIGHT : integer := 129       -- Height of the image
@@ -122,15 +151,22 @@ architecture arch_imp of SURF_v1_0 is
         i_cose : in std_logic_vector(FIXED_SIZE - 1 downto 0);
         i_sine : in std_logic_vector(FIXED_SIZE - 1 downto 0);
         scale : in std_logic_vector(WIDTH - 1 downto 0);
-        ---------------MEM INTERFEJS ZA SLIKU--------------------
-        bram_addr1_o : out std_logic_vector(PIXEL_SIZE-1 downto 0);
-        bram_data_i : in std_logic_vector(FIXED_SIZE-1 downto 0);
+        ---------------MEM INTERFEJSI ZA SLIKU--------------------
+        bram_addr1_o : out std_logic_vector(PIXEL_SIZE -1 downto 0);
+        bram_addr2_o : out std_logic_vector(PIXEL_SIZE -1 downto 0);
+        bram_data32_i : in std_logic_vector(BRAM_32_DATA -1 downto 0);
+        bram_data16_i : in std_logic_vector(BRAM_16_DATA -1 downto 0);
         bram_en1_o : out std_logic;
-        ---------------MEM INTERFEJS ZA IZLAZ--------------------
+        bram_en2_o : out std_logic;
+        ---------------MEM INTERFEJSI ZA IZLAZ--------------------
         addr_do1_o : out std_logic_vector (7 downto 0);
-        data1_o : out std_logic_vector (FIXED_SIZE - 1 downto 0);          
+        addr_do2_o : out std_logic_vector (7 downto 0);
+        data32_o : out std_logic_vector (BRAM_32_DATA - 1 downto 0);          
+        data16_o : out std_logic_vector (BRAM_16_DATA - 1 downto 0);          
         c1_data_o : out std_logic;
         bram_we1_o : out std_logic;
+        c2_data_o : out std_logic;
+        bram_we2_o : out std_logic;
         ---------------INTERFEJS ZA ROM--------------------
         rom_data : in std_logic_vector(FIXED_SIZE - 1 downto 0);
         rom_addr : out std_logic_vector(5 downto 0);  
@@ -261,17 +297,27 @@ SURF_v1_0_S00_AXI_inst : SURF_v1_0_S00_AXI
         i_sine => i_sine_s,
         scale => scale_s,
         
-        ---------------MEM INTERFEJS ZA SLIKU--------------------
-
+        ---------------MEM INTERFEJS ZA SLIKU32--------------------
         bram_addr1_o => addra,
-        bram_data_i => douta,
+        bram_data32_i => douta,
         bram_en1_o => ena,
-        ---------------MEM INTERFEJS ZA IZLAZ--------------------
+        
+        ---------------MEM INTERFEJS ZA SLIKU16--------------------
+        bram_addr2_o => addrb,
+        bram_data16_i => doutb,
+        bram_en2_o => enb,
+        ---------------MEM INTERFEJS ZA IZLAZ32--------------------
 
         addr_do1_o => addrc,
-        data1_o => dinc,        
+        data32_o => dinc,        
         c1_data_o => enc,
         bram_we1_o => wec,
+        
+        ---------------MEM INTERFEJS ZA IZLAZ16--------------------
+        addr_do2_o => addrd,
+        data16_o => dind,        
+        c2_data_o => en_d,
+        bram_we2_o => wed,
         
         rom_data => rom_data_s,
         rom_addr => rom_addr_s,
@@ -282,11 +328,18 @@ SURF_v1_0_S00_AXI_inst : SURF_v1_0_S00_AXI
      );
      
         clka <= s00_axi_aclk;
+        clkb <= s00_axi_aclk;
         clkc <= s00_axi_aclk;
+        clkd <= s00_axi_aclk;
+        
         reseta <= reset_s;
+        resetb <= reset_s;
         resetc <= reset_s;
+        resetd <= reset_s;
         wea <= '0';
+        web <= '0';
         dina <= (others => '0');
+        dinb <= (others => '0');
 	-- User logic ends
 
 end arch_imp;

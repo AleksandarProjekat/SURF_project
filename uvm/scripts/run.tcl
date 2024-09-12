@@ -12,8 +12,10 @@ set_property board_part digilentinc.com:zybo:part0:2.0 [current_project]
 # Ukljucivanje svih izvornih i simulacionih fajlova u projekat
 # ===================================================================================
 
-add_files -norecurse ../dut/bram.vhd
-add_files -norecurse ../dut/bram_out.vhd
+add_files -norecurse ../dut/bram32_in.vhd
+add_files -norecurse ../dut/bram16_in.vhd
+add_files -norecurse ../dut/bram32_out.vhd
+add_files -norecurse ../dut/bram16_out.vhd
 add_files -norecurse ../dut/delay.vhd
 add_files -norecurse ../dut/dsp1.vhd
 add_files -norecurse ../dut/dsp2.vhd
