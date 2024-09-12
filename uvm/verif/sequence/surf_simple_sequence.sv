@@ -207,7 +207,7 @@ class surf_simple_sequence extends surf_base_sequence;
 				surf_item.img_douta = p_sequencer.cfg.img32_input_data[i];
 
        			surf_item.img_enb = 1'b1;
-				surf_item.img_addrb = j*4;
+				surf_item.img_addrb = i*4;
 				surf_item.img_doutb = p_sequencer.cfg.img16_input_data[i];
 
 				finish_item(surf_item);
