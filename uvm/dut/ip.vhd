@@ -1452,13 +1452,13 @@ process (rfrac_mux_out, cfrac_mux_out, rom_adress_delayed1, rpos_squared_delayed
     rom_addr_next <= rom_adress_delayed1(23 downto 18);
              
                 state_next <= ComputeDerivatives;
-
+                bram_en1_o <= '1';  -- Enable BRAM port
+                bram_en2_o <= '1';  -- Enable BRAM port
              when ComputeDerivatives =>
       weight_next <= std_logic_vector(rom_data_internal);
 
                 -- Set BRAM addresses for the first pixel for dxx1
-                bram_en1_o <= '1';  -- Enable BRAM port
-                bram_en2_o <= '1';  -- Enable BRAM port
+
 
                 bram_addr1_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r) + to_integer(addSampleStep) + 1) * IMG_WIDTH + (to_integer(c) + to_integer(addSampleStep) + 1)), PIXEL_SIZE));
                 bram_addr2_o_next <= std_logic_vector(to_unsigned(4*((to_integer(r) + to_integer(addSampleStep) + 1) * IMG_WIDTH + (to_integer(c) + to_integer(addSampleStep) + 1)), PIXEL_SIZE));
