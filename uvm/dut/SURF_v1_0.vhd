@@ -92,7 +92,7 @@ architecture arch_imp of SURF_v1_0 is
         signal bram_addr1_o_s : std_logic_vector(PIXEL_SIZE-1 downto 0);
         signal bram_data_i_s :  std_logic_vector(FIXED_SIZE-1 downto 0);
         signal bram_en1_o_s :  std_logic;
-        signal addr_do1_o_s :  std_logic_vector (5 downto 0);
+        signal addr_do1_o_s :  std_logic_vector (7 downto 0);
         signal data1_o_s :  std_logic_vector (FIXED_SIZE - 1 downto 0);          
         signal c1_data_o_s :  std_logic;
         signal bram_we1_o_s : std_logic;
@@ -149,7 +149,7 @@ architecture arch_imp of SURF_v1_0 is
         LOWER_SIZE : integer := 16;
  
                 C_S_AXI_DATA_WIDTH	: integer	:= 32;
-                C_S_AXI_ADDR_WIDTH	: integer	:= 4
+                C_S_AXI_ADDR_WIDTH	: integer	:= 7
 		);
 		port (
 		iradius_axi_o : out std_logic_vector(WIDTH - 1 downto 0);
