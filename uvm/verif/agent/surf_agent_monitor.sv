@@ -52,8 +52,8 @@ task main_phase(uvm_phase phase);
             curr_it.ip_doutc = s_vif.ip_doutc;
 
             // Ispis podataka za ip_enc
- `uvm_info(get_type_name(), $sformatf("[Monitor] Poslati podaci za ip_enc:"), UVM_HIGH);
-            `uvm_info(get_type_name(), $sformatf("ip_addrc = %0d, ip_doutc = %0d", curr_it.ip_addrc, curr_it.ip_doutc), UVM_HIGH);
+ `uvm_info(get_type_name(), $sformatf("[Monitor] Poslati podaci za ip_enc:"), UVM_LOW);
+            `uvm_info(get_type_name(), $sformatf("ip_addrc = %0d, ip_doutc = %0d", curr_it.ip_addrc, curr_it.ip_doutc), UVM_LOW);
         end
 
         if (s_vif.ip_end == 1) begin
@@ -62,15 +62,15 @@ task main_phase(uvm_phase phase);
             curr_it.ip_doutd = s_vif.ip_doutd;
 
             // Ispis podataka za ip_end
-            `uvm_info(get_type_name(), $sformatf("[Monitor] Poslati podaci za ip_end:"), UVM_HIGH);
-            `uvm_info(get_type_name(), $sformatf("ip_addrd = %0d, ip_doutd = %0d", curr_it.ip_addrd, curr_it.ip_doutd), UVM_HIGH);
+            `uvm_info(get_type_name(), $sformatf("[Monitor] Poslati podaci za ip_end:"), UVM_LOW);
+            `uvm_info(get_type_name(), $sformatf("ip_addrd = %0d, ip_doutd = %0d", curr_it.ip_addrd, curr_it.ip_doutd), UVM_LOW);
         end
 
         // Samo zapisujemo transakciju ako su podaci validni
         if (s_vif.ip_enc == 1 || s_vif.ip_end == 1) begin
-            // Ispisuje šta monitor šalje na item_collected_port
+            // Ispisuje sta monitor salje na item_collected_port
             `uvm_info(get_type_name(), $sformatf("[Monitor] Poslata transakcija: ip_addrc = %0d, ip_doutc = %0d, ip_addrd = %0d, ip_doutd = %0d",
-                curr_it.ip_addrc, curr_it.ip_doutc, curr_it.ip_addrd, curr_it.ip_doutd), UVM_HIGH);
+                curr_it.ip_addrc, curr_it.ip_doutc, curr_it.ip_addrd, curr_it.ip_doutd), UVM_LOW);
             item_collected_port.write(curr_it);
         end
     end
