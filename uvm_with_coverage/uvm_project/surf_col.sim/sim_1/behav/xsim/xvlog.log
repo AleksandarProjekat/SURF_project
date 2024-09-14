@@ -1,0 +1,8 @@
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/coa/Desktop/uvm_with_coverage/verif/configuration/configuration_pkg.sv" into library xil_defaultlib
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/coa/Desktop/uvm_with_coverage/verif/agent/surf_agent_pkg.sv" into library xil_defaultlib
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/coa/Desktop/uvm_with_coverage/verif/axi_agent/surf_axi_agent_pkg.sv" into library xil_defaultlib
+WARNING: [VRFC 10-2581] 4294967295 as 32-bit signed integer overflows, using -1 instead [C:/Users/coa/Desktop/uvm_with_coverage/verif/axi_agent/surf_axi_agent_monitor.sv:52]
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/coa/Desktop/uvm_with_coverage/verif/sequence/surf_sequence_pkg.sv" into library xil_defaultlib
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/coa/Desktop/uvm_with_coverage/verif/test_pkg.sv" into library xil_defaultlib
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/coa/Desktop/uvm_with_coverage/verif/surf_top.sv" into library xil_defaultlib
+INFO: [VRFC 10-311] analyzing module surf_top
