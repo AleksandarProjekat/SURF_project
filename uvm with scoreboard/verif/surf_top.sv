@@ -10,18 +10,18 @@ module surf_top;
 
     logic ip_ena;
     logic [16:0] ip_addra;
-    logic [31:0] ip_douta;
+    logic [23:0] ip_douta;
 
     logic ip_enb;
     logic [16:0] ip_addrb;
-    logic [15:0] ip_doutb;
+    logic [23:0] ip_doutb;
     
     // Interface
     surf_interface s_vif(clk,rst,ip_ena,ip_addra,ip_douta,ip_enb,ip_addrb,ip_doutb);
 
     // DUT
     SURF_v1_0 DUT(
-        // Interfejs za sliku prvih 32 bita
+        // Interfejs za sliku prvih 24 bita
         .ena     (ip_ena),
         .wea     (),
         .addra   (ip_addra),
@@ -29,7 +29,7 @@ module surf_top;
         .douta   (ip_douta),
         .clka    (),
         
-        // Interfejs za sliku drugih 16 bita  
+        // Interfejs za sliku drugih 24 bita  
         .enb     (ip_enb),
         .web     (),
         .addrb   (ip_addrb),
@@ -38,20 +38,20 @@ module surf_top;
         .resetb  (),
         .clkb    (),  
         
-        // Interfejs za izlaz prvih 32 bita       
+        // Interfejs za izlaz prvih 24 bita       
         .enc     (),
         .wec     (s_vif.ip_enc),
         .addrc   (s_vif.ip_addrc),
         .dinc    (s_vif.ip_doutc),
-        .doutc   (32'd0),
+        .doutc   (23'd0),
         .clkc    (),
         
-         // Interfejs za izlaz drugih 16 bita       
+         // Interfejs za izlaz drugih 24 bita       
         .en_d     (),
         .wed     (s_vif.ip_end),
         .addrd   (s_vif.ip_addrd),
         .dind    (s_vif.ip_doutd),
-        .doutd   (16'd0),
+        .doutd   (23'd0),
         .clkd    (),
 
         // Ports of Axi Slave Bus Interface S00_AXI
@@ -78,7 +78,7 @@ module surf_top;
         .s00_axi_rready                (s_vif.s00_axi_rready)
         );
 
-    bram32_in BRAM_A(
+    bram24_upper_in BRAM_A(
         .clka   (clk), 
         .clkb   (clk),
         .ena    (s_vif.img_ena),    
@@ -90,11 +90,11 @@ module surf_top;
         .enb    (ip_ena),
         .web    (1'b0),
         .addrb  (ip_addra),
-        .dib    (32'd0),
+        .dib    (23'd0),
         .dob    (ip_douta)
     );
    
-     bram16_in BRAM_B(
+     bram24_lower_in BRAM_B(
         .clka   (clk), 
         .clkb   (clk),
        // .reseta (rst),
@@ -108,7 +108,7 @@ module surf_top;
         .enb    (ip_enb),
         .web    (1'b0),
         .addrb  (ip_addrb),
-        .dib    (16'd0),
+        .dib    (23'd0),
         .dob    (ip_doutb)
         );
       

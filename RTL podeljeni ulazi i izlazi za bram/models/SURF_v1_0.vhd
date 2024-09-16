@@ -24,7 +24,7 @@ entity SURF_v1_0 is
 	port (
 		-- Users to add ports here
 		
-		---------------MEM INTERFEJS ZA SLIKU32--------------------
+		---------------MEM INTERFEJS ZA SLIKU--------------------
 		clka       : out std_logic;
 		reseta     : out std_logic;
 		ena        : out std_logic;
@@ -32,7 +32,7 @@ entity SURF_v1_0 is
 		dina    : out std_logic_vector (BRAM_24_DATA - 1 downto 0);
 		douta : in std_logic_vector (BRAM_24_DATA - 1 downto 0);
 		wea        : out std_logic;
-		---------------MEM INTERFEJS ZA SLIKU16--------------------
+		---------------MEM INTERFEJS ZA SLIKU--------------------
 		clkb       : out std_logic;
 		resetb     : out std_logic;
 		enb        : out std_logic;
@@ -40,7 +40,7 @@ entity SURF_v1_0 is
 		dinb    : out std_logic_vector (BRAM_24_DATA - 1 downto 0);
 		doutb : in std_logic_vector (BRAM_24_DATA - 1 downto 0);
 		web        : out std_logic;
-        ---------------MEM INTERFEJS ZA IZLAZ32--------------------
+        ---------------MEM INTERFEJS ZA IZLAZ--------------------
         clkc       : out std_logic;
 		resetc     : out std_logic;
 		enc        : out std_logic;
@@ -48,7 +48,7 @@ entity SURF_v1_0 is
 		dinc    : out std_logic_vector (BRAM_24_DATA - 1 downto 0);
 		doutc : in std_logic_vector (BRAM_24_DATA - 1 downto 0);
 		wec        : out std_logic; 
-		---------------MEM INTERFEJS ZA IZLAZ16--------------------
+		---------------MEM INTERFEJS ZA IZLAZ--------------------
         clkd       : out std_logic;
 		resetd     : out std_logic;
 		en_d        : out std_logic;

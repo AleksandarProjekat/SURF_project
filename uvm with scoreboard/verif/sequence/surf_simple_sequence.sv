@@ -72,83 +72,83 @@ class surf_simple_sequence extends surf_base_sequence;
         //********** SETTING IMAGE PARAMETERS **********//
         $display("\nSetting image parameters...\n\n");
 		
-        // Slanje gornjih 32 bita (FRACR_UPPER_C)
+        // Slanje gornjih 24 bita (FRACR_UPPER_C)
         `uvm_do_with(surf_item, {
             surf_item.bram_axi == 1;
             surf_item.s00_axi_awaddr == AXI_BASE + FRACR_UPPER_REG_OFFSET;
-            surf_item.s00_axi_wdata == 32'b00000000000000000000000000000000;
-            s00_axi_wstrb == 4'b1111;
+            surf_item.s00_axi_wdata == {8'b00000000, 24'b000000000000000000000000};
+            s00_axi_wstrb == 4'b0111;
         });
 
-        // Slanje donjih 16 bita (FRACR_LOWER_C)
+        // Slanje donjih 24 bita (FRACR_LOWER_C)
         `uvm_do_with(surf_item, {
             surf_item.bram_axi == 1;
             surf_item.s00_axi_awaddr == AXI_BASE + FRACR_LOWER_REG_OFFSET;
-            surf_item.s00_axi_wdata == {16'b0000000000000000, 16'b0100010101100110};  
-            s00_axi_wstrb == 4'b0011;
+            surf_item.s00_axi_wdata == {8'b00000000, 24'b000000000100010101100110};  
+            s00_axi_wstrb == 4'b0111;
         });
 
-        // Slanje gornjih 32 bita (FRACC_UPPER_C)
+        // Slanje gornjih 24 bita (FRACC_UPPER_C)
         `uvm_do_with(surf_item, {
             surf_item.bram_axi == 1;
             surf_item.s00_axi_awaddr == AXI_BASE + FRACC_UPPER_REG_OFFSET;
-            surf_item.s00_axi_wdata == 32'b00000000000000000000000000000000;
-            s00_axi_wstrb == 4'b1111;
+            surf_item.s00_axi_wdata == {8'b00000000, 24'b000000000000000000000000};
+            s00_axi_wstrb == 4'b0111;
         });
 
-        // Slanje donjih 16 bita (FRACC_LOWER_C)
+        // Slanje donjih 24 bita (FRACC_LOWER_C)
         `uvm_do_with(surf_item, {
             surf_item.bram_axi == 1;
             surf_item.s00_axi_awaddr == AXI_BASE + FRACC_LOWER_REG_OFFSET;
-            surf_item.s00_axi_wdata == {16'b0000000000000000, 16'b0100000110010011};  
-            s00_axi_wstrb == 4'b0011;
+            surf_item.s00_axi_wdata == {8'b00000000, 24'b000000000100000110010011}; 
+            s00_axi_wstrb == 4'b0111;
         });
 
-        // Slanje gornjih 32 bita (SPACING_UPPER_C)
+        // Slanje gornjih 24 bita (SPACING_UPPER_C)
         `uvm_do_with(surf_item, {
             surf_item.bram_axi == 1;
             surf_item.s00_axi_awaddr == AXI_BASE + SPACING_UPPER_REG_OFFSET;
-            surf_item.s00_axi_wdata == 32'b00000000000000000000000000000000;
-            s00_axi_wstrb == 4'b1111;
+            surf_item.s00_axi_wdata == {8'b00000000, 24'b000000000000000000000000};
+            s00_axi_wstrb == 4'b0111;
         });
 
-        // Slanje donjih 16 bita (SPACING_LOWER_C)
+        // Slanje donjih 24 bita (SPACING_LOWER_C)
         `uvm_do_with(surf_item, {
             surf_item.bram_axi == 1;
             surf_item.s00_axi_awaddr == AXI_BASE + SPACING_LOWER_REG_OFFSET;
-            surf_item.s00_axi_wdata == {16'b0000000000000000, 16'b0100101010000000};  
-            s00_axi_wstrb == 4'b0011;
+            surf_item.s00_axi_wdata == {8'b00000000, 24'b000000000100101010000000};  
+            s00_axi_wstrb == 4'b0111;
         });
 
-        // Slanje gornjih 32 bita (I_COSE_UPPER_C)
+        // Slanje gornjih 24 bita (I_COSE_UPPER_C)
         `uvm_do_with(surf_item, {
             surf_item.bram_axi == 1;
             surf_item.s00_axi_awaddr == AXI_BASE + I_COSE_UPPER_REG_OFFSET;
-            surf_item.s00_axi_wdata == 32'b11111111111111111111111111111111;  
-            s00_axi_wstrb == 4'b1111;
+            surf_item.s00_axi_wdata == {8'b00000000, 24'b111111111111111111111111}; 
+            s00_axi_wstrb == 4'b0111;
         });
 
-        // Slanje donjih 16 bita (I_COSE_LOWER_C)
+        // Slanje donjih 24 bita (I_COSE_LOWER_C)
         `uvm_do_with(surf_item, {
             surf_item.bram_axi == 1;
             surf_item.s00_axi_awaddr == AXI_BASE + I_COSE_LOWER_REG_OFFSET;
-            surf_item.s00_axi_wdata == {16'b0000000000000000, 16'b1101101111011100};  
-            s00_axi_wstrb == 4'b0011;
+            surf_item.s00_axi_wdata == {8'b00000000, 24'b111111111101101111011100}; 
+            s00_axi_wstrb == 4'b0111;
         });
 
-        // Slanje gornjih 32 bita (I_SINE_UPPER_C)
+        // Slanje gornjih 24 bita (I_SINE_UPPER_C)
         `uvm_do_with(surf_item, {
             surf_item.bram_axi == 1;
             surf_item.s00_axi_awaddr == AXI_BASE + I_SINE_UPPER_REG_OFFSET;
-            surf_item.s00_axi_wdata == 32'b00000000000000000000000000000011;  
-            s00_axi_wstrb == 4'b1111;
+            surf_item.s00_axi_wdata == {8'b00000000, 24'b000000000000000000000000}; 
+            s00_axi_wstrb == 4'b0111;
         });
 
-        // Slanje donjih 16 bita (I_SINE_LOWER_C)
+        // Slanje donjih 24 bita (I_SINE_LOWER_C)
         `uvm_do_with(surf_item, {
             surf_item.bram_axi == 1;
             surf_item.s00_axi_awaddr == AXI_BASE + I_SINE_LOWER_REG_OFFSET;
-            surf_item.s00_axi_wdata == {16'b0000000000000000, 16'b1111111101011100};  
+            surf_item.s00_axi_wdata == {8'b00000000, 24'b000000111111111101011100};  
             s00_axi_wstrb == 4'b0011;
         });
 
@@ -193,9 +193,9 @@ class surf_simple_sequence extends surf_base_sequence;
         });
 
         //********** LOADING AN IMAGE 32 **********//
-        $display("\nImage32 loading begins...\n");
+        $display("\nImage 24 and 24 loading begins...\n");
 
-        $display("\nPicture32 resolution is: %d", 129*129);
+        $display("\nPicture 24 and 24 resolution is: %d", 129*129);
 
         for(i = 0; i < 129*129; i ++)
         begin
@@ -204,15 +204,15 @@ class surf_simple_sequence extends surf_base_sequence;
 							
 				surf_item.img_ena = 1'b1;
 				surf_item.img_addra = i*4;
-				surf_item.img_douta = p_sequencer.cfg.img32_input_data[i];
+				surf_item.img_douta = p_sequencer.cfg.img_upper_input_data[i];
 
        			surf_item.img_enb = 1'b1;
 				surf_item.img_addrb = i*4;
-				surf_item.img_doutb = p_sequencer.cfg.img16_input_data[i];
+				surf_item.img_doutb = p_sequencer.cfg.img_lower_input_data[i];
 
 				finish_item(surf_item);
      end 
-			$display("\nImage 32 i 16 loaded...\n");
+			$display("\nImage 24 and 24 loaded...\n");
 
 		
         //  ***********************     START THE PROCESSING   ***********************//   

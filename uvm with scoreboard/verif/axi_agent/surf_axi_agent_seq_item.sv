@@ -1,5 +1,5 @@
-`ifndef SURF_SEQ_ITEM
-    `define SURF_SEQ_ITEM
+`ifndef SURF_AXI_SEQ_ITEM
+    `define SURF_AXI_SEQ_ITEM
 
     parameter AXI_BASE = 7'b0000000;
     parameter FRACR_UPPER_REG_OFFSET = 0;
@@ -24,35 +24,33 @@
     parameter C_S00_AXI_ADDR_WIDTH = 7;
     parameter C_S00_AXI_DATA_WIDTH = 32;
 
-
-class surf_seq_item extends uvm_sequence_item;
+class surf_axi_seq_item extends uvm_sequence_item;
 
     // Control signal - 0 for bram, 1 for AXI lite registers
-    rand logic [2:0] bram_axi;
+    rand logic bram_axi;
 
-    // Memory - Input image32
+    // Memory - Input image
     rand logic [16:0] img_addra;
-    rand logic [31:0] img_douta;
+    rand logic [23:0] img_douta;
     rand logic img_ena;
-
-    // Memory - Input image16
+    
+    // Memory - Input image
     rand logic [16:0] img_addrb;
-    rand logic [15:0] img_doutb;
+    rand logic [23:0] img_doutb;
     rand logic img_enb;
-    
-    // Memory - Output image32
+
+
+    // Memory - Output image
     rand logic [7:0] ip_addrc;
-    rand logic [31:0] ip_doutc;
+    rand logic [23:0] ip_doutc;
     rand logic ip_enc;
-
-    rand logic [31:0] img_doutc;
+    rand logic [23:0] img_doutc;
     
-   // Memory - Output image16
+    // Memory - Output image
     rand logic [7:0] ip_addrd;
-    rand logic [15:0] ip_doutd;
+    rand logic [23:0] ip_doutd;
     rand logic ip_end;
-
-    rand logic [15:0] img_doutd;
+    rand logic [23:0] img_doutd;
 
     // AXI Lite - Main registers
     rand logic [C_S00_AXI_ADDR_WIDTH -1:0] s00_axi_awaddr;
@@ -75,19 +73,16 @@ class surf_seq_item extends uvm_sequence_item;
 	rand logic s00_axi_rvalid;
 	rand logic s00_axi_rready;
 
-    `uvm_object_utils_begin(surf_seq_item)
+    `uvm_object_utils_begin(surf_axi_seq_item)
         `uvm_field_int(img_addra, UVM_DEFAULT );
         `uvm_field_int(img_douta, UVM_DEFAULT );
         `uvm_field_int(img_ena, UVM_DEFAULT );
-
         `uvm_field_int(img_addrb, UVM_DEFAULT );
         `uvm_field_int(img_doutb, UVM_DEFAULT );
         `uvm_field_int(img_enb, UVM_DEFAULT );
-
         `uvm_field_int(ip_addrc, UVM_DEFAULT );
         `uvm_field_int(ip_doutc, UVM_DEFAULT );
         `uvm_field_int(ip_enc, UVM_DEFAULT );
-        
         `uvm_field_int(ip_addrd, UVM_DEFAULT );
         `uvm_field_int(ip_doutd, UVM_DEFAULT );
         `uvm_field_int(ip_end, UVM_DEFAULT );
@@ -113,10 +108,10 @@ class surf_seq_item extends uvm_sequence_item;
         `uvm_field_int(s00_axi_rready, UVM_DEFAULT);
     `uvm_object_utils_end
 
-    function new( string name = "surf_seq_item");
+    function new( string name = "surf_axi_seq_item");
         super.new(name);
     endfunction : new
 
-endclass : surf_seq_item
+endclass : surf_axi_seq_item
 
 `endif

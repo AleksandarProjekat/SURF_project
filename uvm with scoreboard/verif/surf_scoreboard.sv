@@ -12,10 +12,10 @@ class surf_scoreboard extends uvm_scoreboard;
     int img32_mismatch_count = 0;
     int img16_mismatch_count = 0;
 
-    bit [31:0] collected_img32_data[64]; 
-    bit [15:0] collected_img16_data[64];
-    bit [31:0] observed_img32_data[64];
-    bit [15:0] observed_img16_data[64];
+    bit [23:0] collected_img32_data[64]; 
+    bit [23:0] collected_img16_data[64];
+    bit [23:0] observed_img32_data[64];
+    bit [23:0] observed_img16_data[64];
 
     `uvm_component_utils_begin(surf_scoreboard)
         `uvm_field_int(checks_enable, UVM_DEFAULT)
@@ -50,6 +50,7 @@ class surf_scoreboard extends uvm_scoreboard;
         end
     endfunction
 
+/*
 // U report fazi izvrsi proveru
 function void report_phase(uvm_phase phase);
     `uvm_info(get_type_name(), $sformatf("Provera podataka nakon svih transakcija..."), UVM_LOW);
@@ -62,24 +63,24 @@ function void report_phase(uvm_phase phase);
 
         // Ispisuje observed i expected vrednosti za img32
         `uvm_info(get_type_name(), $sformatf("Adresa [%0d] - img32: Observed = %0d, Expected = %0d", 
-            i, observed_img32_data[i], cfg.img32_gv_data[i]), UVM_MEDIUM);
+            i, observed_img32_data[i], cfg.img_upper_gv_data[i]), UVM_MEDIUM);
 
         // Provera za img32 - prijavi neslaganje odmah
-        if (observed_img32_data[i] !== cfg.img32_gv_data[i]) begin
+        if (observed_img32_data[i] !== cfg.img_upper_gv_data[i]) begin
             `uvm_error(get_type_name(), $sformatf("Mismatch img_output32[%0d]\nObserved: %0d, Expected: %0d.", 
-                i, observed_img32_data[i], cfg.img32_gv_data[i]));
+                i, observed_img32_data[i], cfg.img_upper_gv_data[i]));
             img32_mismatch_count++; // Pove?aj brojac neslaganja za img32
         end
 
         // Ispisuje observed i expected vrednosti za img16
         `uvm_info(get_type_name(), $sformatf("Adresa [%0d] - img16: Observed = %0d, Expected = %0d", 
-            i, observed_img16_data[i], cfg.img16_gv_data[i]), UVM_MEDIUM);
+            i, observed_img16_data[i], cfg.img_lower_gv_data[i]), UVM_MEDIUM);
 
         // Provera za img16 - prijavi neslaganje odmah
-        if (observed_img16_data[i] !== cfg.img16_gv_data[i]) begin
+        if (observed_img16_data[i] !== cfg.img_lower_gv_data[i]) begin
             `uvm_error(get_type_name(), $sformatf("Mismatch img_output16[%0d]\nObserved: %0d, Expected: %0d.", 
-                i, observed_img16_data[i], cfg.img16_gv_data[i]));
-            img16_mismatch_count++; // Povecaj broja? neslaganja za img16
+                i, observed_img16_data[i], cfg.img_lower_gv_data[i]));
+            img16_mismatch_count++; // Povecaj brojac neslaganja za img16
         end
     end
     
@@ -99,9 +100,9 @@ function void report_phase(uvm_phase phase);
 endfunction
 
 
+*/
 
 
-/*
     // U report fazi izvrši proveru
     function void report_phase(uvm_phase phase);
         `uvm_info(get_type_name(), $sformatf("Provera podataka nakon svih transakcija..."), UVM_LOW);
@@ -114,33 +115,33 @@ endfunction
     
             // Ispisuje observed i expected vrednosti za img32
             `uvm_info(get_type_name(), $sformatf("Adresa [%0d] - img32: Observed = %0d, Expected = %0d", 
-                i, observed_img32_data[i], cfg.img32_gv_data[i]), UVM_MEDIUM);
+                i, observed_img32_data[i], cfg.img_upper_gv_data[i]), UVM_MEDIUM);
     
             // Provera za img32, ignorise se poslednji bit sa ^ XOR
-            if (observed_img32_data[i] !== cfg.img32_gv_data[i]) begin
-                if ((observed_img32_data[i] ^ cfg.img32_gv_data[i]) == 1) begin
+            if (observed_img32_data[i] !== cfg.img_upper_gv_data[i]) begin
+                if ((observed_img32_data[i] ^ cfg.img_upper_gv_data[i]) == 1) begin
                     `uvm_info(get_type_name(), $sformatf("Razlika u poslednjem bitu img32 [%0d]\nObserved: %0d, Expected: %0d.", 
-                        i, observed_img32_data[i], cfg.img32_gv_data[i]), UVM_LOW);
+                        i, observed_img32_data[i], cfg.img_upper_gv_data[i]), UVM_LOW);
                 end else begin
                     `uvm_error(get_type_name(), $sformatf("Mismatch img_output32[%0d]\nObserved: %0d, Expected: %0d.", 
-                        i, observed_img32_data[i], cfg.img32_gv_data[i]));
+                        i, observed_img32_data[i], cfg.img_upper_gv_data[i]));
                     img32_mismatch_count++; // Povecaj broja? neslaganja za img32
                 end
             end
     
             // Ispisuje observed i expected vrednosti za img16
             `uvm_info(get_type_name(), $sformatf("Adresa [%0d] - img16: Observed = %0d, Expected = %0d", 
-                i, observed_img16_data[i], cfg.img16_gv_data[i]), UVM_MEDIUM);
+                i, observed_img16_data[i], cfg.img_lower_gv_data[i]), UVM_MEDIUM);
     
             // Provera za img16, ignoriše se poslednji bit sa ^ XOR
-            if (observed_img16_data[i] !== cfg.img16_gv_data[i]) begin
-                if ((observed_img16_data[i] ^ cfg.img16_gv_data[i]) == 1) begin
+            if (observed_img16_data[i] !== cfg.img_lower_gv_data[i]) begin
+                if ((observed_img16_data[i] ^ cfg.img_lower_gv_data[i]) == 1) begin
                     `uvm_info(get_type_name(), $sformatf("Razlika u poslednjem bitu img16 [%0d]\nObserved: %0d, Expected: %0d.", 
-                        i, observed_img16_data[i], cfg.img16_gv_data[i]), UVM_LOW);
+                        i, observed_img16_data[i], cfg.img_lower_gv_data[i]), UVM_LOW);
                 end else begin
                     `uvm_error(get_type_name(), $sformatf("Mismatch img_output16[%0d]\nObserved: %0d, Expected: %0d.", 
-                        i, observed_img16_data[i], cfg.img16_gv_data[i]));
-                    img16_mismatch_count++; // Pove?aj brojac neslaganja za img16
+                        i, observed_img16_data[i], cfg.img_lower_gv_data[i]));
+                    img16_mismatch_count++; // Povecaj brojac neslaganja za img16
                 end
             end
         end
@@ -159,7 +160,7 @@ endfunction
     
         `uvm_info(get_type_name(), $sformatf("Ukupno transakcija: %0d", num_of_tr), UVM_LOW);
     endfunction
-*/
+
 
 
 

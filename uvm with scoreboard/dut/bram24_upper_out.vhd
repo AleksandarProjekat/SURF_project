@@ -2,8 +2,8 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
-entity bram32_out is
-    generic (WIDTH: positive := 32;             ----- BRAM ZA IZLAZNE PODATKE PRVIH 32 BITA INDEX NIZA
+entity bram24_upper_out is
+    generic (WIDTH: positive := 24;             ----- BRAM ZA IZLAZNE PODATKE PRVIH 24 BITA INDEX NIZA
              SIZE: positive := 4*64;
 			 SIZE_WIDTH: positive := 8);
     port (clka : in std_logic;
@@ -18,9 +18,9 @@ entity bram32_out is
           dib: in std_logic_vector(WIDTH-1 downto 0);
           doa: out std_logic_vector(WIDTH-1 downto 0);
           dob: out std_logic_vector(WIDTH-1 downto 0));
-end bram32_out;
+end bram24_upper_out;
 
-architecture Behavioral of bram32_out is
+architecture Behavioral of bram24_upper_out is
     type ram_type is array(SIZE-1 downto 0) of std_logic_vector(WIDTH-1 downto 0);
     shared variable RAM: ram_type;
     

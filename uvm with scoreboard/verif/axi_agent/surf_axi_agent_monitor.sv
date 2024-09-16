@@ -49,7 +49,7 @@ class surf_axi_monitor extends uvm_monitor;
         write_data : coverpoint s_vif.s00_axi_wdata{
             bins AXI_WDATA_LOW = {0};
             bins AXI_WDATA_HIGH = {1};
-            bins AXI_WDATA_PARAMETERS = {[2:442]};           ////zasto bas ovaj opseg
+            bins AXI_WDATA_PARAMETERS = {[2:442]};           
         }
     endgroup
 
@@ -86,14 +86,14 @@ class surf_axi_monitor extends uvm_monitor;
         $display("\nin UVM_AXI_AGENT_MONITOR\n");
         forever begin
             @(posedge s_vif.clk) begin
-            if(s_vif.rst)                                                //////OBRATI PAZNJU NA RST
+            if(s_vif.rst)                                               
             begin
                 curr_it = surf_axi_seq_item::type_id::create("curr_it", this);
 
                 // Monitor an Axi writing transaction
                 if(s_vif.s00_axi_awvalid == 1 && s_vif.s00_axi_awready == 1)
                 begin
-				if (s_vif.s00_axi_wstrb == 4'b1111 || s_vif.s00_axi_wstrb == 4'b0011)
+				if (s_vif.s00_axi_wstrb == 4'b1111 || s_vif.s00_axi_wstrb == 4'b0111)
                     begin
                         axi_write_transactions.sample();
                         `uvm_info(get_type_name(),$sformatf("[AXI_Monitor] Gathering information..."), UVM_MEDIUM);
