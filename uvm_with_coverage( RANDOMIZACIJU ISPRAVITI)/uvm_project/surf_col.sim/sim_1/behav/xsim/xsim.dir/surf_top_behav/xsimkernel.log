@@ -1,7 +1,0 @@
-Running: xsim.dir/surf_top_behav/xsimk.exe -simmode gui -testplusarg UVM_TESTNAME=test_surf_simple -testplusarg UVM_VERBOSITY=UVM_MEDIUM -wdb surf_top_behav.wdb -simrunnum 0 -socket 57059
-Design successfully loaded
-Design Loading Memory Usage: 23964 KB (Peak: 23964 KB)
-Design Loading CPU Usage: 46 ms
-Simulation completed
-Simulation Memory Usage: 742800 KB (Peak: 742800 KB)
-Simulation CPU Usage: 39359 ms
