@@ -22,21 +22,21 @@
     parameter STATUS_REG_OFFSET = 64;
 	
 
-	int fracr_upper = 0;
-    int fracr_lower = 0;
-    int fracc_upper = 0;
-    int fracc_lower = 0;
-    int spacing_upper = 0;
-    int spacing_lower = 0;
-    int i_cose_upper = 0;
-    int i_cose_lower = 0;
-    int i_sine_upper = 0;
-    int i_sine_lower = 0;
-    int iradius = 0;
-    int iy = 0;
-    int ix = 0;
-    int step = 0;
-    int scale = 0;
+	int fracr_upper;
+    int fracr_lower;
+    int fracc_upper;
+    int fracc_lower;
+    int spacing_upper;
+    int spacing_lower;
+    int i_cose_upper;
+    int i_cose_lower;
+    int i_sine_upper;
+    int i_sine_lower;
+    int iradius;
+    int iy;
+    int ix;
+    int step;
+    int scale;
 
 class surf_simple_sequence extends surf_base_sequence;
 
@@ -46,11 +46,12 @@ class surf_simple_sequence extends surf_base_sequence;
 covergroup img_data_cover();
 		option.per_instance = 2;
 
-    img32_pix_value : coverpoint surf_item.img_doutc {  
-        bins low_value = {[0:25]};
-        bins medium_value = {[31:93]};
-        bins high_value = {[4294967234:4294967275]}; 
-    }
+img32_pix_value : coverpoint surf_item.img_doutc {  
+    bins low_value = {[0:1000000]};   // Adjusted to cover small values
+    bins medium_value = {[1000001:2000000000]};  // Adjusted to cover mid-range values
+    bins high_value = {[2000000001:4294967295]};  // Adjusted to cover high-range values without negatives
+}
+
 
     
 		 img16_pix_value : coverpoint surf_item.img_doutd{
@@ -104,7 +105,7 @@ covergroup img_data_cover();
             surf_item.bram_axi == 1;
             surf_item.s00_axi_awaddr == AXI_BASE + FRACR_UPPER_REG_OFFSET;
             surf_item.s00_axi_wdata == fracr_upper;
-            s00_axi_wstrb == 4'b1111;
+            surf_item.s00_axi_wstrb == 4'b1111;
         });
 
         // Slanje donjih 16 bita (FRACR_LOWER_C)
@@ -112,7 +113,7 @@ covergroup img_data_cover();
             surf_item.bram_axi == 1;
             surf_item.s00_axi_awaddr == AXI_BASE + FRACR_LOWER_REG_OFFSET;
             surf_item.s00_axi_wdata == fracr_lower;  
-            s00_axi_wstrb == 4'b0011;
+            surf_item.s00_axi_wstrb == 4'b0011;
         });
 
         // Slanje gornjih 32 bita (FRACC_UPPER_C)
@@ -120,7 +121,7 @@ covergroup img_data_cover();
             surf_item.bram_axi == 1;
             surf_item.s00_axi_awaddr == AXI_BASE + FRACC_UPPER_REG_OFFSET;
             surf_item.s00_axi_wdata == fracc_upper;
-            s00_axi_wstrb == 4'b1111;
+            surf_item.s00_axi_wstrb == 4'b1111;
         });
 
         // Slanje donjih 16 bita (FRACC_LOWER_C)
@@ -128,7 +129,7 @@ covergroup img_data_cover();
             surf_item.bram_axi == 1;
             surf_item.s00_axi_awaddr == AXI_BASE + FRACC_LOWER_REG_OFFSET;
             surf_item.s00_axi_wdata == fracc_lower;  
-            s00_axi_wstrb == 4'b0011;
+            surf_item.s00_axi_wstrb == 4'b0011;
         });
 
         // Slanje gornjih 32 bita (SPACING_UPPER_C)
@@ -136,7 +137,7 @@ covergroup img_data_cover();
             surf_item.bram_axi == 1;
             surf_item.s00_axi_awaddr == AXI_BASE + SPACING_UPPER_REG_OFFSET;
             surf_item.s00_axi_wdata == spacing_upper;
-            s00_axi_wstrb == 4'b1111;
+            surf_item.s00_axi_wstrb == 4'b1111;
         });
 
         // Slanje donjih 16 bita (SPACING_LOWER_C)
@@ -144,7 +145,7 @@ covergroup img_data_cover();
             surf_item.bram_axi == 1;
             surf_item.s00_axi_awaddr == AXI_BASE + SPACING_LOWER_REG_OFFSET;
             surf_item.s00_axi_wdata == spacing_lower;  
-            s00_axi_wstrb == 4'b0011;
+            surf_item.s00_axi_wstrb == 4'b0011;
         });
 
         // Slanje gornjih 32 bita (I_COSE_UPPER_C)
@@ -152,7 +153,7 @@ covergroup img_data_cover();
             surf_item.bram_axi == 1;
             surf_item.s00_axi_awaddr == AXI_BASE + I_COSE_UPPER_REG_OFFSET;
             surf_item.s00_axi_wdata == i_cose_upper;  
-            s00_axi_wstrb == 4'b1111;
+            surf_item.s00_axi_wstrb == 4'b1111;
         });
 
         // Slanje donjih 16 bita (I_COSE_LOWER_C)
@@ -160,7 +161,7 @@ covergroup img_data_cover();
             surf_item.bram_axi == 1;
             surf_item.s00_axi_awaddr == AXI_BASE + I_COSE_LOWER_REG_OFFSET;
             surf_item.s00_axi_wdata == i_cose_lower;  
-            s00_axi_wstrb == 4'b0011;
+            surf_item.s00_axi_wstrb == 4'b0011;
         });
 
         // Slanje gornjih 32 bita (I_SINE_UPPER_C)
@@ -168,7 +169,7 @@ covergroup img_data_cover();
             surf_item.bram_axi == 1;
             surf_item.s00_axi_awaddr == AXI_BASE + I_SINE_UPPER_REG_OFFSET;
             surf_item.s00_axi_wdata == i_sine_upper;  
-            s00_axi_wstrb == 4'b1111;
+            surf_item.s00_axi_wstrb == 4'b1111;
         });
 
         // Slanje donjih 16 bita (I_SINE_LOWER_C)
@@ -176,7 +177,7 @@ covergroup img_data_cover();
             surf_item.bram_axi == 1;
             surf_item.s00_axi_awaddr == AXI_BASE + I_SINE_LOWER_REG_OFFSET;
             surf_item.s00_axi_wdata == i_sine_lower;  
-            s00_axi_wstrb == 4'b0011;
+            surf_item.s00_axi_wstrb == 4'b0011;
         });
 
         // Slanje vrednosti za IRADIUS
@@ -184,7 +185,7 @@ covergroup img_data_cover();
             surf_item.bram_axi == 1;
             surf_item.s00_axi_awaddr == AXI_BASE + IRADIUS_REG_OFFSET;
             surf_item.s00_axi_wdata == iradius;  
-            s00_axi_wstrb == 4'b1111;
+            surf_item.s00_axi_wstrb == 4'b1111;
         });
 
         // Slanje vrednosti za IY
@@ -192,7 +193,7 @@ covergroup img_data_cover();
             surf_item.bram_axi == 1;
             surf_item.s00_axi_awaddr == AXI_BASE + IY_REG_OFFSET;
             surf_item.s00_axi_wdata == iy;  
-            s00_axi_wstrb == 4'b1111;
+            surf_item.s00_axi_wstrb == 4'b1111;
         });
 
         // Slanje vrednosti za IX
@@ -200,7 +201,7 @@ covergroup img_data_cover();
             surf_item.bram_axi == 1;
             surf_item.s00_axi_awaddr == AXI_BASE + IX_REG_OFFSET;
             surf_item.s00_axi_wdata == ix;  
-            s00_axi_wstrb == 4'b1111;
+            surf_item.s00_axi_wstrb == 4'b1111;
         });
 
         // Slanje vrednosti za STEP
@@ -208,7 +209,7 @@ covergroup img_data_cover();
             surf_item.bram_axi == 1;
             surf_item.s00_axi_awaddr == AXI_BASE + STEP_REG_OFFSET;
             surf_item.s00_axi_wdata == step; 
-            s00_axi_wstrb == 4'b1111;
+           surf_item.s00_axi_wstrb  == 4'b1111;
         });
 		
 		 // Slanje vrednosti za SCALE
@@ -216,7 +217,7 @@ covergroup img_data_cover();
             surf_item.bram_axi == 1;
             surf_item.s00_axi_awaddr == AXI_BASE + SCALE_REG_OFFSET;
             surf_item.s00_axi_wdata == scale; 
-            s00_axi_wstrb == 4'b1111;
+            surf_item.s00_axi_wstrb == 4'b1111;
         });
 
 

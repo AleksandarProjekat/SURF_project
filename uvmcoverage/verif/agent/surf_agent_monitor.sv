@@ -27,29 +27,30 @@ class surf_monitor extends uvm_monitor;
 covergroup surf_cover (int coverage_goal);
     option.per_instance = 1;
     option.goal = 8;
-   // Pokrivanje adresa od 0 do 63 za img32address
-    img32address : coverpoint s_vif.ip_addrd {
-      bins b1 = {[0:7]};     // Adrese od 0 do 7
-        bins b2 = {[8:15]};    // Adrese od 8 do 15
-        bins b3 = {[16:23]};   // Adrese od 16 do 23
-        bins b4 = {[24:31]};   // Adrese od 24 do 31
-        bins b5 = {[32:39]};   // Adrese od 32 do 39
-        bins b6 = {[40:47]};   // Adrese od 40 do 47
-        bins b7 = {[48:55]};   // Adrese od 48 do 55
-        bins b8 = {[56:63]};   // Adrese od 56 do 63
-    }
+// Pokrivanje adresa u koracima od 4 za img32address
+img32address : coverpoint s_vif.ip_addrd {
+    bins b1 = {[0:28]};     
+    bins b2 = {[32:60]};    
+    bins b3 = {[64:92]};   
+    bins b4 = {[96:124]};   
+    bins b5 = {[128:156]};  
+    bins b6 = {[160:188]};  
+    bins b7 = {[192:220]}; 
+    bins b8 = {[224:252]}; 
+}
 
-    // Pokrivanje adresa od 0 do 63 za img16address
-    img16address : coverpoint s_vif.ip_addrc {
-       bins b1 = {[0:7]};     // Adrese od 0 do 7
-        bins b2 = {[8:15]};    // Adrese od 8 do 15
-        bins b3 = {[16:23]};   // Adrese od 16 do 23
-        bins b4 = {[24:31]};   // Adrese od 24 do 31
-        bins b5 = {[32:39]};   // Adrese od 32 do 39
-        bins b6 = {[40:47]};   // Adrese od 40 do 47
-        bins b7 = {[48:55]};   // Adrese od 48 do 55
-        bins b8 = {[56:63]};   // Adrese od 56 do 63
-    }
+// Pokrivanje adresa u koracima od 4 za img16address
+img16address : coverpoint s_vif.ip_addrc {
+    bins b1 = {[0:28]};    
+    bins b2 = {[32:60]};    
+    bins b3 = {[64:92]};   
+    bins b4 = {[96:124]};   
+    bins b5 = {[128:156]};  
+    bins b6 = {[160:188]};  
+    bins b7 = {[192:220]};  
+    bins b8 = {[224:252]};  
+}
+
 endgroup
 
 

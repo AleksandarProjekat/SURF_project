@@ -31,14 +31,14 @@ class surf_seq_item extends uvm_sequence_item;
     rand logic [2:0] bram_axi;
 
     // Memory - Input image32
-    rand logic [16:0] img_addra;
-    rand logic [31:0] img_douta;
-    rand logic img_ena;
+    logic [16:0] img_addra;
+    logic [31:0] img_douta;
+    logic img_ena;
 
     // Memory - Input image16
-    rand logic [16:0] img_addrb;
-    rand logic [15:0] img_doutb;
-    rand logic img_enb;
+    logic [16:0] img_addrb;
+    logic [15:0] img_doutb;
+    logic img_enb;
     
     // Memory - Output image32
     rand logic [7:0] ip_addrc;

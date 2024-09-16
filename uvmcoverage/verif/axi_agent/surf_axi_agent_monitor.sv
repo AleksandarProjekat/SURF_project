@@ -49,7 +49,8 @@ class surf_axi_monitor extends uvm_monitor;
         write_data : coverpoint s_vif.s00_axi_wdata{
             bins AXI_WDATA_LOW = {0};
             bins AXI_WDATA_HIGH = {1};
-            bins AXI_WDATA_PARAMETERS = {[2:4294967275]};  
+           bins AXI_WDATA_PARAMETERS_1 = {[2:1000000]};
+           bins AXI_WDATA_PARAMETERS_2 = {[1000001:4294967295]}; 
             }    
     endgroup
 
