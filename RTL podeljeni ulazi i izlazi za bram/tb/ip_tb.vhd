@@ -9,14 +9,14 @@ end tb_ip;
 
 architecture Behavioral of tb_ip is
 
-file pixels1D_upper32 : text open read_mode is "C:\Users\coa\Desktop\pixels1D_upper32.txt";
-file pixels1D_lower16 : text open read_mode is "C:\Users\coa\Desktop\pixels1D_lower16.txt";
+file pixels1D_upper24 : text open read_mode is "C:\Users\coa\Desktop\psds_ucitavanje\pixels1D_upper24.txt";
+file pixels1D_lower24 : text open read_mode is "C:\Users\coa\Desktop\psds_ucitavanje\pixels1D_lower24.txt";
 
-file index1D_upper32 : text open read_mode is "C:\Users\coa\Desktop\index1D_upper32.txt";
-file index1D_lower16 : text open read_mode is "C:\Users\coa\Desktop\index1D_lower16.txt";
+file index1D_upper24 : text open read_mode is "C:\Users\coa\Desktop\psds_ucitavanje\index_upper24.txt";
+file index1D_lower24 : text open read_mode is "C:\Users\coa\Desktop\psds_ucitavanje\index_lower24.txt";
 
-file izlaz32 : text open write_mode is "C:\Users\coa\Desktop\izlaz32.txt";
-file izlaz16 : text open write_mode is "C:\Users\coa\Desktop\izlaz16.txt";
+file izlaz_upper24 : text open write_mode is "C:\Users\coa\Desktop\psds_ucitavanje\izlaz_upper24.txt";
+file izlaz_lower24 : text open write_mode is "C:\Users\coa\Desktop\psds_ucitavanje\izlaz_lower24.txt";
 
 -- Constants
 constant WIDTH : integer := 11;
@@ -25,24 +25,23 @@ constant INDEX_ADDRESS_SIZE : integer := 8;
 constant FIXED_SIZE : integer := 48;
 constant LOWER_SIZE : integer := 16;
 
-constant BRAM_32_DATA : integer := 32;
-constant BRAM_16_DATA : integer := 16;
+constant BRAM_24_DATA : integer := 24;
         
 constant INDEX_SIZE : integer := 4;
 constant IMG_WIDTH : integer := 129;
 constant IMG_HEIGHT : integer := 129;
 
 ----PODACI KOJE CU POSLE POSLATI (BROJEVI IZ VP) 
-    constant FRACR_UPPER_C : std_logic_vector(32-1 downto 0) := "00000000000000000000000000000000";    --0.06777191162109375
-    constant FRACR_LOWER_C : std_logic_vector(15 downto 0) := "0100010101100110";
-    constant FRACC_UPPER_C : std_logic_vector(32-1 downto 0) := "00000000000000000000000000000000";    --0.06403732299804688
-    constant FRACC_LOWER_C : std_logic_vector(15 downto 0) := "0100000110010011";
-    constant SPACING_UPPER_C : std_logic_vector(32-1 downto 0) := "00000000000000000000000000000000";   --0.0727539062
-    constant SPACING_LOWER_C : std_logic_vector(15 downto 0) := "0100101010000000";
-    constant I_COSE_UPPER_C : std_logic_vector(32-1 downto 0) := "11111111111111111111111111111111";     --  -0.0352935791015625
-    constant I_COSE_LOWER_C : std_logic_vector(15 downto 0) := "1101101111011100";
-    constant I_SINE_UPPER_C : std_logic_vector(32-1 downto 0) := "00000000000000000000000000000011";     --   0.9993743896484375
-    constant I_SINE_LOWER_C : std_logic_vector(15 downto 0) := "1111111101011100";
+    constant FRACR_UPPER_C : std_logic_vector(BRAM_24_DATA-1 downto 0) := "000000000000000000000000";    --0.06777191162109375
+    constant FRACR_LOWER_C : std_logic_vector(BRAM_24_DATA-1 downto 0) := "000000000100010101100110";
+    constant FRACC_UPPER_C : std_logic_vector(BRAM_24_DATA-1 downto 0) := "000000000000000000000000";    --0.06403732299804688
+    constant FRACC_LOWER_C : std_logic_vector(BRAM_24_DATA-1 downto 0) := "000000000100000110010011";
+    constant SPACING_UPPER_C : std_logic_vector(BRAM_24_DATA-1 downto 0) := "000000000000000000000000";   --0.0727539062
+    constant SPACING_LOWER_C : std_logic_vector(BRAM_24_DATA-1 downto 0) := "000000000100101010000000";
+    constant I_COSE_UPPER_C : std_logic_vector(BRAM_24_DATA-1 downto 0) := "111111111111111111111111";     --  -0.0352935791015625
+    constant I_COSE_LOWER_C : std_logic_vector(BRAM_24_DATA-1 downto 0) := "111111111101101111011100";
+    constant I_SINE_UPPER_C : std_logic_vector(BRAM_24_DATA-1 downto 0) := "000000000000000000000000";     --   0.9993743896484375
+    constant I_SINE_LOWER_C : std_logic_vector(BRAM_24_DATA-1 downto 0) := "000000111111111101011100";
     constant IRADIUS_C : std_logic_vector(WIDTH - 1 downto 0) := "00000011000";    --24
     constant IY_C : std_logic_vector(WIDTH - 1 downto 0) := "00000100000";         --32
     constant IX_C : std_logic_vector(WIDTH - 1 downto 0) := "00000101101";         --45
@@ -78,25 +77,25 @@ constant IMG_HEIGHT : integer := 129;
 -- Input BRAM_32 port
 signal tb_a_en_i : std_logic;
 signal tb_a_addr_i : std_logic_vector(PIXEL_SIZE-1 downto 0);
-signal tb_a_data_i : std_logic_vector(BRAM_32_DATA-1 downto 0);
+signal tb_a_data_i : std_logic_vector(BRAM_24_DATA-1 downto 0);
 signal tb_a_we_i : std_logic;
 
 -- Input BRAM_16 port
 signal tb_b_en_i : std_logic;
 signal tb_b_addr_i : std_logic_vector(PIXEL_SIZE-1 downto 0);
-signal tb_b_data_i : std_logic_vector(BRAM_16_DATA-1 downto 0);
+signal tb_b_data_i : std_logic_vector(BRAM_24_DATA-1 downto 0);
 signal tb_b_we_i : std_logic; 
     
 -- Output BRAM32 port
 signal tb_c_en_i : std_logic;
 signal tb_c_addr_i : std_logic_vector(7 downto 0);
-signal tb_c_data_o : std_logic_vector(BRAM_32_DATA - 1 downto 0);
+signal tb_c_data_o : std_logic_vector(BRAM_24_DATA - 1 downto 0);
 signal tb_c_we_i : std_logic;
 
 -- Output BRAM16 port
 signal tb_d_en_i : std_logic;
 signal tb_d_addr_i : std_logic_vector(7 downto 0);
-signal tb_d_data_o : std_logic_vector(BRAM_16_DATA - 1 downto 0);
+signal tb_d_data_o : std_logic_vector(BRAM_24_DATA - 1 downto 0);
 signal tb_d_we_i : std_logic;
 
 
@@ -106,22 +105,22 @@ signal tb_d_we_i : std_logic;
 signal ip_a_en : std_logic;
 signal ip_a_we : std_logic;
 signal ip_a_addr : std_logic_vector(PIXEL_SIZE-1 downto 0);
-signal ip_a_data: std_logic_vector(BRAM_32_DATA-1 downto 0);
+signal ip_a_data: std_logic_vector(BRAM_24_DATA-1 downto 0);
 
 signal ip_b_en : std_logic;
 signal ip_b_we : std_logic;
 signal ip_b_addr : std_logic_vector(PIXEL_SIZE-1 downto 0);
-signal ip_b_data: std_logic_vector(BRAM_16_DATA-1 downto 0);
+signal ip_b_data: std_logic_vector(BRAM_24_DATA-1 downto 0);
 
 signal ip_c_en : std_logic;
 signal ip_c_we : std_logic;
 signal ip_c_addr : std_logic_vector(7 downto 0);
-signal ip_c_data: std_logic_vector(BRAM_32_DATA - 1 downto 0);
+signal ip_c_data: std_logic_vector(BRAM_24_DATA - 1 downto 0);
 
 signal ip_d_en : std_logic;
 signal ip_d_we : std_logic;
 signal ip_d_addr : std_logic_vector(7 downto 0);
-signal ip_d_data: std_logic_vector(BRAM_16_DATA - 1 downto 0);
+signal ip_d_data: std_logic_vector(BRAM_24_DATA - 1 downto 0);
 
 ------------------- AXI Interfaces signals ----------------------
     
@@ -163,7 +162,7 @@ clk_gen: process is
     
     
     stimulus_generator: process
-    variable tv_slika32, tv_slika16  : line;
+    variable tv_slika_upper24, tv_slika_lower24  : line;
     begin
     report "Start !";
 
@@ -183,13 +182,13 @@ clk_gen: process is
     report "Loading the picture dimensions into the core!";
     
     
--- Slanje gornjih 32 bita (FRACR_UPPER_C)
+-- Slanje gornjih 24 bita (FRACR_UPPER_C)
 wait until falling_edge(clk_s);
 s00_axi_awaddr_s <= std_logic_vector(to_unsigned(FRACR_UPPER_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
 s00_axi_awvalid_s <= '1';
-s00_axi_wdata_s <= FRACR_UPPER_C;  -- Salje prvih 32 bita
+s00_axi_wdata_s <= std_logic_vector(to_unsigned(0,8)) & FRACR_UPPER_C;  
 s00_axi_wvalid_s <= '1';
-s00_axi_wstrb_s <= "1111";
+s00_axi_wstrb_s <= "0111";
 s00_axi_bready_s <= '1';
     wait until s00_axi_awready_s = '1';
     wait until s00_axi_awready_s = '0';
@@ -204,13 +203,13 @@ s00_axi_bready_s <= '1';
     s00_axi_bready_s <= '0';
     wait until falling_edge(clk_s);
 
--- Slanje donjih 16 bita (FRACR_LOWER_C), smestenih u donji deo 32-bitne širine
+-- Slanje donjih 24 bita (FRACR_LOWER_C), smestenih u donji deo 32-bitne širine
 wait until falling_edge(clk_s);
 s00_axi_awaddr_s <= std_logic_vector(to_unsigned(FRACR_LOWER_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
 s00_axi_awvalid_s <= '1';
-s00_axi_wdata_s <= std_logic_vector(to_unsigned(0,16)) & FRACR_LOWER_C;  -- Gornjih 16 bita nule, donjih 16 bita nasa vrednost
+s00_axi_wdata_s <= std_logic_vector(to_unsigned(0,8)) & FRACR_LOWER_C; 
 s00_axi_wvalid_s <= '1';
-s00_axi_wstrb_s <= "0011";  -- Oznaka da su validni samo donji 2 bajta
+s00_axi_wstrb_s <= "0111";  
 s00_axi_bready_s <= '1';
     wait until s00_axi_awready_s = '1';
     wait until s00_axi_awready_s = '0';
@@ -231,13 +230,13 @@ s00_axi_bready_s <= '1';
         wait until falling_edge(clk_s);
     end loop;
     
-     -- Slanje gornjih 32 bita (FRACC_UPPER_C)
+     -- Slanje gornjih 24 bita (FRACC_UPPER_C)
     wait until falling_edge(clk_s);
     s00_axi_awaddr_s <= std_logic_vector(to_unsigned(FRACC_UPPER_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
     s00_axi_awvalid_s <= '1';
-    s00_axi_wdata_s <= FRACC_UPPER_C;  -- Salje prvih 32 bita
+    s00_axi_wdata_s <=std_logic_vector(to_unsigned(0,8)) &  FRACC_UPPER_C;  
     s00_axi_wvalid_s <= '1';
-    s00_axi_wstrb_s <= "1111";
+    s00_axi_wstrb_s <= "0111";
     s00_axi_bready_s <= '1';
     wait until s00_axi_awready_s = '1';
     wait until s00_axi_awready_s = '0';
@@ -252,13 +251,13 @@ s00_axi_bready_s <= '1';
     s00_axi_bready_s <= '0';
     wait until falling_edge(clk_s);
     
-    -- Slanje donjih 16 bita (FRACC_LOWER_C), smestenih u donji deo 32-bitne širine
+    -- Slanje donjih 24 bita (FRACC_LOWER_C)
     wait until falling_edge(clk_s);
     s00_axi_awaddr_s <= std_logic_vector(to_unsigned(FRACC_LOWER_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
     s00_axi_awvalid_s <= '1';
-    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0,16)) & FRACC_LOWER_C;  -- Gornjih 16 bita nule, donjih 16 bita nasa vrednost
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0,8)) & FRACC_LOWER_C;  
     s00_axi_wvalid_s <= '1';
-    s00_axi_wstrb_s <= "0011";  -- Oznaka da su validni samo donji 2 bajta, odnosno 
+    s00_axi_wstrb_s <= "0111";  
     s00_axi_bready_s <= '1';
     wait until s00_axi_awready_s = '1';
     wait until s00_axi_awready_s = '0';
@@ -278,13 +277,13 @@ s00_axi_bready_s <= '1';
         wait until falling_edge(clk_s);
     end loop;
     
-        -- Slanje gornjih 32 bita (SPACING_UPPER_C)
+        -- Slanje gornjih 24 bita (SPACING_UPPER_C)
     wait until falling_edge(clk_s);
     s00_axi_awaddr_s <= std_logic_vector(to_unsigned(SPACING_UPPER_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
     s00_axi_awvalid_s <= '1';
-    s00_axi_wdata_s <= SPACING_UPPER_C;  -- Salje prvih 32 bita
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0,8)) & SPACING_UPPER_C;  
     s00_axi_wvalid_s <= '1';
-    s00_axi_wstrb_s <= "1111";
+    s00_axi_wstrb_s <= "0111";
     s00_axi_bready_s <= '1';
     wait until s00_axi_awready_s = '1';
     wait until s00_axi_awready_s = '0';
@@ -293,13 +292,13 @@ s00_axi_bready_s <= '1';
     s00_axi_wvalid_s <= '0';
     s00_axi_bready_s <= '0';
     
-    -- Slanje donjih 16 bita (SPACING_LOWER_C), smestenih u donji deo 32-bitne širine
+    -- Slanje donjih 24 bita (SPACING_LOWER_C
     wait until falling_edge(clk_s);
     s00_axi_awaddr_s <= std_logic_vector(to_unsigned(SPACING_LOWER_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
     s00_axi_awvalid_s <= '1';
-    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0,16)) & SPACING_LOWER_C;  -- Gornjih 16 bita nule, donjih 16 bita nasa vrednost
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0,8)) & SPACING_LOWER_C;  
     s00_axi_wvalid_s <= '1';
-    s00_axi_wstrb_s <= "0011";  -- Oznaka da su validni samo donji 2 bajta, odnosno 
+    s00_axi_wstrb_s <= "0111";  
     s00_axi_bready_s <= '1';
     wait until s00_axi_awready_s = '1';
     wait until s00_axi_awready_s = '0';
@@ -320,13 +319,13 @@ s00_axi_bready_s <= '1';
     end loop;
    
     
-         -- Slanje gornjih 32 bita (I_COSE_UPPER_C)
+         -- Slanje gornjih 24 bita (I_COSE_UPPER_C)
     wait until falling_edge(clk_s);
     s00_axi_awaddr_s <= std_logic_vector(to_unsigned(I_COSE_UPPER_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
     s00_axi_awvalid_s <= '1';
-    s00_axi_wdata_s <= I_COSE_UPPER_C;  -- Salje prvih 32 bita
+    s00_axi_wdata_s <=std_logic_vector(to_unsigned(0,8)) &  I_COSE_UPPER_C;  
     s00_axi_wvalid_s <= '1';
-    s00_axi_wstrb_s <= "1111";
+    s00_axi_wstrb_s <= "0111";
     s00_axi_bready_s <= '1';
     wait until s00_axi_awready_s = '1';
     wait until s00_axi_awready_s = '0';
@@ -335,13 +334,13 @@ s00_axi_bready_s <= '1';
     s00_axi_wvalid_s <= '0';
     s00_axi_bready_s <= '0';
     
-    -- Slanje donjih 16 bita (I_COSE_LOWER_C), smestenih u donji deo 32-bitne širine
+    -- Slanje donjih 24 bita (I_COSE_LOWER_C)
     wait until falling_edge(clk_s);
     s00_axi_awaddr_s <= std_logic_vector(to_unsigned(I_COSE_LOWER_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
     s00_axi_awvalid_s <= '1';
-    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0,16)) & I_COSE_LOWER_C;  -- Gornjih 16 bita nule, donjih 16 bita nasa vrednost
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0,8)) & I_COSE_LOWER_C;  
     s00_axi_wvalid_s <= '1';
-    s00_axi_wstrb_s <= "0011";  -- Oznaka da su validni samo donji 2 bajta, odnosno 
+    s00_axi_wstrb_s <= "0111";  
     s00_axi_bready_s <= '1';
     wait until s00_axi_awready_s = '1';
     wait until s00_axi_awready_s = '0';
@@ -361,13 +360,13 @@ s00_axi_bready_s <= '1';
         wait until falling_edge(clk_s);
     end loop;
     
-             -- Slanje gornjih 32 bita (I_SINE_UPPER_C)
+             -- Slanje gornjih 24 bita (I_SINE_UPPER_C)
     wait until falling_edge(clk_s);
     s00_axi_awaddr_s <= std_logic_vector(to_unsigned(I_SINE_UPPER_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
     s00_axi_awvalid_s <= '1';
-    s00_axi_wdata_s <= I_SINE_UPPER_C;  -- Salje prvih 32 bita
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0,8)) & I_SINE_UPPER_C;  
     s00_axi_wvalid_s <= '1';
-    s00_axi_wstrb_s <= "1111";
+    s00_axi_wstrb_s <= "0111";
     s00_axi_bready_s <= '1';
     wait until s00_axi_awready_s = '1';
     wait until s00_axi_awready_s = '0';
@@ -376,13 +375,13 @@ s00_axi_bready_s <= '1';
     s00_axi_wvalid_s <= '0';
     s00_axi_bready_s <= '0';
     
-    -- Slanje donjih 16 bita (I_SINE_LOWER_C), smestenih u donji deo 32-bitne širine
+    -- Slanje donjih 24 bita (I_SINE_LOWER_C)
     wait until falling_edge(clk_s);
     s00_axi_awaddr_s <= std_logic_vector(to_unsigned(I_SINE_LOWER_REG_ADDR_C, C_S00_AXI_ADDR_WIDTH_c));
     s00_axi_awvalid_s <= '1';
-    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0,16)) & I_SINE_LOWER_C;  -- Gornjih 16 bita nule, donjih 16 bita nasa vrednost
+    s00_axi_wdata_s <= std_logic_vector(to_unsigned(0,8)) & I_SINE_LOWER_C;  
     s00_axi_wvalid_s <= '1';
-    s00_axi_wstrb_s <= "0011";  -- Oznaka da su validni samo donji 2 bajta, odnosno 
+    s00_axi_wstrb_s <= "0111";  
     s00_axi_bready_s <= '1';
     wait until s00_axi_awready_s = '1';
     wait until s00_axi_awready_s = '0';
@@ -409,7 +408,7 @@ s00_axi_bready_s <= '1';
     s00_axi_awvalid_s <= '1';
     s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, 21)) & IRADIUS_C;
     s00_axi_wvalid_s <= '1';
-    s00_axi_wstrb_s <= "1111";     ----- VALJDA JE NAPISANO U SURF_V1_0_S00 NA KRAJU FAJLA DA SE UZIMA DONJIH 11 BITA PA MOZDA OVO NIJE BITNO
+    s00_axi_wstrb_s <= "1111";    
     s00_axi_bready_s <= '1';
     wait until s00_axi_awready_s = '1';
     wait until s00_axi_awready_s = '0';
@@ -435,7 +434,7 @@ s00_axi_bready_s <= '1';
     s00_axi_awvalid_s <= '1';
     s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, 21)) & IY_C;
     s00_axi_wvalid_s <= '1';
-    s00_axi_wstrb_s <= "1111";     ----- VALJDA JE NAPISANO U SURF_V1_0_S00 NA KRAJU FAJLA DA SE UZIMA DONJIH 11 BITA PA MOZDA OVO NIJE BITNO
+    s00_axi_wstrb_s <= "1111";    
     s00_axi_bready_s <= '1';
     wait until s00_axi_awready_s = '1';
     wait until s00_axi_awready_s = '0';
@@ -462,7 +461,7 @@ s00_axi_bready_s <= '1';
     s00_axi_awvalid_s <= '1';
     s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, 21)) & IX_C;
     s00_axi_wvalid_s <= '1';
-    s00_axi_wstrb_s <= "1111";     ----- VALJDA JE NAPISANO U SURF_V1_0_S00 NA KRAJU FAJLA DA SE UZIMA DONJIH 11 BITA PA MOZDA OVO NIJE BITNO
+    s00_axi_wstrb_s <= "1111";     
     s00_axi_bready_s <= '1';
     wait until s00_axi_awready_s = '1';
     wait until s00_axi_awready_s = '0';
@@ -483,7 +482,7 @@ s00_axi_bready_s <= '1';
     s00_axi_awvalid_s <= '1';
     s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, 21)) & STEP_C;
     s00_axi_wvalid_s <= '1';
-    s00_axi_wstrb_s <= "1111";     ----- VALJDA JE NAPISANO U SURF_V1_0_S00 NA KRAJU FAJLA DA SE UZIMA DONJIH 11 BITA PA MOZDA OVO NIJE BITNO
+    s00_axi_wstrb_s <= "1111";     
     s00_axi_bready_s <= '1';
     wait until s00_axi_awready_s = '1';
     wait until s00_axi_awready_s = '0';
@@ -509,7 +508,7 @@ s00_axi_bready_s <= '1';
     s00_axi_awvalid_s <= '1';
     s00_axi_wdata_s <= std_logic_vector(to_unsigned(0, 21)) & SCALE_C;
     s00_axi_wvalid_s <= '1';
-    s00_axi_wstrb_s <= "1111";     ----- VALJDA JE NAPISANO U SURF_V1_0_S00 NA KRAJU FAJLA DA SE UZIMA DONJIH 11 BITA PA MOZDA OVO NIJE BITNO
+    s00_axi_wstrb_s <= "1111";     
     s00_axi_bready_s <= '1';
     wait until s00_axi_awready_s = '1';
     wait until s00_axi_awready_s = '0';
@@ -538,10 +537,10 @@ s00_axi_bready_s <= '1';
 
     for i in 0 to (IMG_WIDTH*IMG_HEIGHT)-1 loop 
         wait until falling_edge(clk_s);
-        readline(pixels1D_upper32, tv_slika32);
+        readline(pixels1D_upper24, tv_slika_upper24);
         tb_a_en_i  <= '1';
         tb_a_addr_i <= std_logic_vector(to_unsigned(4*i, PIXEL_SIZE)); 
-        tb_a_data_i <= to_std_logic_vector(string(tv_slika32));
+        tb_a_data_i <= to_std_logic_vector(string(tv_slika_upper24));
         tb_a_we_i   <= '1';
      
         for j in 1 to 3 loop
@@ -555,17 +554,17 @@ s00_axi_bready_s <= '1';
     
         -------------------------------------------------------------------------------------------
 
-    -- Load the picture16 into the memory
+    -- Load the picture24 into the memory
     report "Loading picture16 into the memory!";
     
     wait until falling_edge(clk_s);
 
     for i in 0 to (IMG_WIDTH*IMG_HEIGHT)-1 loop 
         wait until falling_edge(clk_s);
-        readline(pixels1D_lower16, tv_slika16);
+        readline(pixels1D_lower24, tv_slika_lower24);
         tb_b_en_i  <= '1';
         tb_b_addr_i <= std_logic_vector(to_unsigned(4*i, PIXEL_SIZE)); 
-        tb_b_data_i <= to_std_logic_vector(string(tv_slika16));
+        tb_b_data_i <= to_std_logic_vector(string(tv_slika_lower24));
         tb_b_we_i   <= '1';
      
         for j in 1 to 3 loop
@@ -690,9 +689,9 @@ s00_axi_bready_s <= '1';
     wait;
 end process;
 
-write_to_output_file32 : process(clk_s)
-    variable data_output32_line : line;
-    variable data_output32_string : string(1 to BRAM_32_DATA) := (others => '0');
+write_to_output_file24 : process(clk_s)
+    variable data_output24_line : line;
+    variable data_output24_string : string(1 to BRAM_24_DATA) := (others => '0');
     variable prev_addr : std_logic_vector(7 downto 0) := (others => '1');  -- promenite pocetnu vrednost
     variable first_iteration : boolean := true;  -- signal za pracenje prve iteracije
 begin
@@ -704,26 +703,26 @@ begin
                 first_iteration := false;  -- postavi signal da prva iteracija više nije aktivna
 
                 -- Pripremi podatke za upis
-                data_output32_string := (others => '0');
-                for i in 0 to BRAM_32_DATA - 1 loop
+                data_output24_string := (others => '0');
+                for i in 0 to BRAM_24_DATA - 1 loop
                     if tb_c_data_o(i) = '1' then
-                        data_output32_string(BRAM_32_DATA - i) := '1';  
+                        data_output24_string(BRAM_24_DATA - i) := '1';  
                     else
-                        data_output32_string(BRAM_32_DATA - i) := '0';  
+                        data_output24_string(BRAM_24_DATA - i) := '0';  
                     end if;
                 end loop;
 
                 -- Upis podataka u izlazni fajl
-                write(data_output32_line, data_output32_string);
-                writeline(izlaz32, data_output32_line);
+                write(data_output24_line, data_output24_string);
+                writeline(izlaz_upper24, data_output24_line);
             end if;
         end if;
     end if;
 end process;
 
-write_to_output_file16 : process(clk_s)
-    variable data_output16_line : line;
-    variable data_output16_string : string(1 to BRAM_16_DATA) := (others => '0');
+write_to_output_file24_lower : process(clk_s)
+    variable data_output24_line : line;
+    variable data_output24_string : string(1 to BRAM_24_DATA) := (others => '0');
     variable prev_addr : std_logic_vector(7 downto 0) := (others => '1');  -- promenite pocetnu vrednost
     variable first_iteration : boolean := true;  -- signal za pracenje prve iteracije
 begin
@@ -735,18 +734,18 @@ begin
                 first_iteration := false;  -- postavi signal da prva iteracija više nije aktivna
 
                 -- Pripremi podatke za upis
-                data_output16_string := (others => '0');
-                for i in 0 to BRAM_16_DATA - 1 loop
+                data_output24_string := (others => '0');
+                for i in 0 to BRAM_24_DATA - 1 loop
                     if tb_d_data_o(i) = '1' then
-                        data_output16_string(BRAM_16_DATA - i) := '1';  
+                        data_output24_string(BRAM_24_DATA - i) := '1';  
                     else
-                        data_output16_string(BRAM_16_DATA - i) := '0';  
+                        data_output24_string(BRAM_24_DATA - i) := '0';  
                     end if;
                 end loop;
 
                 -- Upis podataka u izlazni fajl
-                write(data_output16_line, data_output16_string);
-                writeline(izlaz16, data_output16_line);
+                write(data_output24_line, data_output24_string);
+                writeline(izlaz_lower24, data_output24_line);
             end if;
         end if;
     end if;
@@ -763,8 +762,7 @@ uut: entity work.SURF_v1_0(arch_imp)
         INDEX_ADDRESS_SIZE => INDEX_ADDRESS_SIZE,
         FIXED_SIZE => FIXED_SIZE,
         INDEX_SIZE => INDEX_SIZE,
-        BRAM_16_DATA => BRAM_16_DATA,
-        BRAM_32_DATA => BRAM_32_DATA,
+        BRAM_24_DATA => BRAM_24_DATA,
         IMG_WIDTH => IMG_WIDTH,
         IMG_HEIGHT => IMG_HEIGHT
     )
@@ -835,9 +833,9 @@ uut: entity work.SURF_v1_0(arch_imp)
     );
 
 
--- Instantiation of input 32 BRAM
-bramA: entity work.bram32_in(Behavioral)
-  generic map (WIDTH =>32,
+-- Instantiation of input 24 BRAM
+bramA: entity work.bram24_upper_in(Behavioral)
+  generic map (WIDTH =>24,
              SIZE => IMG_WIDTH*IMG_HEIGHT*4,
 			 SIZE_WIDTH => 17)
          port map(
@@ -856,9 +854,9 @@ bramA: entity work.bram32_in(Behavioral)
 	           dob=> ip_a_data    
 	        );
 	        
--- Instantiation of input 16 BRAM
-bramB: entity work.bram16_in(Behavioral) 
-    generic map( WIDTH =>16,
+-- Instantiation of input 24 BRAM
+bramB: entity work.bram24_lower_in(Behavioral) 
+    generic map( WIDTH =>24,
              SIZE => IMG_WIDTH*IMG_HEIGHT*4,
 			 SIZE_WIDTH => 17 )
              
@@ -878,10 +876,10 @@ bramB: entity work.bram16_in(Behavioral)
 	           dob=> ip_b_data
 	        ); 
 	         
--- Instantiation of output 32 BRAM
-bramC: entity work.bram32_out
+-- Instantiation of output 24 BRAM
+bramC: entity work.bram24_upper_out
     generic map (
-        WIDTH => 32,  -- data width
+        WIDTH => 24,  -- data width
         SIZE => 4*64,  -- memory depth
         SIZE_WIDTH => INDEX_ADDRESS_SIZE
     )
@@ -901,10 +899,10 @@ bramC: entity work.bram32_out
         dob => tb_c_data_o
     );
     
--- Instantiation of output 16 BRAM
-bramD: entity work.bram16_out
+-- Instantiation of output 24 BRAM
+bramD: entity work.bram24_lower_out
     generic map (
-        WIDTH => 16,  -- data width
+        WIDTH => 24,  -- data width
         SIZE => 4*64,  -- memory depth
         SIZE_WIDTH => INDEX_ADDRESS_SIZE
     )

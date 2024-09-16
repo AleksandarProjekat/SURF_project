@@ -27,10 +27,10 @@ set_property simulator_language VHDL [current_project]
 
 # Dodavanje potrebnih fajlova
 add_files ../models/ip.vhd
-add_files ../models/bram32_in.vhd
-add_files ../models/bram16_in.vhd
-add_files ../models/bram32_out.vhd
-add_files ../models/bram16_out.vhd
+add_files ../models/bram24_upper_in.vhd
+add_files ../models/bram24_lower_in.vhd
+add_files ../models/bram24_upper_out.vhd
+add_files ../models/bram24_lower_out.vhd
 add_files ../models/ip_pkg.vhd
 add_files ../models/rom.vhd
 add_files ../models/delay.vhd
@@ -48,7 +48,6 @@ add_files ../models/dsp8.vhd
 # Dodavanje glavnih SURF modula
 add_files ../models/SURF_v1_0.vhd
 add_files ../models/SURF_v1_0_S00_AXI.vhd
-
 
 
 # Dodavanje constraints fajla

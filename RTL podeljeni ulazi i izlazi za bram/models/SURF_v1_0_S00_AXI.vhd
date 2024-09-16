@@ -7,7 +7,8 @@ entity SURF_v1_0_S00_AXI is
 		-- Users to add parameters here
  WIDTH : integer := 11;
  FIXED_SIZE : integer := 48;
- LOWER_SIZE : integer := 16;
+ UPPER_SIZE : integer := 24;
+ LOWER_SIZE : integer := 24;
 		-- User parameters ends
 		-- Do not modify the parameters beyond this line
 
@@ -146,16 +147,7 @@ architecture arch_imp of SURF_v1_0_S00_AXI is
 	signal aw_en	: std_logic;
 
 
---    signal fracr_upper_s : std_logic_vector(C_S_AXI_DATA_WIDTH - 1 downto 0);
---    signal fracr_lower_s : std_logic_vector(LOWER_SIZE - 1 downto 0);
---    signal fracc_upper_s : std_logic_vector(C_S_AXI_DATA_WIDTH - 1 downto 0);
---    signal fracc_lower_s : std_logic_vector(LOWER_SIZE - 1 downto 0);
---    signal spacing_upper_s : std_logic_vector(C_S_AXI_DATA_WIDTH - 1 downto 0);
---    signal spacing_lower_s : std_logic_vector(LOWER_SIZE - 1 downto 0);
---    signal i_cose_upper_s : std_logic_vector(C_S_AXI_DATA_WIDTH - 1 downto 0);
---    signal i_cose_lower_s : std_logic_vector(LOWER_SIZE - 1 downto 0);
---    signal i_sine_upper_s : std_logic_vector(C_S_AXI_DATA_WIDTH - 1 downto 0);
---    signal i_sine_lower_s : std_logic_vector(LOWER_SIZE - 1 downto 0);
+
         
 begin
 	-- I/O Connections assignments
@@ -592,19 +584,19 @@ begin
 
 	-- Add user logic here
 
-fracr_axi_o <= slv_reg0 & slv_reg1(LOWER_SIZE - 1 downto 0);
+fracr_axi_o <= slv_reg0(UPPER_SIZE -1 downto 0) & slv_reg1(LOWER_SIZE - 1 downto 0);
 
 
-fracc_axi_o <= slv_reg2 & slv_reg3(LOWER_SIZE - 1 downto 0);
+fracc_axi_o <= slv_reg2(UPPER_SIZE -1 downto 0) & slv_reg3(LOWER_SIZE - 1 downto 0);
 
 
-spacing_axi_o <= slv_reg4 & slv_reg5(LOWER_SIZE - 1 downto 0);
+spacing_axi_o <= slv_reg4(UPPER_SIZE -1 downto 0) & slv_reg5(LOWER_SIZE - 1 downto 0);
 
 
-i_cose_axi_o <= slv_reg6 & slv_reg7(LOWER_SIZE - 1 downto 0);
+i_cose_axi_o <= slv_reg6(UPPER_SIZE -1 downto 0) & slv_reg7(LOWER_SIZE - 1 downto 0);
 
 
-i_sine_axi_o <= slv_reg8 & slv_reg9(LOWER_SIZE - 1 downto 0);
+i_sine_axi_o <= slv_reg8(UPPER_SIZE -1 downto 0) & slv_reg9(LOWER_SIZE - 1 downto 0);
 
 -- Povezivanje ostalih signala direktno sa registrima
 iradius_axi_o <= slv_reg10(WIDTH - 1 downto 0);
