@@ -76,7 +76,7 @@ void Cpu::software()
     VLength = getVectLength();
 
     // Compute the orientation and the descriptor for every interest point
-    for (unsigned n=0; n<1; n++){
+    for (unsigned n=0; n<ipts.size(); n++){
       setIpoint(&ipts[n]); // set the current interest point
       assignOrientation(); // assign reproducible orientation
       makeDescriptor(); // make the SURF descriptor
