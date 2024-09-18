@@ -40,17 +40,20 @@ class surf_simple_sequence extends surf_base_sequence;
 covergroup img_data_cover();
 		option.per_instance = 2;
 
-        index_upper_pix_value : coverpoint surf_item.img_doutc {    
-            bins low_value = {0};   
-            bins high_value = {16777215};  
+       img_upper_pix_value : coverpoint surf_item.img_douta {    
+            bins low_value    = {[0:61]};          // 0 to 33.33% 
+            bins mid_value    = {[62:122]};        // 33.33% to 66.66% 
+            bins high_value   = {[123:184]};       // 66.66% to 100%
         }
-    
-		indedex_lower_pix_value : coverpoint surf_item.img_doutd {
-            bins very_low    = {[0:4194303]};          // 0 to 25% of the full range
-            bins low_value   = {[4194304:8388607]};    // 25% to 50% of the full range
-            bins mid_value   = {[8388608:12582911]};   // 50% to 75% of the full range
-            bins high_value  = {[12582912:16777215]};  // 75% to 100% of the full range
+
+
+            
+        img_lower_pix_value : coverpoint surf_item.img_doutb {
+            bins low_value    = {[0:5592405]};         // 0 to 33.33% of the full range
+            bins mid_value    = {[5592406:11184810]};  // 33.33% to 66.66% of the full range
+            bins high_value   = {[11184811:16777215]}; // 66.66% to 100% of the full range
         }
+
 
     endgroup
     
@@ -59,6 +62,8 @@ covergroup img_data_cover();
 
     function new(string name = "surf_simple_sequence");
         super.new(name);
+        
+        img_data_cover = new();
     endfunction : new
 
     virtual task body();

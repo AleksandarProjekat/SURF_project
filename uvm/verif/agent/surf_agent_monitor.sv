@@ -26,8 +26,8 @@ class surf_monitor extends uvm_monitor;
 covergroup surf_cover (int coverage_goal);
     option.per_instance = 1;
     option.goal = 8;
-// Pokrivanje adresa u koracima od 4 za img32address
-img32address : coverpoint s_vif.ip_addrd {
+// Pokrivanje adresa u koracima od 4 za imgUPPERaddress
+imgUPPERaddress : coverpoint s_vif.ip_addrd {
     bins b1 = {[0:28]};     
     bins b2 = {[32:60]};    
     bins b3 = {[64:92]};   
@@ -38,8 +38,8 @@ img32address : coverpoint s_vif.ip_addrd {
     bins b8 = {[224:252]}; 
 }
 
-// Pokrivanje adresa u koracima od 4 za img16address
-img16address : coverpoint s_vif.ip_addrc {
+// Pokrivanje adresa u koracima od 4 za imgLOWERaddress
+imgLOWERaddress : coverpoint s_vif.ip_addrc {
     bins b1 = {[0:28]};    
     bins b2 = {[32:60]};    
     bins b3 = {[64:92]};   

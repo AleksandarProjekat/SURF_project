@@ -46,12 +46,14 @@ class surf_axi_monitor extends uvm_monitor;
 					
         }
 
-        write_data : coverpoint s_vif.s00_axi_wdata{
-            bins AXI_WDATA_LOW = {0};
-            bins AXI_WDATA_HIGH = {1};
-           bins AXI_WDATA_PARAMETERS_1 = {[2:10000000]};                              
-           bins AXI_WDATA_PARAMETERS_2 = {[10000001:16777215]};          
-        }                                           
+        write_data : coverpoint s_vif.s00_axi_wdata {
+              bins AXI_WDATA_LOW = {0};
+              bins AXI_WDATA_HIGH = {1};
+              bins AXI_WDATA_PARAMETERS_1 = {[2:80799]};
+              bins AXI_WDATA_PARAMETERS_2 = {[80800:1200000]};
+              bins AXI_WDATA_PARAMETERS_3 = {[1200001:16777215]};
+        }
+                                         
     endgroup
 
     covergroup axi_read_transactions;
@@ -62,8 +64,7 @@ class surf_axi_monitor extends uvm_monitor;
         }
 
         read_data : coverpoint s_vif.s00_axi_rdata{
-            bins READY_RDATA_LOW = {0};
-            bins READY_RDATA_HIGH = {1};
+            bins READY_RDATA_HIGH = {0};
         }
     endgroup
 

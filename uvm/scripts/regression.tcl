@@ -4,7 +4,7 @@ for {set i 0} {$i < 49} {incr i} {
     eval $xsim_command
     launch_simulation
     run all
-    if {$i+1 < 37} {
+    if {$i+1 < 49} {
         close_sim
 		puts "Test is over !!!!"
     }
