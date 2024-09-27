@@ -1,4 +1,4 @@
-parameter NUMBER_OF_PARAMETERS = 49;
+parameter NUMBER_OF_PARAMETERS = 12;
 
 class surf_config extends uvm_object;
 
@@ -54,37 +54,37 @@ class surf_config extends uvm_object;
 
 constraint rand_constr { 
         rand_test_init > 0;
-        rand_test_init < 49;
+        rand_test_init < 12;
     } 
         
     function new(string name = "surf_config");
         super.new(name);
 
-        img_properties[0] = "../../../../../files/input_parameters_decimal/parameters_input.txt";
-        index_upper_gv_file[0] = "../../../../../golden_vectors/index_upper24_decimal/index_upper.txt";
-        index_lower_gv_file[0] = "../../../../../golden_vectors/index_lower24_decimal/index_lower.txt";
-        img_upper_file[0] = "../../../../../files/pixels1D_upper_decimal/pixels1D_upper24_decimal.txt";
-        img_lower_file[0] = "../../../../../files/pixels1D_lower_decimal/pixels1D_lower24_decimal.txt";
-        index_upper_file[0] = "../../../../../files/index_upper24_decimal/index_upper.txt";
-        index_lower_file[0] = "../../../../../files/index_lower24_decimal/index_lower.txt";
+        img_properties[0] = "../files/\parameters_input.txt";
+        index_upper_gv_file[0] = "../golden_vectors/\index_upper.txt";
+        index_lower_gv_file[0] = "../golden_vectors//\index_lower.txt";
+        img_upper_file[0] = "../files/\pixels1D_upper24_decimal.txt";
+        img_lower_file[0] = "../files/\pixels1D_lower24_decimal.txt";
+        index_upper_file[0] = "../files/\index_upper.txt";
+        index_lower_file[0] = "../files/\index_lower.txt";
 
         // Loop initialization for all parameters
         for (int j = 1; j < NUMBER_OF_PARAMETERS; j++) begin
             num.itoa(j);
-            img_properties[j] = $sformatf("../../../../../files/input_parameters_decimal/parameters_input%d.txt", j);
-            index_upper_gv_file[j] = $sformatf("../../../../../golden_vectors/index_upper24_decimal/index_upper_%d.txt", j);
-            index_lower_gv_file[j] = $sformatf("../../../../../golden_vectors/index_lower24_decimal/index_lower_%d.txt", j);
-            img_upper_file[j] = $sformatf("../../../../../files/pixels1D_upper_decimal/pixels1D_upper24_decimal_%d.txt", j);
-            img_lower_file[j] = $sformatf("../../../../../files/pixels1D_lower_decimal/pixels1D_lower24_decimal_%d.txt", j);
-            index_upper_file[j] = $sformatf("../../../../../files/index_upper24_decimal/index_upper_%d.txt", j);
-            index_lower_file[j] = $sformatf("../../../../../files/index_lower24_decimal/index_lower_%d.txt", j);
+            img_properties[j] = $sformatf("../files/\parameters_input%0d.txt", j);
+            index_upper_gv_file[j] = $sformatf("../golden_vectors/\index_upper_%0d.txt", j);
+            index_lower_gv_file[j] = $sformatf("../golden_vectors/\index_lower_%0d.txt", j);
+            img_upper_file[j] = $sformatf("../files/\pixels1D_upper24_decimal_%0d.txt", j);
+            img_lower_file[j] = $sformatf("../files/\pixels1D_lower24_decimal_%0d.txt", j);
+            index_upper_file[j] = $sformatf("../files/\index_upper_%0d.txt", j);
+            index_lower_file[j] = $sformatf("../files/\index_lower_%0d.txt", j);
         end
     endfunction
 
     function void extracting_data();
     
       rand_test_num = (rand_test_init % NUMBER_OF_PARAMETERS);
-      $display("rand_test_num : %d", rand_test_num);
+      $display("rand_test_num : %0d", rand_test_num);
         
     //**************************          UCITAVANJE PARAMETARA SLIKE         **************************//
 

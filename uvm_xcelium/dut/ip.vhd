@@ -360,7 +360,7 @@ signal cweight2_delayed, cweight2_delayed1 : std_logic_vector(FIXED_SIZE - 1 dow
     signal bram_we2_int : std_logic := '0';
 
 
-signal counter, counter_next : integer range 0 to 3 := 0;
+signal counter, counter_next : integer range 0 to 9 := 0;
 
 
 begin

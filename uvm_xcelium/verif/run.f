@@ -6,7 +6,7 @@
 -sv +incdir+../verif/sequence
 -sv +incdir+../verif/configuration
   
-
+../dut/utils_pkg.vhd
 ../dut/bram24_upper_in.vhd
 ../dut/bram24_lower_in.vhd
 ../dut/bram24_upper_out.vhd
@@ -26,7 +26,6 @@
 ../dut/rom.vhd
 ../dut/SURF_v1_0.vhd
 ../dut/SURF_v1_0_S00_AXI.vhd
-../dut/utils_pkg.vhd
 
 -sv ../verif/configuration/configuration_pkg.sv
 -sv ../verif/agent/surf_agent_pkg.sv
@@ -36,9 +35,11 @@
 -sv ../verif/surf_interface.sv
 -sv ../verif/surf_top.sv
 
--LINEDEBUG
+#-LINEDEBUG
 -access +rwc
 -disable_sem2009
 -nowarn "MEMODR"
 -timescale 1ns/10ps
+
+
 
