@@ -1,9 +1,11 @@
-This project is a final project in my bachelor studies.
-My area of focus and specialization within this project is RTL design,UVM verification and Linux Driver.
+This project is a final project in my bachelor studies, developed as part of a team of three members. My colleagues focused on System Level Design, while my area of focus and specialization within this project is RTL design, UVM verification, and Linux driver development.
 
-Here is a FULL project development flow with following steps :
+Here is the full project development flow with the following steps:
 
- 	1.System Level Design (ESL)	
- 	2.RTL Design
- 	3.UVM Verification
- 	4.Linux Driver
+  -System Level Design (ESL)
+
+  -RTL Design
+
+  -UVM Verification
+
+  -Linux Driver
